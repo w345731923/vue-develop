@@ -32,8 +32,8 @@ export default {
 </script>
 
 <style lang="scss">
-@import "./sass/mixins";
-@import "./sass/variables";
+// @import "./sass/mixins";
+// @import "./sass/variables";
 main {
   position: relative;
 }
