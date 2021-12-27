@@ -5,9 +5,12 @@
         <v-header :fatherMethod="fatherMethod" />
       </el-header>
       <el-container>
-        <v-sidebar class="_pane" style="min-width: 240px" />
-        <div class="resizer-controls"></div>
-        <v-content class="_pane" :isTable="isTable" :isSqlEdit="isSqlEdit" />
+        <el-aside width="300px">
+          <v-sidebar />
+        </el-aside>
+        <el-main>
+          <v-content :isTable="isTable" :isSqlEdit="isSqlEdit" />
+        </el-main>
       </el-container>
     </el-container>
   </div>
@@ -60,28 +63,16 @@ section.el-container.is-vertical {
   color: white;
   text-align: center;
 }
+
+.el-aside {
+  /* background-color: #d3dce6; */
+  color: var(--el-text-color-primary);
+  text-align: center;
+}
+
 .common-layout .el-main {
-  /* background-color: #e9eef3; */
+  background-color: #e9eef3;
   color: var(--el-text-color-primary);
   padding: 0;
-}
-._pane {
-  display: flex;
-  flex: 1 1 0%;
-  z-index: 0;
-}
-._pane:first-child {
-  position: relative;
-  flex: 0 1 auto;
-}
-._pane:last-child {
-  overflow: hidden;
-}
-.resizer-controls {
-  position: relative;
-  flex: 0 1 auto;
-  width: 2px;
-  cursor: col-resize;
-  background-color: var(--mdc-theme-background, #dedede);
 }
 </style>

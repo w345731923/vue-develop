@@ -5,7 +5,7 @@ module.exports = {
   productionSourceMap: false, // 生产环境是否生成 SourceMap
   devServer: {
     //api---https://cli.vuejs.org/zh/config
-    open: true, // 启动服务后是否打开浏览器
+    open: false, // 启动服务后是否打开浏览器
     overlay: { // 错误信息展示到页面
       warnings: true,
       errors: true
