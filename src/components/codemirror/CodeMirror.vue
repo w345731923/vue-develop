@@ -1,9 +1,5 @@
 <template>
-  <textarea
-    ref="mycode"
-    class="codesql"
-    v-model="code"
-  ></textarea>
+  <textarea ref="mycode" class="codesql" v-model="code"></textarea>
 </template>
 <script>
 import "codemirror/theme/ambiance.css";
@@ -21,7 +17,7 @@ export default {
   name: "codeMirror",
   data() {
     return {
-      code: "111111",
+      code: "select * from user",
     };
   },
   methods: {

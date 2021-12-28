@@ -1,83 +1,69 @@
 <template>
   <div>
-    <el-tabs v-model="activeName" type="card" @tab-click="handleClick" closable>
-      <el-tab-pane label="SQL编辑器">
-        <div class="box">
-          <CodeMirror v-model="sql" />
-        </div>
+    <!-- <p>{{ tabActiveName }}</p><br/> -->
+    <el-tabs
+      v-model="activeName"
+      type="card"
+      @tab-click="handleClick"
+      closable
+      @tab-remove="handleRemoveTab"
+    >
+      <!-- <el-tab-pane label="SQL编辑器" name="0">
+        <SQLEditor />
       </el-tab-pane>
-      <el-tab-pane label="查询表数据">
-        <div class="table-edit">
-          <el-table :data="tableData" border>
-            <el-table-column prop="index" label="#" width="80" />
-            <el-table-column prop="id" label="id" width="100" />
-            <el-table-column prop="name" label="name" width="100" />
-          </el-table>
-        </div>
-      </el-tab-pane>
+      <el-tab-pane label="查询表数据" name="1">
+        <TableEditor />
+      </el-tab-pane> -->
       <el-tab-pane
         v-for="item in editableTabs"
         :key="item.name"
         :label="item.title"
         :name="item.name"
       >
-        {{ item.content }}
+        <component :is="item.content"></component>
       </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script>
-import CodeMirror from "../../components/codemirror/CodeMirror.vue";
+// import SQLEditor from "../../components/SQLEditor.vue";
+// import TableEditor from "../../components/TableEditor.vue";
 
 export default {
   name: "vContent",
   props: {
-    editableTabs: [],
-    // likes: String,
-    // years: String,
-    // isTable: Boolean,
-    // isSqlEdit: Boolean,
-  },
-  data() {
-    return {
-      activeName: "first",
-      // editableTabs: [],
-      tableData: [
-        {
-          index: "1",
-          id: "1",
-          name: "Angeles",
-        },
-        {
-          index: "2",
-          id: "2",
-          name: "Angeles",
-        },
-      ],
-    };
+    tabActiveName: {
+      type: String,
+      dafault: () => "0",
+    },
+    editableTabs: {
+      type: Array,
+      dafault: () => [],
+    },
+    removeTab: {
+      type: Function,
+      default: null,
+    },
   },
   components: {
-    CodeMirror,
+    // SQLEditor,
+    // TableEditor,
   },
   methods: {
-    removeTab() {
-      console.log("targetName");
-      // const tabs = this.editableTabs;
-      // let activeName = this.editableTabsValue;
-      // if (activeName === targetName) {
-      //   tabs.forEach((tab, index) => {
-      //     if (tab.name === targetName) {
-      //       const nextTab = tabs[index + 1] || tabs[index - 1];
-      //       if (nextTab) {
-      //         activeName = nextTab.name;
-      //       }
-      //     }
-      //   });
-      // }
-
-      // this.editableTabsValue = activeName;
-      // this.editableTabs = tabs.filter((tab) => tab.name !== targetName);
+    handleClick(tab, event) {
+      console.log(tab, event);
+    },
+    handleRemoveTab(targetName) {
+      this.removeTab(targetName);
+    },
+  },
+  watch: {
+    tabActiveName: {
+      immediate: true,
+      handler(val) {
+        this.activeName = val;
+      },
     },
   },
 };
@@ -91,13 +77,6 @@ export default {
 }
 .el-table .success-row {
   background-color: #dedede;
-}
-.box {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  /* width: 1500px; */
-  /* height: 500px; */
 }
 .el-tabs {
   width: 100%;

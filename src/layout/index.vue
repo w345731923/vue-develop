@@ -2,16 +2,16 @@
   <div class="common-layout">
     <el-container>
       <el-header>
-        <v-header :fatherMethod="fatherMethod" :addSQLTab="addSQLTab" />
+        <v-header :addSQLTab="addSQLTab" />
       </el-header>
       <el-container>
         <v-sidebar class="_pane" style="min-width: 240px" />
         <div class="resizer-controls"></div>
         <v-content
           class="_pane"
-          :isTable="isTable"
-          :isSqlEdit="isSqlEdit"
+          :tabActiveName="tabActiveName"
           :editableTabs="editableTabs"
+          :removeTab="removeTab"
         />
       </el-container>
     </el-container>
@@ -22,6 +22,9 @@
 import vHeader from "./components/Header.vue";
 import vSidebar from "./components/Sidebar.vue";
 import vContent from "./components/Content.vue";
+import SQLEditor from "../components/SQLEditor.vue";
+import TableEditor from "../components/TableEditor.vue";
+
 /**
  * created（创建）-> mounted（加载）-> updated（更新）-> unmounted（卸载）
  * https://v3.vuejs.org/guide/instance.html#lifecycle-diagram
@@ -30,36 +33,60 @@ export default {
   name: "Home",
   data() {
     return {
-      isTable: false,
-      isSqlEdit: true,
-      editableTabs: [],
+      editableTabs: [], //tab显示数组
+      tabActiveName: "", //tab选中页
     };
-  },
-  methods: {
-    addSQLTab() {
-      const newTabName = `${++this.tabIndex}`;
-      this.editableTabs.push({
-        title: "New Tab",
-        name: newTabName,
-        content: "New Tab content",
-      });
-      this.editableTabsValue = newTabName;
-    },
-    fatherMethod(key) {
-      console.log("测试", key === "1");
-      if (key === "1") {
-        this.isTable = false;
-        this.isSqlEdit = true;
-      } else {
-        this.isTable = true;
-        this.isSqlEdit = false;
-      }
-    },
   },
   components: {
     vHeader,
     vSidebar,
     vContent,
+    // SQLEditor,
+    // TableEditor
+  },
+  methods: {
+    /**
+     * 添加tab
+     */
+    addSQLTab(event) {
+      const name = new Date().getTime();
+      if (event.index === "1") {
+        const newTabName = `*<localhost>无标题`;
+        console.log("name", name);
+        this.editableTabs.push({
+          title: newTabName,
+          name: name,
+          content: <SQLEditor />,
+        });
+      } else {
+        const newTabName = `newTable@postgres.public(localhost)`;
+        this.editableTabs.push({
+          title: newTabName,
+          name: name,
+          content: <TableEditor />,
+        });
+      }
+      this.tabActiveName = name;
+    },
+    /**
+     * 移除tab
+     */
+    removeTab(targetName) {
+      const tabs = this.editableTabs;
+      let activeName = this.tabActiveName;
+      if (activeName === targetName) {
+        tabs.forEach((tab, index) => {
+          if (tab.name === targetName) {
+            const nextTab = tabs[index + 1] || tabs[index - 1];
+            if (nextTab) {
+              activeName = nextTab.name;
+            }
+          }
+        });
+      }
+      this.tabActiveName = activeName;
+      this.editableTabs = tabs.filter((tab) => tab.name !== targetName);
+    },
   },
 };
 </script>

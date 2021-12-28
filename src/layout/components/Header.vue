@@ -12,9 +12,8 @@
       >
         <!-- @select="handleSelect" -->
         <el-menu-item index="1" @click="this.addSQLTab">SQL</el-menu-item>
-        <el-menu-item index="2" @click="this.addTableTab">Table</el-menu-item>
-        <el-menu-item index="3" @click="this.addTableTab">Tool-1</el-menu-item>
-        <el-menu-item index="4" @click="this.addTableTab">Tool-2</el-menu-item>
+        <el-menu-item index="2" @click="this.addSQLTab">Table</el-menu-item>
+        <el-menu-item index="4">Tool</el-menu-item>
       </el-menu>
     </div>
   </div>
