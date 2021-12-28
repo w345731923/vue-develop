@@ -2,12 +2,17 @@
   <div class="common-layout">
     <el-container>
       <el-header>
-        <v-header :fatherMethod="fatherMethod" />
+        <v-header :fatherMethod="fatherMethod" :addSQLTab="addSQLTab" />
       </el-header>
       <el-container>
         <v-sidebar class="_pane" style="min-width: 240px" />
         <div class="resizer-controls"></div>
-        <v-content class="_pane" :isTable="isTable" :isSqlEdit="isSqlEdit" />
+        <v-content
+          class="_pane"
+          :isTable="isTable"
+          :isSqlEdit="isSqlEdit"
+          :editableTabs="editableTabs"
+        />
       </el-container>
     </el-container>
   </div>
@@ -27,9 +32,19 @@ export default {
     return {
       isTable: false,
       isSqlEdit: true,
+      editableTabs: [],
     };
   },
   methods: {
+    addSQLTab() {
+      const newTabName = `${++this.tabIndex}`;
+      this.editableTabs.push({
+        title: "New Tab",
+        name: newTabName,
+        content: "New Tab content",
+      });
+      this.editableTabsValue = newTabName;
+    },
     fatherMethod(key) {
       console.log("测试", key === "1");
       if (key === "1") {
@@ -63,6 +78,9 @@ section.el-container.is-vertical {
 .common-layout .el-main {
   /* background-color: #e9eef3; */
   color: var(--el-text-color-primary);
+  padding: 0;
+}
+.common-layout .el-header {
   padding: 0;
 }
 ._pane {

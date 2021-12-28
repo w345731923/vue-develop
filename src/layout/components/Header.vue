@@ -9,15 +9,16 @@
         background-color="#338ecc"
         text-color="#fff"
         active-text-color="none"
-        @select="handleSelect"
       >
-        <el-menu-item index="1">SQL</el-menu-item>
-        <el-menu-item index="2">Table</el-menu-item>
+        <!-- @select="handleSelect" -->
+        <el-menu-item index="1" @click="this.addSQLTab">SQL</el-menu-item>
+        <el-menu-item index="2" @click="this.addTableTab">Table</el-menu-item>
+        <el-menu-item index="3" @click="this.addTableTab">Tool-1</el-menu-item>
+        <el-menu-item index="4" @click="this.addTableTab">Tool-2</el-menu-item>
       </el-menu>
     </div>
   </div>
 </template>
-
 
 <script>
 export default {
@@ -26,12 +27,16 @@ export default {
       type: Function,
       default: null,
     },
+    addSQLTab: {
+      type: Function,
+      default: null,
+    },
   },
   methods: {
-    handleSelect(key, keyPath) {
-      console.log(key, keyPath);
-      this.fatherMethod(key);
-    },
+    // handleSelect(key, keyPath) {
+    //   console.log(key, keyPath);
+    //   this.fatherMethod(key);
+    // },
   },
 };
 </script>
@@ -42,7 +47,6 @@ export default {
   align-items: center;
   height: 60px;
   line-height: 60px;
-  padding: 0 16px;
   z-index: 1;
 }
 .logo {
@@ -50,8 +54,10 @@ export default {
   width: 250px;
   cursor: pointer;
   margin-right: 16px;
+  flex: 0 1 auto;
 }
 .menu {
   height: 100%;
+  flex: 1 1;
 }
 </style>

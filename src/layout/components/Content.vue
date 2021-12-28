@@ -1,10 +1,5 @@
 <template>
   <div>
-    <div style="margin-bottom: 20px">
-      <el-button size="small" @click="addTab(editableTabsValue)">
-        add tab
-      </el-button>
-    </div>
     <el-tabs v-model="activeName" type="card" @tab-click="handleClick" closable>
       <el-tab-pane label="SQL编辑器">
         <div class="box">
@@ -38,6 +33,7 @@ import CodeMirror from "../../components/codemirror/CodeMirror.vue";
 export default {
   name: "vContent",
   props: {
+    editableTabs: [],
     // likes: String,
     // years: String,
     // isTable: Boolean,
@@ -46,7 +42,7 @@ export default {
   data() {
     return {
       activeName: "first",
-      editableTabs: [],
+      // editableTabs: [],
       tableData: [
         {
           index: "1",
@@ -57,7 +53,7 @@ export default {
           index: "2",
           id: "2",
           name: "Angeles",
-        }
+        },
       ],
     };
   },
@@ -65,32 +61,23 @@ export default {
     CodeMirror,
   },
   methods: {
-    addTab(targetName) {
-      console.log('targetName',targetName)
-      const newTabName = `${++this.tabIndex}`;
-      this.editableTabs.push({
-        title: "New Tab",
-        name: newTabName,
-        content: "New Tab content",
-      });
-      this.editableTabsValue = newTabName;
-    },
-    removeTab(targetName) {
-      const tabs = this.editableTabs;
-      let activeName = this.editableTabsValue;
-      if (activeName === targetName) {
-        tabs.forEach((tab, index) => {
-          if (tab.name === targetName) {
-            const nextTab = tabs[index + 1] || tabs[index - 1];
-            if (nextTab) {
-              activeName = nextTab.name;
-            }
-          }
-        });
-      }
+    removeTab() {
+      console.log("targetName");
+      // const tabs = this.editableTabs;
+      // let activeName = this.editableTabsValue;
+      // if (activeName === targetName) {
+      //   tabs.forEach((tab, index) => {
+      //     if (tab.name === targetName) {
+      //       const nextTab = tabs[index + 1] || tabs[index - 1];
+      //       if (nextTab) {
+      //         activeName = nextTab.name;
+      //       }
+      //     }
+      //   });
+      // }
 
-      this.editableTabsValue = activeName;
-      this.editableTabs = tabs.filter((tab) => tab.name !== targetName);
+      // this.editableTabsValue = activeName;
+      // this.editableTabs = tabs.filter((tab) => tab.name !== targetName);
     },
   },
 };
