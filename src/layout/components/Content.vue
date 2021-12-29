@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <!-- <p>{{ tabActiveName }}</p><br/> -->
+  <div class="_content">
     <el-tabs
       v-model="activeName"
       type="card"
@@ -8,12 +7,6 @@
       closable
       @tab-remove="handleRemoveTab"
     >
-      <!-- <el-tab-pane label="SQL编辑器" name="0">
-        <SQLEditor />
-      </el-tab-pane>
-      <el-tab-pane label="查询表数据" name="1">
-        <TableEditor />
-      </el-tab-pane> -->
       <el-tab-pane
         v-for="item in editableTabs"
         :key="item.name"
@@ -27,9 +20,6 @@
 </template>
 
 <script>
-// import SQLEditor from "../../components/SQLEditor.vue";
-// import TableEditor from "../../components/TableEditor.vue";
-
 export default {
   name: "vContent",
   props: {
@@ -70,15 +60,11 @@ export default {
 </script>
 
 
-<style scoped>
-.table-edit {
-  height: 100%;
-  background-color: white;
-}
-.el-table .success-row {
-  background-color: #dedede;
-}
+<style >
 .el-tabs {
   width: 100%;
+}
+._content .el-tabs .el-tabs__header {
+  margin: 0;
 }
 </style>

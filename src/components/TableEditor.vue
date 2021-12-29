@@ -33,4 +33,11 @@ export default {
 
 
 <style scoped>
+.table-edit {
+  height: 100%;
+  background-color: white;
+}
+.el-table .success-row {
+  background-color: #dedede;
+}
 </style>
