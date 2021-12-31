@@ -1,57 +1,62 @@
 <template>
-  <el-tree
-    :data="dataSource"
-    node-key="id"
-    :expand-on-click-node="false"
-    highlight-current="true"
-  >
-    <template #default="{ node, data }">
-      <div
-        class="tree-node-row"
-        aria-selected="false"
-        @click="handleNodeClick($event)"
-      >
-        <!-- <div class="tree-node-icon"> <img src="../../assets/server.png"></div>         -->
-        <div class="tree-node-icon tree-node-icon-gt">
-          <img
-            src="../../assets/server.png"
-            v-if="node.data.type === 'group'"
-          />
-          <img
-            src="../../assets/hgdb16.png"
-            v-if="node.data.type === 'server'"
-          />
-          <img
-            src="../../assets/database.png"
-            v-if="node.data.type === 'db-name'"
-          />
-          <img
-            src="../../assets/folder_schema.png"
-            v-if="node.data.type === 'schema-group'"
-          />
-          <img
-            src="../../assets/schema.png"
-            v-if="node.data.type === 'schema'"
-          />
-          <img
-            src="../../assets/folder_table.png"
-            v-if="node.data.type === 'table-group'"
-          />
-          <img src="../../assets/table.png" v-if="node.data.type === 'table'" />
-          <img
-            src="../../assets/folder_user.png"
-            v-if="node.data.type === 'role-group'"
-          />
-          <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
+  <div class="tree-view">
+    <el-tree
+      :data="dataSource"
+      node-key="id"
+      :expand-on-click-node="false"
+      highlight-current="true"
+    >
+      <template #default="{ node, data }">
+        <div
+          class="tree-node-row"
+          aria-selected="false"
+          @click="handleNodeClick($event)"
+        >
+          <!-- <div class="tree-node-icon"> <img src="../../assets/server.png"></div>         -->
+          <div class="tree-node-icon tree-node-icon-gt">
+            <img
+              src="../../assets/server.png"
+              v-if="node.data.type === 'group'"
+            />
+            <img
+              src="../../assets/hgdb16.png"
+              v-if="node.data.type === 'server'"
+            />
+            <img
+              src="../../assets/database.png"
+              v-if="node.data.type === 'db-name'"
+            />
+            <img
+              src="../../assets/folder_schema.png"
+              v-if="node.data.type === 'schema-group'"
+            />
+            <img
+              src="../../assets/schema.png"
+              v-if="node.data.type === 'schema'"
+            />
+            <img
+              src="../../assets/folder_table.png"
+              v-if="node.data.type === 'table-group'"
+            />
+            <img
+              src="../../assets/table.png"
+              v-if="node.data.type === 'table'"
+            />
+            <img
+              src="../../assets/folder_user.png"
+              v-if="node.data.type === 'role-group'"
+            />
+            <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
+          </div>
+          <div class="tree-node-name tree-node-name-gt">{{ node.label }}</div>
+          <div class="tree-node-action">
+            <img src="../../assets/refresh.png" @click="append(data)" />
+          </div>
         </div>
-        <div class="tree-node-name tree-node-name-gt">{{ node.label }}</div>
-        <div class="tree-node-action">
-          <img src="../../assets/refresh.png" @click="append(data)" />
-        </div>
-      </div>
-    </template>
-  </el-tree>
-  <!-- default-expand-all :render-content="renderContent"-->
+      </template>
+    </el-tree>
+    <!-- default-expand-all :render-content="renderContent"-->
+  </div>
 </template>
 
 <script>
@@ -193,8 +198,10 @@ export default {
 }
 
 .el-tree-node__content:hover .tree-node-action,
-.el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content .tree-node-action {
+.el-tree--highlight-current
+  .el-tree-node.is-current
+  > .el-tree-node__content
+  .tree-node-action {
   visibility: visible;
 }
-
 </style>

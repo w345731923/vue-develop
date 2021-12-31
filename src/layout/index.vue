@@ -4,11 +4,11 @@
       <el-header>
         <v-header :addSQLTab="addSQLTab" />
       </el-header>
-      <el-container>
-        <v-sidebar class="_pane" style="min-width: 240px" />
+      <el-container class="box">
+        <v-sidebar class="_pane left" />
         <div class="resizer-controls"></div>
         <v-content
-          class="_pane"
+          class="_pane mid"
           :tabActiveName="tabActiveName"
           :editableTabs="editableTabs"
           :removeTab="removeTab"
@@ -44,7 +44,43 @@ export default {
     // SQLEditor,
     // TableEditor
   },
+  mounted() {
+    this.dragControllerDiv();
+  },
   methods: {
+    dragControllerDiv() {
+      const resize = document.getElementsByClassName("resizer-controls")[0];
+      const left = document.getElementsByClassName("left")[0];
+      // const mid = document.getElementsByClassName("mid")[0];
+      // const box = document.getElementsByClassName("box")[0];
+      // 鼠标按下事件
+      resize.onmousedown = function (e) {
+        console.log(e);
+        // const startX = e.clientX;
+        // const resizeLeft = resize.offsetLeft;
+        // 鼠标拖动事件
+        document.onmousemove = function (e) {
+          // console.log("startX", startX); //248
+          // console.log("resizeLeft", resizeLeft); //248
+          const moveX = e.clientX;
+          // let moveLen = resizeLeft + (moveX - startX);
+          // const rightWidth = box.clientWidth - resize.offsetWidth; // 容器宽度 - 左边区域的宽度 = 右边区域的宽度
+          // console.log(rightWidth,left, mid);
+          left.style.minWidth = moveX + "px";
+          left.style.maxWidth = "0px";
+
+          // left.style.width = moveLen + "px";
+          // mid.style.width = rightWidth + "px";
+          // resize.style.left = 2 + "px";
+        };
+        // 鼠标松开事件
+        document.onmouseup = function () {
+          document.onmousemove = null;
+          document.onmouseup = null;
+        };
+        return false;
+      };
+    },
     /**
      * 添加tab
      */
@@ -114,6 +150,7 @@ section.el-container.is-vertical {
   display: flex;
   flex: 1 1 0%;
   z-index: 0;
+  overflow: auto;
 }
 ._pane:first-child {
   position: relative;
