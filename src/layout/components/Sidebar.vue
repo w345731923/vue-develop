@@ -154,6 +154,9 @@ export default {
 </script>
 
 <style>
+.el-tree{
+  flex: 1;
+}
 .el-tree-node__content .tree-node-row div {
   margin-right: 6px;
   margin-left: 2px;

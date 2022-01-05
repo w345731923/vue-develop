@@ -23,7 +23,7 @@ import vHeader from "./components/Header.vue";
 import vSidebar from "./components/Sidebar.vue";
 import vContent from "./components/Content.vue";
 import SQLEditor from "../components/SQLEditor.vue";
-import TableEditor from "../components/TableEditor.vue";
+import CreateTable from "../views/create-table/index.vue";
 
 /**
  * created（创建）-> mounted（加载）-> updated（更新）-> unmounted（卸载）
@@ -41,8 +41,6 @@ export default {
     vHeader,
     vSidebar,
     vContent,
-    // SQLEditor,
-    // TableEditor
   },
   mounted() {
     this.dragControllerDiv();
@@ -94,12 +92,12 @@ export default {
           name: name,
           content: <SQLEditor />,
         });
-      } else {
+      } else if(event.index === "2"){
         const newTabName = `newTable@postgres.public(localhost)`;
         this.editableTabs.push({
           title: newTabName,
           name: name,
-          content: <TableEditor />,
+          content: <CreateTable />,
         });
       }
       this.tabActiveName = name;
