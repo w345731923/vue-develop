@@ -68,8 +68,12 @@
         </el-space>
       </div>
     </div>
-    <CodeMirror />
+
+    <div class="top" :style="{ backgroundColor: 'red' }">
+      <CodeMirror />
+    </div>
     <!-- <img src="../assets/database.png" /> -->
+    <div class="resizer-top-bottom"></div>
     <div class="query-result">
       <el-tabs model-value="info" type="card">
         <el-tab-pane label="信息" name="info" style="margin: 0.5rem">
@@ -139,6 +143,41 @@ export default {
       schema_val: "0",
     };
   },
+  mounted() {
+    this.dragControllerDiv();
+  },
+  methods: {
+    dragControllerDiv() {
+      const resize = document.getElementsByClassName("resizer-top-bottom")[0];
+      const top = document.getElementsByClassName("top")[0];
+      const elHeader = document.getElementsByClassName("el-header")[0];
+      const elTabsHeader = document.getElementsByClassName("el-tabs__header")[0];
+      const toolButtons = document.getElementsByClassName("tool-buttons")[0];
+      // const mid = document.getElementsByClassName("mid")[0];
+      // const box = document.getElementsByClassName("box")[0];
+      // 鼠标按下事件
+      resize.onmousedown = function (e) {
+        console.log(e);
+        // 鼠标拖动事件
+        document.onmousemove = function (e) {
+          const topHeight = elHeader.clientHeight + elTabsHeader.clientHeight + toolButtons.clientHeight; //60+40+76
+          const moveY = e.clientY - topHeight;
+          top.style.minHeight = moveY + "px";
+          top.style.maxHeight = "0px";
+
+          // left.style.width = moveLen + "px";
+          // mid.style.width = rightWidth + "px";
+          // resize.style.left = 2 + "px";
+        };
+        // 鼠标松开事件
+        document.onmouseup = function () {
+          document.onmousemove = null;
+          document.onmouseup = null;
+        };
+        return false;
+      };
+    },
+  },
 };
 </script>
 
@@ -157,5 +196,12 @@ export default {
 }
 .row-connect {
   padding-left: 1em;
+}
+.resizer-top-bottom {
+  position: relative;
+  flex: 0 1 auto;
+  height: 2px;
+  cursor: row-resize;
+  background-color: var(--mdc-theme-background, #dedede);
 }
 </style>
