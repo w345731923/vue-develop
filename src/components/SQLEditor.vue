@@ -68,23 +68,24 @@
         </el-space>
       </div>
     </div>
-
-    <div class="top" :style="{ backgroundColor: 'red' }">
-      <CodeMirror />
-    </div>
-    <!-- <img src="../assets/database.png" /> -->
-    <div class="resizer-top-bottom"></div>
-    <div class="query-result">
-      <el-tabs model-value="info" type="card">
-        <el-tab-pane label="信息" name="info" style="margin: 0.5rem">
-          <p style="margin: 0.3rem">> SQL:select now()</p>
-          <p style="margin: 0.3rem">> SUCCESS:OK</p>
-          <p style="margin: 0.3rem">> TIME:148ms</p>
-        </el-tab-pane>
-        <el-tab-pane label="查询结果" name="result" style="margin: 0.5rem">
-          <TableEditor />
-        </el-tab-pane>
-      </el-tabs>
+    <div class="split-content">
+      <div class="codemirror pane_flex">
+        <CodeMirror />
+      </div>
+      <!-- <img src="../assets/database.png" /> -->
+      <div class="resizer_controls resizer_controls_column"></div>
+      <div class="query-result pane_flex">
+        <el-tabs model-value="info" type="card">
+          <el-tab-pane label="信息" name="info" style="margin: 0.5rem">
+            <p style="margin: 0.3rem">> SQL:select now()</p>
+            <p style="margin: 0.3rem">> SUCCESS:OK</p>
+            <p style="margin: 0.3rem">> TIME:148ms</p>
+          </el-tab-pane>
+          <el-tab-pane label="查询结果" name="result" style="margin: 0.5rem">
+            <TableEditor />
+          </el-tab-pane>
+        </el-tabs>
+      </div>
     </div>
   </div>
 </template>
@@ -147,35 +148,49 @@ export default {
     this.dragControllerDiv();
   },
   methods: {
+    /**
+     * SQL编辑器页面，拖动中间层事件
+     */
     dragControllerDiv() {
-      const resize = document.getElementsByClassName("resizer-top-bottom")[0];
-      const top = document.getElementsByClassName("top")[0];
+      //页面header
       const elHeader = document.getElementsByClassName("el-header")[0];
-      const elTabsHeader = document.getElementsByClassName("el-tabs__header")[0];
-      const toolButtons = document.getElementsByClassName("tool-buttons")[0];
-      // const mid = document.getElementsByClassName("mid")[0];
-      // const box = document.getElementsByClassName("box")[0];
-      // 鼠标按下事件
-      resize.onmousedown = function (e) {
-        console.log(e);
-        // 鼠标拖动事件
-        document.onmousemove = function (e) {
-          const topHeight = elHeader.clientHeight + elTabsHeader.clientHeight + toolButtons.clientHeight; //60+40+76
-          const moveY = e.clientY - topHeight;
-          top.style.minHeight = moveY + "px";
-          top.style.maxHeight = "0px";
+      //tab页height不知为何获取为0，暂时写固定值40
+      // const elTabsHeader = document.getElementsByClassName("el-tabs__header")[0]; //header
+      const elTabsHeader = { clientHeight: 40 };
 
-          // left.style.width = moveLen + "px";
-          // mid.style.width = rightWidth + "px";
-          // resize.style.left = 2 + "px";
+      //获取拖动层div，绑定事件
+      const resize = document.getElementsByClassName("resizer_controls_column");
+      for (var i = 0; i < resize.length; i++) {
+        const codemirrorObj = document.getElementsByClassName("codemirror")[i]; //code区域
+        // console.log("codemirrorObj", codemirrorObj);
+        const toolButtons = document.getElementsByClassName("tool-buttons")[i]; //工具栏对象
+        const topHeight =
+          elHeader.clientHeight +
+          elTabsHeader.clientHeight +
+          toolButtons.clientHeight; //60+40+76
+        // console.log(
+        //   "moveY",
+        //   elHeader.clientHeight,
+        //   elTabsHeader.clientHeight,
+        //   toolButtons.clientHeight
+        // );
+        // 鼠标按下事件
+        resize[i].onmousedown = function () {
+          // 鼠标拖动事件
+          document.onmousemove = function (e) {
+            const moveY = e.clientY - topHeight; //移动位置-上方距离=sql编辑器高度
+            console.log("moveY", topHeight, e.clientY, moveY);
+            codemirrorObj.style.minHeight = moveY + "px";
+            codemirrorObj.style.maxHeight = "0px";
+          };
+          // 鼠标松开事件
+          document.onmouseup = function () {
+            document.onmousemove = null;
+            document.onmouseup = null;
+          };
+          return false;
         };
-        // 鼠标松开事件
-        document.onmouseup = function () {
-          document.onmousemove = null;
-          document.onmouseup = null;
-        };
-        return false;
-      };
+      }
     },
   },
 };
@@ -187,12 +202,23 @@ export default {
   margin: 0;
   padding: 0;
   width: 100%;
-  /* width: 1500px; */
-  /* height: 500px; */
+  height: 100%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
 }
 .tool-buttons {
   padding: 4px 4px 8px 4px;
   background-color: #f2f2f2;
+  flex: 0 0 auto;
+  overflow: auto;
+}
+.split-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
 }
 .row-connect {
   padding-left: 1em;

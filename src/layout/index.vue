@@ -1,20 +1,18 @@
 <template>
-  <div class="common-layout">
-    <el-container>
-      <el-header>
-        <v-header :addSQLTab="addSQLTab" />
-      </el-header>
-      <el-container class="box">
-        <v-sidebar class="_pane left" />
-        <div class="resizer-controls"></div>
-        <v-content
-          class="_pane mid"
-          :tabActiveName="tabActiveName"
-          :editableTabs="editableTabs"
-          :removeTab="removeTab"
-        />
-      </el-container>
-    </el-container>
+  <div class="theme_flex_column">
+    <el-header>
+      <v-header :addSQLTab="addSQLTab" />
+    </el-header>
+    <div class="split_flex_row">
+      <vSidebar class="pane_flex left home" />
+      <div class="resizer_controls"></div>
+      <vContent
+        class="pane_flex right home"
+        :tabActiveName="tabActiveName"
+        :editableTabs="editableTabs"
+        :removeTab="removeTab"
+      />
+    </div>
   </div>
 </template>
 
@@ -47,7 +45,7 @@ export default {
   },
   methods: {
     dragControllerDiv() {
-      const resize = document.getElementsByClassName("resizer-controls")[0];
+      const resize = document.getElementsByClassName("resizer_controls")[0];
       const left = document.getElementsByClassName("left")[0];
       // const mid = document.getElementsByClassName("mid")[0];
       // const box = document.getElementsByClassName("box")[0];
@@ -92,7 +90,7 @@ export default {
           name: name,
           content: <SQLEditor />,
         });
-      } else if(event.index === "2"){
+      } else if (event.index === "2") {
         const newTabName = `newTable@postgres.public(localhost)`;
         this.editableTabs.push({
           title: newTabName,
@@ -125,43 +123,16 @@ export default {
 };
 </script>
 <style>
-section.el-container.is-vertical {
-  height: calc(100vh - 30px);
-}
-.el-main::-webkit-scrollbar {
-  display: none;
-}
 .el-header {
   background-color: #2a7cb4;
   color: white;
   text-align: center;
 }
-.common-layout .el-main {
-  /* background-color: #e9eef3; */
-  color: var(--el-text-color-primary);
-  padding: 0;
-}
-.common-layout .el-header {
-  padding: 0;
-}
-._pane {
-  display: flex;
-  flex: 1 1 0%;
-  z-index: 0;
-  overflow: auto;
-}
-._pane:first-child {
+.split_flex_row .home:first-child {
   position: relative;
   flex: 0 1 auto;
 }
-._pane:last-child {
+.split_flex_row .home:last-child {
   overflow: hidden;
-}
-.resizer-controls {
-  position: relative;
-  flex: 0 1 auto;
-  width: 2px;
-  cursor: col-resize;
-  background-color: var(--mdc-theme-background, #dedede);
 }
 </style>

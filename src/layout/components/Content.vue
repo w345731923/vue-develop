@@ -3,8 +3,8 @@
     <el-tabs
       v-model="activeName"
       type="card"
-      @tab-click="handleClick"
       closable
+      @tab-click="handleClick"      
       @tab-remove="handleRemoveTab"
     >
       <el-tab-pane
@@ -60,11 +60,7 @@ export default {
 </script>
 
 
-<style >
-.el-tabs {
-  width: 100%;
-}
-._content .el-tabs .el-tabs__header {
-  margin: 0;
-}
+<style scoped>
+
+
 </style>

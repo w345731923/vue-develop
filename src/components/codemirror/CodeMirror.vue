@@ -1,11 +1,17 @@
 <template>
-  <textarea ref="mycode" class="codesql" v-model="code"></textarea>
+  <div class="sql-editor">
+    <!-- <div>123</div> -->
+    <div class="sql-editor-code">
+      <textarea ref="mycode" class="codesql" v-model="code"></textarea>
+    </div>
+  </div>
 </template>
 <script>
-import "codemirror/theme/ambiance.css";
+// import "codemirror/theme/ambiance.css";
 import "codemirror/lib/codemirror.css";
 import "codemirror/addon/hint/show-hint.css";
 import "./sql-hint.css";
+import "codemirror/theme/base16-light.css";
 
 let CodeMirror = require("codemirror/lib/codemirror");
 // require("codemirror/addon/edit/matchbrackets");
@@ -105,6 +111,22 @@ export default {
 };
 </script>
 <style>
+.sql-editor {
+  position: relative;
+  z-index: 0;
+  flex: 1 1 auto;
+  /* height: 100%; */
+  display: flex;
+  overflow: auto;
+}
+.sql-editor-code {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+.CodeMirror {
+  flex: 1 1 auto;
+  height: 100%;
+}
 .codesql {
   text-align: left;
   font-size: 11pt;
