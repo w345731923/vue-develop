@@ -7,9 +7,14 @@
           保存
         </el-button>
         <el-button-group v-if="tabsActive == 'columns'">
-          <el-button size="small" color="#f2f2f2"
-            ><el-icon><Avatar /></el-icon>添加字段</el-button
-          >
+          <el-button
+              size="small"
+              color="#f2f2f2"
+              @click="addColumnButtonClick"
+            >
+            <el-icon><Avatar /></el-icon>
+            添加字段
+          </el-button>
           <el-button size="small" color="#f2f2f2"
             ><el-icon><Avatar /></el-icon>删除字段</el-button
           >
@@ -29,7 +34,7 @@
     <div class="query-result">
       <el-tabs v-model="tabsActive" type="card" @tab-click="handleTabClick">
         <el-tab-pane label="字段" name="columns" style="margin: 0.5rem">
-          <ColumnTab />
+          <ColumnTab :tableData="tableData" :columnUpdateButtonClick="columnUpdateButtonClick"/>
         </el-tab-pane>
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
           <IndexTab />
@@ -41,6 +46,46 @@
         </el-tab-pane>
       </el-tabs>
     </div>
+
+    <el-dialog :close-on-click-modal=false v-model="dialogFormVisible" title="添加字段" destroy-on-close>
+      <el-form :model="form" size="small">
+        <el-form-item label="字段" :label-width="formLabelWidth">
+          <el-input v-model="form.column" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="类型" :label-width="formLabelWidth">
+          <el-select v-model="form.type" filterable placeholder="Select">
+            <el-option
+                v-for="item in dataTypeList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="长度" :label-width="formLabelWidth">
+          <el-input-number v-model="form.length" :min="0" />
+        </el-form-item>
+        <el-form-item label="小数点" :label-width="formLabelWidth">
+          <el-input-number v-model="form.point" :min="0" />
+        </el-form-item>
+        <el-form-item label="不是null" :label-width="formLabelWidth">
+          <el-switch v-model="form.notnull" />
+        </el-form-item>
+        <el-form-item label="主键" :label-width="formLabelWidth">
+          <el-switch v-model="form.primary" />
+        </el-form-item>
+        <el-form-item label="注释" :label-width="formLabelWidth">
+          <el-input v-model="form.comment" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button size="small" @click="dialogFormVisible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="addColumnForm(form)">保存</el-button>
+      </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -49,6 +94,30 @@ import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "./columnTab.vue";
 import IndexTab from "./indexTab.vue";
 
+const formInitValue = {
+  column: '',
+  type: '',
+  length: 0,
+  point: 0,
+  notnull: false,
+  primary: false,
+  comment: '',
+};
+const dataTypeList = [
+  {
+    value: 'varchar',
+    label: 'varchar',
+  },
+  {
+    value: 'integer',
+    label: 'integer',
+  },
+  {
+    value: 'date',
+    label: 'date',
+  },
+];
+
 export default {
   name: "sqleditor",
   components: {
@@ -56,21 +125,36 @@ export default {
     ColumnTab,
     IndexTab,
   },
-  props: {},
   data() {
     return {
       tabsActive: "columns",
       tabsName: ["columns", "index", "sqlview"],
+      dialogFormVisible: false,
+      formLabelWidth: "80px",
+      form: formInitValue,
+      dataTypeList,
+      tableData: [],
     };
   },
   methods: {
     handleTabClick(tab) {
       this.tabsActive = tab.props.name;
     },
+    addColumnButtonClick() {
+      this.dialogFormVisible = true;
+    },
+    addColumnForm(form) {
+      this.dialogFormVisible = false;
+      this.tableData.push(form);
+      form.resetFields;
+    },
+    columnUpdateButtonClick(row) {
+      // this.dialogFormVisible = true;
+      console.log(row)
+    },
   },
 };
 </script>
-
 
 <style scoped>
 .box {
