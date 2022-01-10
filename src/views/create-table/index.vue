@@ -34,7 +34,7 @@
     <div class="query-result">
       <el-tabs v-model="tabsActive" type="card" @tab-click="handleTabClick">
         <el-tab-pane label="字段" name="columns" style="margin: 0.5rem">
-          <ColumnTab :tableData="tableData" :columnUpdateButtonClick="columnUpdateButtonClick"/>
+          <ColumnTab :tableData="tableData" />
         </el-tab-pane>
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
           <IndexTab />
@@ -47,8 +47,8 @@
       </el-tabs>
     </div>
 
-    <el-dialog :close-on-click-modal=false v-model="dialogFormVisible" title="添加字段" destroy-on-close>
-      <el-form :model="form" size="small">
+    <el-dialog :close-on-click-modal=false v-model="dialogFormVisible" title="添加字段" :destroy-on-close=true>
+      <el-form v-model="form" size="mini">
         <el-form-item label="字段" :label-width="formLabelWidth">
           <el-input v-model="form.column" autocomplete="off"></el-input>
         </el-form-item>
@@ -80,10 +80,8 @@
         </el-form-item>
       </el-form>
       <template #footer>
-      <span class="dialog-footer">
         <el-button size="small" @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" size="small" @click="addColumnForm(form)">保存</el-button>
-      </span>
+        <el-button type="primary" size="small" @click="addColumnForm">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -94,15 +92,6 @@ import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "./columnTab.vue";
 import IndexTab from "./indexTab.vue";
 
-const formInitValue = {
-  column: '',
-  type: '',
-  length: 0,
-  point: 0,
-  notnull: false,
-  primary: false,
-  comment: '',
-};
 const dataTypeList = [
   {
     value: 'varchar',
@@ -131,7 +120,7 @@ export default {
       tabsName: ["columns", "index", "sqlview"],
       dialogFormVisible: false,
       formLabelWidth: "80px",
-      form: formInitValue,
+      form: { length: 0, point: 0, notnull: false, primary: false,},
       dataTypeList,
       tableData: [],
     };
@@ -143,14 +132,10 @@ export default {
     addColumnButtonClick() {
       this.dialogFormVisible = true;
     },
-    addColumnForm(form) {
+    addColumnForm() {
       this.dialogFormVisible = false;
-      this.tableData.push(form);
-      form.resetFields;
-    },
-    columnUpdateButtonClick(row) {
-      // this.dialogFormVisible = true;
-      console.log(row)
+      this.tableData.push(this.form);
+      this.form = { length: 0, point: 0, notnull: false, primary: false,};
     },
   },
 };

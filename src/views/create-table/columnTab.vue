@@ -20,6 +20,43 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-dialog :close-on-click-modal=false v-model="dialogFormVisible" title="添加字段" :destroy-on-close=true>
+      <el-form v-model="form" size="mini">
+        <el-form-item label="字段" :label-width="formLabelWidth">
+          <el-input v-model="form.column" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="类型" :label-width="formLabelWidth">
+          <el-select v-model="form.type" filterable placeholder="Select">
+            <el-option
+                v-for="item in dataTypeList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="长度" :label-width="formLabelWidth">
+          <el-input-number v-model="form.length" :min="0" />
+        </el-form-item>
+        <el-form-item label="小数点" :label-width="formLabelWidth">
+          <el-input-number v-model="form.point" :min="0" />
+        </el-form-item>
+        <el-form-item label="不是null" :label-width="formLabelWidth">
+          <el-switch v-model="form.notnull" />
+        </el-form-item>
+        <el-form-item label="主键" :label-width="formLabelWidth">
+          <el-switch v-model="form.primary" />
+        </el-form-item>
+        <el-form-item label="注释" :label-width="formLabelWidth">
+          <el-input v-model="form.comment" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button size="small" @click="dialogFormVisible = false">取消</el-button>
+        <el-button type="primary" size="small">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -28,13 +65,12 @@ export default {
   name: "columntab",
   props: {
     tableData: [],
-    columnUpdateButtonClick: null,
   },
   data() {
     return {
-      // tableData: [
-      //
-      // ],
+      form: {},
+      dialogFormVisible: false,
+      formLabelWidth: "80px",
       dataTypeList: [
         {
           value: "char",
@@ -50,6 +86,13 @@ export default {
         },
       ],
     };
+  },
+  methods: {
+    columnUpdateButtonClick(row) {
+      this.dialogFormVisible = true;
+      console.log(row);
+      this.form = row;
+    },
   },
 };
 </script>
