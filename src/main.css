@@ -27,7 +27,7 @@ body{
     width: 2px;
     cursor: col-resize;
     background-color: var(--mdc-theme-background, #dedede);
-    z-index: 1;
+    z-index: 0;
 }
 .resizer_controls_column {
     flex-direction:column;
