@@ -1,6 +1,6 @@
 <template>
   <div class="box">
-    <div class="tool-buttons">
+    <div class="tool-buttons" :id="identity">
       <div class="row-button">
         <el-button-group>
           <el-button size="small" color="#f2f2f2">
@@ -62,7 +62,7 @@
           <el-button size="small" color="#f2f2f2"
             ><el-icon><Avatar /></el-icon>执行</el-button
           >
-          <el-button size="small" color="#f2f2f2"
+          <el-button size="small" color="#f2f2f2" @click="handleClick"
             ><el-icon><Avatar /></el-icon>停止</el-button
           >
         </el-space>
@@ -94,7 +94,8 @@
 import CodeMirror from "./codemirror/CodeMirror.vue";
 import { Avatar } from "@element-plus/icons-vue";
 import TableEditor from "../components/TableEditor.vue";
-import { getList } from "@/api/test";
+// import { getList } from "@/api/test";
+// import { reactive, toRefs } from "vue";
 
 export default {
   name: "sqleditor",
@@ -103,11 +104,19 @@ export default {
     Avatar,
     TableEditor,
   },
-  props: {
-    name: { type: String },
+  props: ["identity"],
+  setup() {
+    // const state = reactive({
+    //   identity: props.identity,
+    // });
+    // return {
+    //   ...toRefs(state),
+    // };
   },
   data() {
     return {
+      // name1: props.name,
+      activeClass: "name",
       ip_option: [
         {
           value: "localhost1",
@@ -153,8 +162,17 @@ export default {
   },
   methods: {
     async fetchData() {
-      const { obj } = await getList();
-      console.log("data", obj);
+      // const { obj } = await getList();
+      // console.log("data", obj);
+    },
+    handleClick() {
+      this.name1 = 333;
+    },
+  },
+  computed: {
+    //计算属性
+    reversedMessage() {
+      return "".split("").reverse().join("");
     },
   },
 };

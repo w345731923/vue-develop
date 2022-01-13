@@ -81,89 +81,73 @@ export default {
      * SQL编辑器页面，拖动中间层事件
      */
     dragControllerSQLEditor() {
-      console.log("editableTabs.length = ", this.editableTabs.length);
+      // console.log("editableTabs.length = ", this.editableTabs.length);
       // //页面header
       const elHeader = document.getElementsByClassName("el-header")[0];
       //tab页height不知为何获取为0，暂时写固定值40
-      const elTabsHeader =
-        document.getElementsByClassName("el-tabs__header")[0]; //header
-      // const elTabsHeader = { clientHeight: 40 };
-      // console.log(
-      //   elHeader.clientHeight,
-      //   elTabsHeader.clientHeight,
-      //   toolButtons.clientHeight
-      // );
+      // const elTabsHeader = document.getElementsByClassName("el-tabs__header")[0]; //header
+      const tabsHeader = { clientHeight: 40 };
 
-      this.editableTabs.map((element, index) => {
-        console.log(element, index);
-        const toolButtons =
-          document.getElementsByClassName("tool-buttons")[index]; //工具栏对象
-        console.log(
-          elHeader.clientHeight,
-          elTabsHeader.clientHeight,
-          toolButtons.clientHeight
-        );
+      //工具栏高度
+      let toolHeight = 0;
+      this.editableTabs.forEach((element) => {
+        if (element.name.startsWith("sql")) {
+          toolHeight = document.getElementById(element.name).clientHeight;
+        }
       });
+      const topHeight =
+        elHeader.clientHeight + tabsHeader.clientHeight + toolHeight; //60+40+76
 
-      // //获取拖动层div，绑定事件
-      // const resize = document.getElementsByClassName("resizer_controls_column");
-      // for (var i = 0; i < resize.length; i++) {
-      //   const codemirrorObj = document.getElementsByClassName("codemirror")[i]; //code区域
-      //   // console.log("codemirrorObj", codemirrorObj);
-      //   const toolButtons = document.getElementsByClassName("tool-buttons")[i]; //工具栏对象
-      //   console.log("toolButtons", toolButtons.clientHeight);
-      //   const topHeight =
-      //     elHeader.clientHeight +
-      //     elTabsHeader.clientHeight +
-      //     toolButtons.clientHeight; //60+40+76
-      //   console.log(
-      //     "moveY 60-40-76",
-      //     elHeader.clientHeight,
-      //     elTabsHeader.clientHeight,
-      //     toolButtons.clientHeight
-      //   );
-      //   // 鼠标按下事件
-      //   resize[i].onmousedown = function () {
-      //     // 鼠标拖动事件
-      //     document.onmousemove = function (e) {
-      //       const moveY = e.clientY - topHeight; //移动位置-上方距离=sql编辑器高度
-      //       // console.log("moveY", topHeight, e.clientY, moveY);
-      //       codemirrorObj.style.minHeight = moveY + "px";
-      //       codemirrorObj.style.maxHeight = "0px";
-      //     };
-      //     // 鼠标松开事件
-      //     document.onmouseup = function () {
-      //       document.onmousemove = null;
-      //       document.onmouseup = null;
-      //     };
-      //     return false;
-      //   };
-      // }
+      //获取拖动层div，绑定事件
+      const resize = document.getElementsByClassName("resizer_controls_column");
+      for (var i = 0; i < resize.length; i++) {
+        const codemirrorObj = document.getElementsByClassName("codemirror")[i]; //code区域
+
+        // 鼠标按下事件
+        resize[i].onmousedown = function () {
+          // 鼠标拖动事件
+          document.onmousemove = function (e) {
+            const moveY = e.clientY - topHeight; //移动位置-上方距离=sql编辑器高度
+            // console.log("moveY", topHeight, e.clientY, moveY);
+            codemirrorObj.style.minHeight = moveY + "px";
+            codemirrorObj.style.maxHeight = "0px";
+          };
+          // 鼠标松开事件
+          document.onmouseup = function () {
+            document.onmousemove = null;
+            document.onmouseup = null;
+          };
+          return false;
+        };
+      }
     },
     /**
      * 添加tab
      */
     addSQLTab(event) {
-      const name = new Date().getTime();
+      const currentTime = new Date().getTime();
+      let tabId = "";
       if (event.index === "1") {
-        const newTabName = `*<localhost>无标题`;
+        const newTitle = `*<localhost>无标题`;
+        tabId = "sql" + currentTime;
         this.editableTabs.push({
-          title: newTabName,
-          name: name,
-          content: <SQLEditor name={{ name }} />,
+          title: newTitle,
+          name: tabId,
+          content: <SQLEditor identity={tabId} />,
         });
         setTimeout(() => {
           this.dragControllerSQLEditor();
         }, 500);
       } else if (event.index === "2") {
-        const newTabName = `newTable@postgres.public(localhost)`;
+        const newTitle = `newTable@postgres.public(localhost)`;
+        tabId = "create-table" + currentTime;
         this.editableTabs.push({
-          title: newTabName,
-          name: name,
+          title: newTitle,
+          name: tabId,
           content: <CreateTable />,
         });
       }
-      this.tabActiveName = name;
+      this.tabActiveName = tabId;
     },
     /**
      * 移除tab
