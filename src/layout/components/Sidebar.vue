@@ -1,10 +1,13 @@
 <template>
   <div class="tree-view">
     <el-tree
-      :data="dataSource"
+      :data="state.treeData"
       node-key="id"
       :expand-on-click-node="false"
       highlight-current="true"
+      node-expand="handleNodeExpand"
+      :load="loadNode"
+      lazy
     >
       <template #default="{ node, data }">
         <div
@@ -50,6 +53,7 @@
           </div>
           <div class="tree-node-name tree-node-name-gt">{{ node.label }}</div>
           <div class="tree-node-action">
+            <img src="../../assets/schema.png" @click="handleAddServerGroup" />
             <img src="../../assets/refresh.png" @click="append(data)" />
           </div>
         </div>
@@ -60,75 +64,113 @@
 </template>
 
 <script>
+import { reactive, onMounted } from "vue";
+import { getRoot } from "@/api/treeNode";
+
+const dataSource = [
+  {
+    label: "组1",
+    type: "group",
+    children: [
+      // {
+      //   label: "localhost",
+      //   type: "server",
+      //   children: [
+      //     {
+      //       label: "postgres",
+      //       type: "db-name",
+      //       children: [
+      //         {
+      //           label: "模式",
+      //           type: "schema-group",
+      //           children: [
+      //             {
+      //               label: "public",
+      //               type: "schema",
+      //               children: [
+      //                 {
+      //                   label: "表",
+      //                   type: "table-group",
+      //                   children: [
+      //                     {
+      //                       label: "t_class",
+      //                       type: "table",
+      //                     },
+      //                     {
+      //                       label: "t_user",
+      //                       type: "table",
+      //                     },
+      //                     {
+      //                       label: "t_course",
+      //                       type: "table",
+      //                     },
+      //                   ],
+      //                 },
+      //               ],
+      //             },
+      //           ],
+      //         },
+      //         {
+      //           label: "角色",
+      //           type: "role-group",
+      //           children: [
+      //             {
+      //               label: "postgres",
+      //               type: "user",
+      //             },
+      //             {
+      //               label: "pg_execute_server_program",
+      //               type: "user",
+      //             },
+      //           ],
+      //         },
+      //       ],
+      //     },
+      //   ],
+      // },
+    ],
+  },
+];
 let id = 1000;
 export default {
+  setup() {
+    const state = reactive({
+      treeData: [],
+    });
+
+    const handleNodeClick = (event) => {
+      var el = event.currentTarget;
+      console.log("当前对象的内容：", el, state.treeData);
+    };
+    const handleAddServerGroup = () => {
+      const un = id++;
+      const newChild = {
+        id: un,
+        label: "testtest" + un,
+        type: "group",
+        children: [],
+      };
+      state.treeData.push(newChild);
+    };
+    onMounted(() => {
+      console.log("组件挂载完成", dataSource);
+      getRoot().then((res) => {
+        state.treeData = res.data
+      });
+
+      // setTimeout(() => {
+      //   // state.treeData = ["苏格拉底", "柏拉图", "亚里士多德"];
+      //   state.treeData = dataSource;
+      // }, 1000);
+    });
+    return {
+      state,
+      handleNodeClick,
+      handleAddServerGroup,
+    };
+  },
   data() {
     return {
-      dataSource: [
-        {
-          label: "组1",
-          icon: "el-icon-edit",
-          type: "group",
-          children: [
-            {
-              label: "localhost",
-              type: "server",
-              children: [
-                {
-                  label: "postgres",
-                  type: "db-name",
-                  children: [
-                    {
-                      label: "模式",
-                      type: "schema-group",
-                      children: [
-                        {
-                          label: "public",
-                          type: "schema",
-                          children: [
-                            {
-                              label: "表",
-                              type: "table-group",
-                              children: [
-                                {
-                                  label: "t_class",
-                                  type: "table",
-                                },
-                                {
-                                  label: "t_user",
-                                  type: "table",
-                                },
-                                {
-                                  label: "t_course",
-                                  type: "table",
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                    {
-                      label: "角色",
-                      type: "role-group",
-                      children: [
-                        {
-                          label: "postgres",
-                          type: "user",
-                        },
-                        {
-                          label: "pg_execute_server_program",
-                          type: "user",
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
       defaultProps: {
         children: "children",
         label: "label",
@@ -136,10 +178,6 @@ export default {
     };
   },
   methods: {
-    handleNodeClick(event) {
-      var el = event.currentTarget;
-      console.log("当前对象的内容：", el["aria-selected"]);
-    },
     append(data) {
       console.log(data, id);
       // const newChild = { id: id++, label: "testtest", children: [] };
@@ -149,12 +187,33 @@ export default {
       // data.children.push(newChild);
       // this.dataSource = [...this.dataSource];
     },
+    loadNode(node, resolve) {
+      console.log("node", node, resolve);
+      if (node.level === 0) {
+        return;
+      }
+      // if (node.level == 1) {
+      //   setTimeout(() => {
+      //     const data = [
+      //       {
+      //         label: "leaf",
+      //         leaf: true,
+      //       },
+      //       {
+      //         label: "zone",
+      //       },
+      //     ];
+
+      //     return resolve(data);
+      //   }, 500);
+      // }
+    },
   },
 };
 </script>
 
 <style>
-.el-tree{
+.el-tree {
   flex: 1;
 }
 .el-tree-node__content .tree-node-row div {

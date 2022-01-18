@@ -5,7 +5,7 @@ import { ElMessageBox, ElMessage } from 'element-plus'
 
 // create an axios instance
 const service = axios.create({
-    baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
+    baseURL: process.env.VUE_APP_BASE_URL, // url = base url + request url
     // withCredentials: true, // send cookies when cross-domain requests
     timeout: 5000 // request timeout
 })
@@ -52,7 +52,7 @@ service.interceptors.response.use(
             }
             return Promise.reject(new Error(res.message || 'Error'))
         } else {
-            console.log('return res....',res);
+            console.log('return res....', res.data);
             return res
         }
     },

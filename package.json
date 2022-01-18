@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "mock": "nodemon ./mock/index.js",
+    "start": "vue-cli-service serve --mode test",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
@@ -10,11 +12,15 @@
   "dependencies": {
     "@element-plus/icons-vue": "^0.2.4",
     "axios": "^0.24.0",
+    "body-parser": "^1.19.1",
     "codemirror": "^5.65.0",
     "core-js": "^3.6.5",
     "element-plus": "^1.2.0-beta.6",
+    "express": "^4.17.2",
     "jshint": "^2.13.1",
     "jsonlint": "^1.6.3",
+    "mockjs": "^1.1.0",
+    "nodemon": "^2.0.15",
     "script-loader": "^0.7.2",
     "serve": "^13.0.2",
     "sql-formatter": "^4.0.2",

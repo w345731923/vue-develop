@@ -14,14 +14,13 @@ module.exports = {
     port: 8066, // 服务端口
     https: false,
     hotOnly: false,
-    // proxy: { // 设置代理
-    //   '/api': {
-    //     target: host,
-    //     changeOrigin: true,
-    //     pathRewrite: {
-    //       '/api': '/',
-    //     }
-    //   },
-    // },
-  },
+    proxy: {
+      // 接口请求代理
+      "/": {
+        ws: true,      
+        changOrigin: true,  //允许跨域
+        target: 'http://192.168.8.144:3001/api'
+      }
+    },
+  }
 }
