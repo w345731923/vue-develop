@@ -5,7 +5,7 @@ body{
 .pane_flex {
     display: flex;
     flex: 1 1 0%;
-    z-index: 0;
+    /* z-index: 0; */
     overflow: auto;
 }
 .split_flex_row{
