@@ -3,11 +3,12 @@
     :close-on-click-modal="false"
     v-model="dialogShow"
     title="添加组"
+    :rules="rules"
     :destroy-on-close="true"
   >
-    <el-form ref="formRef" :model="form" label-width="120px">
+    <el-form ref="formRef" :model="form">
       <el-form-item label="组名称">
-        <el-input v-model="form.name"></el-input>
+        <el-input v-model="form.label"></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -35,9 +36,7 @@ export default {
   },
   data() {
     return {
-      // dialogVisible: this.dialogVisible,
-      form: { name: "" },
-      tableData: [],
+      form: { label: "" },
     };
   },
   computed: {
@@ -46,17 +45,24 @@ export default {
         return this.dialogVisible;
       },
       set(val) {
-        this.$emit("update:dialogShow", val);
+        this.$emit("updateServerGroupDialog", val);
       },
     },
   },
   methods: {
     saveServerGroup() {
-      // this.dialogVisible = false;
-      // this.tableData.push(this.form);
       console.log("this.form", this.form);
       this.handleSaveServerGroup(this.form);
     },
+    // rules() {
+    //   label: [
+    //     {
+    //       required: true,
+    //       message: "Please input Activity name",
+    //       trigger: "blur",
+    //     }
+    //   ];
+    // },
   },
 };
 </script>

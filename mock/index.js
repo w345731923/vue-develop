@@ -8,7 +8,7 @@ app.use(bodyParser.urlencoded({            //此项必须在 bodyParser.json 下
 }));
 
 var router = express.Router();
-router.use("/root",require('./server'));
+router.use("/",require('./server'));
 
 
 app.use("/api",router)

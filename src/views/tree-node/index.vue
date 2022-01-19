@@ -53,7 +53,10 @@
           </div>
           <div class="tree-node-name tree-node-name-gt">{{ node.label }}</div>
           <div class="tree-node-action">
-            <img src="../../assets/schema.png" @click="openServerGroupDialog" />
+            <img
+              src="../../assets/schema.png"
+              @click="updateServerGroupDialog(true)"
+            />
             <img src="../../assets/refresh.png" @click="append(data)" />
           </div>
         </div>
@@ -62,6 +65,7 @@
     <!-- default-expand-all :render-content="renderContent"-->
     <ServerGroupDialog
       :dialogVisible="state.dialogVisible"
+      @updateServerGroupDialog="updateServerGroupDialog"
       :handleSaveServerGroup="handleSaveServerGroup"
     />
   </div>
@@ -69,7 +73,7 @@
 
 <script>
 import { reactive, onMounted } from "vue";
-import { getRoot } from "@/api/treeNode";
+import { getRoot, serverGroupAdd } from "@/api/treeNode";
 import ServerGroupDialog from "@/components/tree-node/ServerGroupDialog.vue";
 
 const dataSource = [
@@ -167,33 +171,39 @@ export default {
     const handleNodeClick = (event) => {
       var el = event.currentTarget;
       console.log("当前对象的内容：", el, state.treeData);
-    };
-    /**
-     * 打开group窗口
-     */
-    const openServerGroupDialog = () => {
-      //   const un = id++;
-      //   const newChild = {
-      //     id: un,
-      //     label: "testtest" + un,
-      //     type: "group",
-      //     children: [],
-      //   };
-      //   state.treeData.push(newChild);
-      state.dialogVisible = true;
+      console.log("state", state);
     };
 
+    const updateServerGroupDialog = (status) => {
+      console.log("enter updateServerGroupDialog....00000", status);
+      state.dialogVisible = status;
+    };
+    // const openServerGroupDialog = () => {
+    //   console.log('enter openServerGroupDialog....1111')
+    //   state.dialogVisible = true;
+    //   console.log("state", state);
+    // };
+    // const closeServerGroupDialog = () => {
+    //   console.log('enter closeServerGroupDialog....22222')
+    //   state.dialogVisible = false;
+    // };
     /**
      * 保存group
      */
     const handleSaveServerGroup = (serverGroupObj) => {
       console.log("handleSaveServerGroup,", serverGroupObj);
-      queryRoot();
+      serverGroupAdd(serverGroupObj).then(() => {
+        // closeServerGroupDialog();
+        updateServerGroupDialog(false);
+        queryRoot();
+      });
     };
     return {
       state,
       handleNodeClick,
-      openServerGroupDialog,
+      updateServerGroupDialog,
+      // openServerGroupDialog,
+      // closeServerGroupDialog,
       handleSaveServerGroup,
     };
   },

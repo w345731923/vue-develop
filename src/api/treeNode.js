@@ -17,5 +17,5 @@ export async function serverGroupAdd(data) {
         url: '/servergroup/add',
         method: 'post',
         data
-    })
+    })  
 }
