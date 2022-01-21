@@ -2,14 +2,22 @@
   <Home />
 </template>
 
-<script>
+<script lang="ts">
+import { Options, Vue } from "vue-class-component";
 import Home from "./layout/index.vue";
 
-export default {
-  name: "App",
+@Options({
   components: {
     Home,
   },
-};
+})
+export default class App extends Vue {}
 </script>
+
+<style lang="scss">
+</style>
+
+
+
+
 

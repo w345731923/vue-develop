@@ -19,45 +19,38 @@
           <div class="tree-node-icon tree-node-icon-gt">
             <img
               src="../../assets/server.png"
-              v-if="node.data.type === 'group'"
+              v-if="data.type === 'ServerGroup'"
             />
-            <img
-              src="../../assets/hgdb16.png"
-              v-if="node.data.type === 'server'"
-            />
+            <img src="../../assets/hgdb16.png" v-if="data.type === 'server'" />
             <img
               src="../../assets/database.png"
-              v-if="node.data.type === 'db-name'"
+              v-if="data.type === 'db-name'"
             />
             <img
               src="../../assets/folder_schema.png"
-              v-if="node.data.type === 'schema-group'"
+              v-if="data.type === 'schema-group'"
             />
-            <img
-              src="../../assets/schema.png"
-              v-if="node.data.type === 'schema'"
-            />
+            <img src="../../assets/schema.png" v-if="data.type === 'schema'" />
             <img
               src="../../assets/folder_table.png"
-              v-if="node.data.type === 'table-group'"
+              v-if="data.type === 'table-group'"
             />
-            <img
-              src="../../assets/table.png"
-              v-if="node.data.type === 'table'"
-            />
+            <img src="../../assets/table.png" v-if="data.type === 'table'" />
             <img
               src="../../assets/folder_user.png"
-              v-if="node.data.type === 'role-group'"
+              v-if="data.type === 'role-group'"
             />
             <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
           </div>
-          <div class="tree-node-name tree-node-name-gt">{{ node.label }}</div>
+          <div class="tree-node-name tree-node-name-gt">
+            {{ data.object.name }}
+          </div>
           <div class="tree-node-action">
             <img
               src="../../assets/schema.png"
               @click="updateServerGroupDialog(true)"
             />
-            <img src="../../assets/refresh.png" @click="append(data)" />
+            <img src="../../assets/refresh.png" />
           </div>
         </div>
       </template>
@@ -71,93 +64,50 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {
+  defineComponent,
+  // computed, ref, watch, unref, watchEffect
+} from "vue";
 import { reactive, onMounted } from "vue";
-import { getRoot, serverGroupAdd } from "@/api/treeNode";
+import {
+  getRoot,
+  serverGroupAdd
+} from "@/api/treeNode";
 import ServerGroupDialog from "@/components/tree-node/ServerGroupDialog.vue";
+import {
+  ResponseData,
+  ServerGroup,
+  //  ServerGroupForm
+} from "@/types";
+import // axios,
+//  AxiosResponse,
+// AxiosRequestConfig
+"axios";
 
-const dataSource = [
-  {
-    label: "组1",
-    type: "group",
-    children: [
-      // {
-      //   label: "localhost",
-      //   type: "server",
-      //   children: [
-      //     {
-      //       label: "postgres",
-      //       type: "db-name",
-      //       children: [
-      //         {
-      //           label: "模式",
-      //           type: "schema-group",
-      //           children: [
-      //             {
-      //               label: "public",
-      //               type: "schema",
-      //               children: [
-      //                 {
-      //                   label: "表",
-      //                   type: "table-group",
-      //                   children: [
-      //                     {
-      //                       label: "t_class",
-      //                       type: "table",
-      //                     },
-      //                     {
-      //                       label: "t_user",
-      //                       type: "table",
-      //                     },
-      //                     {
-      //                       label: "t_course",
-      //                       type: "table",
-      //                     },
-      //                   ],
-      //                 },
-      //               ],
-      //             },
-      //           ],
-      //         },
-      //         {
-      //           label: "角色",
-      //           type: "role-group",
-      //           children: [
-      //             {
-      //               label: "postgres",
-      //               type: "user",
-      //             },
-      //             {
-      //               label: "pg_execute_server_program",
-      //               type: "user",
-      //             },
-      //           ],
-      //         },
-      //       ],
-      //     },
-      //   ],
-      // },
-    ],
-  },
-];
-let id = 1000;
-export default {
-  name: "tree-node",
+interface TreeNodeState {
+  treeData: ServerGroup[];
+  dialogVisible: boolean;
+}
+
+export default defineComponent({
+  name: "treeNode",
   components: {
     ServerGroupDialog,
   },
   setup() {
-    const state = reactive({
+    const state = reactive<TreeNodeState>({
       treeData: [],
       dialogVisible: false,
     });
     const queryRoot = () => {
-      getRoot().then((res) => {
-        state.treeData = res.data;
+      getRoot().then((respon: ResponseData<ServerGroup[]>) => {
+        console.log("respon", respon.data);
+        state.treeData = respon.data;
       });
     };
     onMounted(() => {
-      console.log("组件挂载完成", dataSource);
+      console.log("组件挂载完成", state.treeData);
       queryRoot();
 
       // setTimeout(() => {
@@ -168,13 +118,13 @@ export default {
     /**
      * 节点点击event
      */
-    const handleNodeClick = (event) => {
+    const handleNodeClick = (event: any) => {
       var el = event.currentTarget;
       console.log("当前对象的内容：", el, state.treeData);
       console.log("state", state);
     };
 
-    const updateServerGroupDialog = (status) => {
+    const updateServerGroupDialog = (status: boolean) => {
       console.log("enter updateServerGroupDialog....00000", status);
       state.dialogVisible = status;
     };
@@ -190,7 +140,7 @@ export default {
     /**
      * 保存group
      */
-    const handleSaveServerGroup = (serverGroupObj) => {
+    const handleSaveServerGroup = (serverGroupObj: any) => {
       console.log("handleSaveServerGroup,", serverGroupObj);
       serverGroupAdd(serverGroupObj).then(() => {
         // closeServerGroupDialog();
@@ -216,16 +166,7 @@ export default {
     };
   },
   methods: {
-    append(data) {
-      console.log(data, id);
-      // const newChild = { id: id++, label: "testtest", children: [] };
-      // if (!data.children) {
-      //   data.children = [];
-      // }
-      // data.children.push(newChild);
-      // this.dataSource = [...this.dataSource];
-    },
-    loadNode(node, resolve) {
+    loadNode(node: any, resolve: any) {
       console.log("node", node, resolve);
       if (node.level === 0) {
         return;
@@ -247,7 +188,7 @@ export default {
       // }
     },
   },
-};
+});
 </script>
 
 <style scoped>

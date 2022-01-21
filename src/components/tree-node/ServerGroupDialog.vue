@@ -8,7 +8,7 @@
   >
     <el-form ref="formRef" :model="form">
       <el-form-item label="组名称">
-        <el-input v-model="form.label"></el-input>
+        <el-input v-model="form.serverGroupName"></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -36,7 +36,7 @@ export default {
   },
   data() {
     return {
-      form: { label: "" },
+      form: { serverGroupName: "" },
     };
   },
   computed: {
