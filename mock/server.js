@@ -31,20 +31,25 @@ router.get("/root/list", function (req, res) {
 router.post("/root/list", function (req, res) {
   return res.json(treeResult);
 })
-var newGroup = {
-  'databaseOid': -1,
-  'object': {
-    'name': '@FIRST',
-    'oid': 0
-  },
-  'serverId': null,
-  'type': 'ServerGroup'
-}
+
 router.post("/servergroup/add", function (req, res) {
   console.log('req', req.body)
+  var newGroup = {
+    'databaseOid': -1,
+    'object': {
+      'name': '@FIRST',
+      'oid': 0
+    },
+    'serverId': null,
+    'type': 'ServerGroup'
+  }
   newGroup.object.name = req.body.serverGroupName;
   treeResult.data.push(newGroup)
   console.log('treeResult', treeResult)
+  return res.json(normal);
+})
+router.post("/rename", function (req, res) {
+  console.log('req', req.body)
   return res.json(normal);
 })
 
