@@ -10,9 +10,21 @@ export interface ResponseData<T = any> {
 //   serverId: string;
 //   object: T;
 // }
+
+export interface Login {
+  username: string;
+  password: string;
+}
+
+export interface LoginResp {
+  tokenHead: string;
+  token: string;
+}
+
 export interface TreeNodeDel<T = any> {
   dbObject: T;
 }
+
 export interface TreeNodeRename<T = any> {
   dbObject: T;
   newName: string;

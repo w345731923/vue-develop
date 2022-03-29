@@ -1,8 +1,14 @@
 module.exports = {
   publicPath: '/',
-  outputDir: 'dist', // 打包的目录
-  lintOnSave: true, // 在保存时校验格式
-  productionSourceMap: false, // 生产环境是否生成 SourceMap
+
+  // 打包的目录
+  outputDir: 'dist', 
+  
+  // 在保存时校验格式
+  lintOnSave: true, 
+
+  // 生产环境是否生成 SourceMap
+  productionSourceMap: false, 
   devServer: {
     //api---https://cli.vuejs.org/zh/config
     open: false, // 启动服务后是否打开浏览器
@@ -14,13 +20,13 @@ module.exports = {
     port: 8066, // 服务端口
     https: false,
     hotOnly: false,
-    proxy: {
-      // 接口请求代理
-      "/": {
-        ws: true,      
-        changOrigin: true,  //允许跨域
-        target: 'http://192.168.8.144:3001/api'
-      }
-    },
+    // proxy: {
+    //   // 接口请求代理
+    //   "/": {
+    //     ws: true,      
+    //     changOrigin: true,  //允许跨域
+    //     target: 'http://192.168.9.247:/api'
+    //   }
+    // },
   }
 }
