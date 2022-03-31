@@ -3,6 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "strict": true,
+    "noImplicitAny":false,//支持javascript写法，比如any，后期有时间需要移除，并不规范
     "jsx": "preserve",
     "importHelpers": true,
     "moduleResolution": "node",

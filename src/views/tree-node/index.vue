@@ -8,7 +8,6 @@
       node-expand="handleNodeExpand"
       :load="loadNode"
       lazy
-      
     >
       <template #default="{ node, data }">
         <div
@@ -44,136 +43,130 @@
             <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
           </div>
           <div class="tree-node-name tree-node-name-gt">
-            {{ data.object.name }}
+            {{ data.object.displayName }}
           </div>
           <div class="tree-node-action">
             <el-icon><document-add @click="handleGroupCreate" /></el-icon>
             <el-icon><edit @click="handleGroupUpdate(data)" /></el-icon>
+            <el-icon><delete @click="handleGroupDel(data)" /></el-icon>
             <img src="../../assets/refresh.png" />
           </div>
         </div>
       </template>
     </el-tree>
     <!-- default-expand-all :render-content="renderContent"-->
-    <!-- <ServerGroupDialog
-      :dialogGroupVisible="state.dialogGroupVisible"
-      :dialogGroupStatus="state.dialogGroupStatus"
-      :dialogGroupObj="dialogGroupObj"
-      @updateServerGroupDialog="updateServerGroupDialog"
-      :saveServerGroup="saveServerGroup"
-      :updateServerGroup="updateServerGroup"
-    /> -->
-    <ServerGroupDialog/>
+    <ServerGroupDialogEdit
+      :visible="state.groupVisible"
+      :groupOldName="state.groupOldName"
+      @saveModal="saveServerGroup"
+      @closeModal="switchGroupVisable"
+    />
   </div>
 </template>
 
 <script lang="ts">
-import { DocumentAdd, Edit } from "@element-plus/icons-vue";
+import { DocumentAdd, Edit, Delete } from "@element-plus/icons-vue";
 
 import {
   defineComponent,
   toRefs,
-  computed, ref, watch, unref, watchEffect
+  computed,
+  ref,
+  watch,
+  unref,
+  watchEffect,
 } from "vue";
 import { reactive, onMounted } from "vue";
-import {
-  getRoot,
-  addServerGroup,
-  getTreeNodeRename,
-  // getTreeNodeDel,
-} from "@/api/treeNode";
-import ServerGroupDialog from "@/components/tree-node/ServerGroupDialogAdd.vue";
+import { getTreeNodeDel, getTreeNodeRename } from "@/api/treeNode";
+import ServerGroupDialogEdit from "@/components/tree-node/ServerGroupDialogEdit.vue";
 import { ResponseData, TreeNodeServerGroup, ServerGroupForm } from "@/types";
 
 interface TreeNodeState {
-  dialogGroupVisible: boolean; //group dialog
-  dialogGroupStatus: string; //group create or edit
-  dialogGroupObj: ServerGroupForm;
+  groupVisible: Boolean;
+  groupOldObject: TreeNodeServerGroup | undefined;
+  groupOldName: String;
 }
 
 export default defineComponent({
   name: "treeNode",
   components: {
-    ServerGroupDialog,
+    ServerGroupDialogEdit,
     DocumentAdd,
     Edit,
+    Delete,
   },
   props: {
     treeData: Array,
-    queryRoot:Function
+    queryRoot: Function,
   },
 
   setup(props, { emit }) {
-    console.log('treeNode props',props)
-    // const { treeData } = toRefs(props);
-    // console.log('treeData',treeData)
-    // const state = reactive({
-    //   treeData: treeData.value,
-    // });    
-    // watch(
-    //   treeData,
-    //   (newValue) => {
-    //     state.treeData = newValue;
-    //   },
-    //   { immediate: true }
-    // );
+    console.log("treeNode props", props);
+    const state = reactive<TreeNodeState>({
+      groupVisible: false,
+      groupOldObject: undefined,
+      groupOldName: "",
+    });
+
+    /**
+     * 打开编辑组弹窗
+     */
+    const handleGroupUpdate = (row: any) => {
+      state.groupOldObject = row; //存储old值，用于save参数
+      state.groupOldName = row.object.displayName; //传给子界面
+      switchGroupVisable(true);
+    };
+    /**
+     * 新建Group窗口开关
+     */
+    const switchGroupVisable = (flag: boolean) => (state.groupVisible = flag);
+    /**
+     * 保存修改Group
+     */
+    const saveServerGroup = (form: ServerGroupForm) => {
+      const data = {
+        newName: form.serverGroupName,
+        dbObject: state.groupOldObject,
+      };
+      console.log("saveServerGroup data", data);
+      /**
+       * 重命名接口
+       */
+      getTreeNodeRename(data).then(() => {
+        switchGroupVisable(false);
+        //刷新树形菜单
+        emit("queryRoot");
+      });
+    };
+    /**
+     * 打开编辑组弹窗
+     */
+    const handleGroupDel = (row: any) => {
+      const data = {
+        conns: null, //暂存
+        delObject: row, //删除对象
+        deleteOptions: { isCascadeDelete: true }, //是否级联
+      };
+      getTreeNodeDel(data).then(() => {
+        switchGroupVisable(false);
+        //刷新树形菜单
+        emit("queryRoot");
+      });
+    };
     /**
      * 节点点击event
      */
     const handleNodeClick = (event: any) => {
       var el = event.currentTarget;
     };
-    /**
-     * 打开新建组弹窗
-     */
-    const handleGroupCreate = () => {
-      // state.dialogGroupStatus = "create";
-      // state.dialogGroupVisible = true;
-      // state.dialogGroupObj = { serverGroupName: "" };
-    };
-    /**
-     * 打开编辑组弹窗
-     */
-    const handleGroupUpdate = (row: any) => {
-      // state.dialogGroupObj = Object.assign({}, row); // copy obj
-      // state.dialogGroupStatus = "update";
-      // state.dialogGroupVisible = true;
-      // console.log("dialogGroupObj", state.dialogGroupObj);
-    };
-    /**
-     * 打开/关闭弹窗
-     */
-    const updateServerGroupDialog = (status: boolean) =>
-    console.log()
-      // (state.dialogGroupVisible = status);
-    /**
-     * 添加group
-     */
-    const saveServerGroup = (obj: any) => {
-      console.log("handleSaveServerGroup,", obj);
-      addServerGroup(obj).then(() => {
-        // state.dialogGroupVisible = false;
-      });
-    };
-    /**
-     * 保存编辑节点
-     */
-    const updateServerGroup = (obj: any) => {
-      console.log("handleUpdateServerGroup,", obj);
-      // getTreeNodeRename({ dbObject: obj, newName: "123" }).then(() => {
-      //   state.dialogGroupVisible = false;
-      // });
-    };
-    // console.log('state',state)
+
     return {
-      // state,
-      // ...toRefs(state),      
+      state,
       handleNodeClick,
-      updateServerGroupDialog,
-      handleGroupCreate,
       handleGroupUpdate,
       saveServerGroup,
-      updateServerGroup,
+      switchGroupVisable,
+      handleGroupDel,
     };
   },
   data() {
@@ -186,7 +179,7 @@ export default defineComponent({
   },
   methods: {
     loadNode(node: any, resolve: any) {
-      console.log("node", node, resolve);
+      // console.log("node", node, resolve);
       if (node.level === 0) {
         return;
       }
@@ -211,7 +204,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.tree-view{
+.tree-view {
   min-width: 12%;
 }
 .el-tree {
@@ -259,7 +252,10 @@ export default defineComponent({
   margin-right: 16px !important;
   visibility: hidden;
 }
-
+/**图标间距 */
+.tree-node-action .el-icon {
+  margin-right: 3px;
+}
 .el-tree-node__content:hover .tree-node-action,
 .el-tree--highlight-current
   .el-tree-node.is-current

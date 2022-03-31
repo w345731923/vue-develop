@@ -1,10 +1,14 @@
 <template>
   <div class="theme_flex_column">
     <el-header>
-      <v-header :tools="toolsEvent" @queryRoot="queryRoot"/>
+      <v-header :tools="toolsEvent" @queryRoot="queryRoot" />
     </el-header>
     <div class="split_flex_row">
-      <vSidebar class="pane_flex left home" :treeData="state.treeData"  @queryRoot="queryRoot"/>
+      <vSidebar
+        class="pane_flex left home"
+        :treeData="state.treeData"
+        @queryRoot="queryRoot"
+      />
       <div class="resizer_controls"></div>
       <vContent
         class="pane_flex right home"
@@ -19,10 +23,7 @@
 <script lang="ts">
 import { DocumentAdd, Edit } from "@element-plus/icons-vue";
 
-import {
-  defineComponent,
-  computed, ref, watch, unref, watchEffect
-} from "vue";
+import { defineComponent, computed, ref, watch, unref, watchEffect } from "vue";
 import { reactive, onMounted } from "vue";
 import {
   getRoot,
@@ -38,7 +39,6 @@ interface TreeNodeState {
   dialogGroupVisible: boolean; //group dialog
   dialogGroupStatus: string; //group create or edit
   dialogGroupObj: ServerGroupForm;
-  aaa:String;
 }
 import vHeader from "@/layout/components/Header.vue";
 import vSidebar from "./components/Sidebar.vue";
@@ -57,13 +57,13 @@ export default defineComponent({
     vSidebar,
     vContent,
   },
-  setup() {//TreeNodeState
-    const state:TreeNodeState = reactive({
+  setup() {
+    //TreeNodeState
+    const state: TreeNodeState = reactive({
       treeData: [], //树形菜单
       dialogGroupVisible: false,
       dialogGroupStatus: "",
       dialogGroupObj: { serverGroupName: "" },
-      aaa:'123'
     });
     /**
      * 查询Root根下节点
@@ -72,20 +72,14 @@ export default defineComponent({
       getRoot().then((respon: ResponseData<TreeNodeServerGroup[]>) => {
         console.log("queryRoot respon", respon.data);
         state.treeData = respon.data;
-        console.log("请求数据完成 state = ", JSON.stringify(state));
       });
     };
     onMounted(() => {
-      console.log("组件挂载完成,请求数据 state = ", JSON.stringify(state));
       queryRoot();
-
-      setTimeout(() => {
-        state.aaa = '333';
-      }, 5000);
     });
     return {
       state,
-      queryRoot
+      queryRoot,
     };
   },
 

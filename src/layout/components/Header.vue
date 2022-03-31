@@ -22,7 +22,7 @@
     </div>
   </div>
   <ServerGroupDialogAdd
-    :visible="state.dialogGroupVisible"
+    :visible="state.groupVisible"
     @saveModal="saveServerGroup"
     @closeModal="switchGroupVisable"
   />
@@ -63,21 +63,21 @@ export default {
       default: null,
     },
   },
-  setup(props,ctx) {
+  setup(props, { emit }) {
     const state = reactive({
-      dialogGroupVisible: false,
+      groupVisible: false,
     });
     /**
      * 新建Group窗口开关
      */
-    const switchGroupVisable = (flag:boolean) => (state.dialogGroupVisible = flag);
+    const switchGroupVisable = (flag:boolean) => (state.groupVisible = flag);
     /**
      * 保存新建组
      */
     const saveServerGroup = (form:ServerGroupForm) => {
       addServerGroup(form).then(() => {
         switchGroupVisable(false);
-        ctx.emit('queryRoot')
+        emit('queryRoot')
       });
     };
 

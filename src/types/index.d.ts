@@ -22,7 +22,9 @@ export interface LoginResp {
 }
 
 export interface TreeNodeDel<T = any> {
-  dbObject: T;
+  delObject: T;
+  conns:null;
+  deleteOptions: { isCascadeDelete: boolean }
 }
 
 export interface TreeNodeRename<T = any> {
@@ -41,7 +43,7 @@ export interface ServerGroup {
   name: string;
   class: string;
   isRoleLeaf: boolean;
-  displayNmae: string;
+  displayName: string | undefined;
   keyString: string;
   schema: string;
   caseModel: string;
