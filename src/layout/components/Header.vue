@@ -11,25 +11,81 @@
         active-text-color="none"
       >
         <!-- @select="handleSelect" -->
-        <el-menu-item index="1" @click="this.addSQLTab">SQL编辑器</el-menu-item>
-        <el-menu-item index="2" @click="this.addSQLTab">新建表</el-menu-item>
+        <el-menu-item index="5" @click="switchGroupVisable(true)">新建组</el-menu-item>
+        <el-menu-item index="6" @click="this.toolsEvent">新建节点</el-menu-item>
+        <el-menu-item index="1" @click="this.toolsEvent"
+          >SQL编辑器</el-menu-item
+        >
+        <el-menu-item index="2" @click="this.toolsEvent">新建表</el-menu-item>
         <el-menu-item index="4">Tool</el-menu-item>
       </el-menu>
     </div>
   </div>
+  <ServerGroupDialogAdd
+    :visible="state.dialogGroupVisible"
+    @saveModal="saveServerGroup"
+    @closeModal="switchGroupVisable"
+  />
 </template>
 
-<script>
+<script lang="ts">
+import { reactive, onMounted } from "vue";
+import ServerGroupDialogAdd from "@/components/tree-node/ServerGroupDialogAdd.vue";
+import {
+  addServerGroup,
+} from "@/api/treeNode";
+import { ServerGroupForm } from '@/types'
+
 export default {
+  name: "Header",
+  components: {
+    ServerGroupDialogAdd,
+  },
   props: {
+    queryRoot: {
+      type: Function,
+      default: null,
+    },
     fatherMethod: {
       type: Function,
       default: null,
     },
-    addSQLTab: {
+    toolsEvent: {
       type: Function,
       default: null,
     },
+    addGroup: {
+      type: Function,
+      default: null,
+    },
+    addServer: {
+      type: Function,
+      default: null,
+    },
+  },
+  setup(props,ctx) {
+    const state = reactive({
+      dialogGroupVisible: false,
+    });
+    /**
+     * 新建Group窗口开关
+     */
+    const switchGroupVisable = (flag:boolean) => (state.dialogGroupVisible = flag);
+    /**
+     * 保存新建组
+     */
+    const saveServerGroup = (form:ServerGroupForm) => {
+      addServerGroup(form).then(() => {
+        switchGroupVisable(false);
+        ctx.emit('queryRoot')
+      });
+    };
+
+    return {
+      state,
+      switchGroupVisable,
+      saveServerGroup
+    };
   },
   methods: {
     // handleSelect(key, keyPath) {

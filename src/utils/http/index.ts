@@ -11,7 +11,7 @@ import {
 // import qs from "qs";
 // import NProgress from "../progress";
 // import { loadEnv } from "@build/index";
-// import { getToken } from "/@/utils/auth";
+import { getToken } from "@/utils/auth";
 // import { useUserStoreHook } from "/@/store/modules/user";
 
 // 加载环境变量 VITE_PROXY_DOMAIN（开发环境）  VITE_PROXY_DOMAIN_REAL（打包后的线上环境）
@@ -49,20 +49,33 @@ class PureHttp {
   // 请求拦截
   private httpInterceptorsRequest(): void {
     PureHttp.axiosInstance.interceptors.request.use(
-      (config: PureHttpRequestConfig) => {
+      // (config: PureHttpRequestConfig) => {
+      (config: any) => {
         const $config = config;
-        // 开启进度条动画
-        // NProgress.start();
+
         // 优先判断post/get等方法是否传入回掉，否则执行初始化设置等回掉
-        if (typeof config.beforeRequestCallback === "function") {
-          config.beforeRequestCallback($config);
-          return $config;
-        }
-        if (PureHttp.initConfig.beforeRequestCallback) {
-          PureHttp.initConfig.beforeRequestCallback($config);
-          return $config;
+        // if (typeof config.beforeRequestCallback === "function") {
+        //   config.beforeRequestCallback($config);
+        //   return $config;
+        // }
+        // if (PureHttp.initConfig.beforeRequestCallback) {
+        //   PureHttp.initConfig.beforeRequestCallback($config);
+        //   return $config;
+        // }
+        // return $config;
+        const token = getToken();
+        // console.log('httpInterceptorsRequest token', $config.headers);
+        if (token) {
+          $config.headers["Authorization"] = "Bearer " + token;
+        } else {
+          ElMessage({
+            message: 'token失效，重新登录',
+            type: 'error',
+            duration: 5 * 1000
+          })
         }
         return $config;
+
         // const token = getToken();
         // if (token) {
         //   const data = JSON.parse(token);
@@ -95,6 +108,7 @@ class PureHttp {
     const instance = PureHttp.axiosInstance;
     instance.interceptors.response.use(
       (response: PureHttpResoponse) => {
+        console.log('httpInterceptorsResponse response', response)
         // const $config = response.config;
         // 关闭进度条动画
         // NProgress.done(); 
@@ -134,6 +148,11 @@ class PureHttp {
       },
       (error: PureHttpError) => {
         const $error = error;
+        ElMessage({
+          message: error.message,
+          type: 'error',
+          duration: 5 * 1000
+        })
         $error.isCancelRequest = Axios.isCancel($error);
         // 关闭进度条动画
         // NProgress.done();

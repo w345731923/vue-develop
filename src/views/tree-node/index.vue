@@ -1,13 +1,14 @@
 <template>
   <div class="tree-view">
     <el-tree
-      :data="state.treeData"
+      :data="treeData"
       node-key="id"
       :expand-on-click-node="false"
       highlight-current="true"
       node-expand="handleNodeExpand"
       :load="loadNode"
       lazy
+      
     >
       <template #default="{ node, data }">
         <div
@@ -54,14 +55,15 @@
       </template>
     </el-tree>
     <!-- default-expand-all :render-content="renderContent"-->
-    <ServerGroupDialog
+    <!-- <ServerGroupDialog
       :dialogGroupVisible="state.dialogGroupVisible"
       :dialogGroupStatus="state.dialogGroupStatus"
       :dialogGroupObj="dialogGroupObj"
       @updateServerGroupDialog="updateServerGroupDialog"
       :saveServerGroup="saveServerGroup"
       :updateServerGroup="updateServerGroup"
-    />
+    /> -->
+    <ServerGroupDialog/>
   </div>
 </template>
 
@@ -70,7 +72,8 @@ import { DocumentAdd, Edit } from "@element-plus/icons-vue";
 
 import {
   defineComponent,
-  // computed, ref, watch, unref, watchEffect
+  toRefs,
+  computed, ref, watch, unref, watchEffect
 } from "vue";
 import { reactive, onMounted } from "vue";
 import {
@@ -79,11 +82,10 @@ import {
   getTreeNodeRename,
   // getTreeNodeDel,
 } from "@/api/treeNode";
-import ServerGroupDialog from "@/components/tree-node/ServerGroupDialog.vue";
+import ServerGroupDialog from "@/components/tree-node/ServerGroupDialogAdd.vue";
 import { ResponseData, TreeNodeServerGroup, ServerGroupForm } from "@/types";
 
 interface TreeNodeState {
-  treeData: TreeNodeServerGroup[]; //tree data
   dialogGroupVisible: boolean; //group dialog
   dialogGroupStatus: string; //group create or edit
   dialogGroupObj: ServerGroupForm;
@@ -96,64 +98,61 @@ export default defineComponent({
     DocumentAdd,
     Edit,
   },
-  setup() {
-    const state = reactive<TreeNodeState>({
-      treeData: [],
-      dialogGroupVisible: false,
-      dialogGroupStatus: "",
-      dialogGroupObj: { serverGroupName: "" },
-    });
-    /**
-     * 查询Root根下节点
-     */
-    const queryRoot = () => {
-      getRoot().then((respon: ResponseData<TreeNodeServerGroup[]>) => {
-        console.log("respon", respon.data);
-        state.treeData = respon.data;
-      });
-    };
-    onMounted(() => {
-      console.log("组件挂载完成", state.treeData);
-      queryRoot();
-    });
+  props: {
+    treeData: Array,
+    queryRoot:Function
+  },
+
+  setup(props, { emit }) {
+    console.log('treeNode props',props)
+    // const { treeData } = toRefs(props);
+    // console.log('treeData',treeData)
+    // const state = reactive({
+    //   treeData: treeData.value,
+    // });    
+    // watch(
+    //   treeData,
+    //   (newValue) => {
+    //     state.treeData = newValue;
+    //   },
+    //   { immediate: true }
+    // );
     /**
      * 节点点击event
      */
     const handleNodeClick = (event: any) => {
       var el = event.currentTarget;
-      console.log("当前对象的内容：", el, state.treeData);
-      console.log("state", state);
     };
     /**
      * 打开新建组弹窗
      */
     const handleGroupCreate = () => {
-      state.dialogGroupStatus = "create";
-      state.dialogGroupVisible = true;
-      state.dialogGroupObj = { serverGroupName: "" };
+      // state.dialogGroupStatus = "create";
+      // state.dialogGroupVisible = true;
+      // state.dialogGroupObj = { serverGroupName: "" };
     };
     /**
      * 打开编辑组弹窗
      */
     const handleGroupUpdate = (row: any) => {
-      state.dialogGroupObj = Object.assign({}, row); // copy obj
-      state.dialogGroupStatus = "update";
-      state.dialogGroupVisible = true;
-      console.log("dialogGroupObj", state.dialogGroupObj);
+      // state.dialogGroupObj = Object.assign({}, row); // copy obj
+      // state.dialogGroupStatus = "update";
+      // state.dialogGroupVisible = true;
+      // console.log("dialogGroupObj", state.dialogGroupObj);
     };
     /**
      * 打开/关闭弹窗
      */
     const updateServerGroupDialog = (status: boolean) =>
-      (state.dialogGroupVisible = status);
+    console.log()
+      // (state.dialogGroupVisible = status);
     /**
      * 添加group
      */
     const saveServerGroup = (obj: any) => {
       console.log("handleSaveServerGroup,", obj);
       addServerGroup(obj).then(() => {
-        state.dialogGroupVisible = false;
-        queryRoot();
+        // state.dialogGroupVisible = false;
       });
     };
     /**
@@ -161,13 +160,14 @@ export default defineComponent({
      */
     const updateServerGroup = (obj: any) => {
       console.log("handleUpdateServerGroup,", obj);
-      getTreeNodeRename({ dbObject: obj, newName: "123" }).then(() => {
-        state.dialogGroupVisible = false;
-        queryRoot();
-      });
+      // getTreeNodeRename({ dbObject: obj, newName: "123" }).then(() => {
+      //   state.dialogGroupVisible = false;
+      // });
     };
+    // console.log('state',state)
     return {
-      state,
+      // state,
+      // ...toRefs(state),      
       handleNodeClick,
       updateServerGroupDialog,
       handleGroupCreate,
@@ -211,6 +211,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.tree-view{
+  min-width: 12%;
+}
 .el-tree {
   flex: 1;
 }

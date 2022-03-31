@@ -53,7 +53,7 @@ console.log('router',router)
 const ruleFormRef = ref<FormInstance>();
 
 const ruleForm = reactive({
-  username: "admin",
+  username: "wangdapeng",
   password: "123",
   checked: true,
 });

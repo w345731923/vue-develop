@@ -25,7 +25,7 @@ module.exports = {
     //   "/": {
     //     ws: true,      
     //     changOrigin: true,  //允许跨域
-    //     target: 'http://192.168.9.247:/api'
+    //     target: 'http://192.168.8.144:3001/api'
     //   }
     // },
   }
