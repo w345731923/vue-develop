@@ -48,19 +48,29 @@
           <div class="tree-node-action">
             <el-icon><document-add @click="handleGroupCreate" /></el-icon>
             <el-icon><edit @click="handleGroupUpdate(data)" /></el-icon>
-            <el-icon><delete @click="handleGroupDel(data)" /></el-icon>
+            <el-icon><delete @click="openGroupDelDialog(data)" /></el-icon>
             <img src="../../assets/refresh.png" />
           </div>
         </div>
       </template>
     </el-tree>
-    <!-- default-expand-all :render-content="renderContent"-->
+    <!-- ServerGroup弹出框 -->
     <ServerGroupDialogEdit
       :visible="state.groupVisible"
       :groupOldName="state.groupOldName"
       @saveModal="saveServerGroup"
       @closeModal="switchGroupVisable"
     />
+    <!-- ServerGroup删除确认框 -->
+    <el-dialog v-model="state.groupDialogVisible" title="删除对象" width="30%" center>
+      <span>确定要删除{{state.groupOldObject.object.displayName}}吗？</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="state.groupDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleGroupDel">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -85,6 +95,7 @@ interface TreeNodeState {
   groupVisible: Boolean;
   groupOldObject: TreeNodeServerGroup | undefined;
   groupOldName: String;
+  groupDialogVisible: Boolean;
 }
 
 export default defineComponent({
@@ -106,6 +117,7 @@ export default defineComponent({
       groupVisible: false,
       groupOldObject: undefined,
       groupOldName: "",
+      groupDialogVisible: false,
     });
 
     /**
@@ -128,7 +140,6 @@ export default defineComponent({
         newName: form.serverGroupName,
         dbObject: state.groupOldObject,
       };
-      console.log("saveServerGroup data", data);
       /**
        * 重命名接口
        */
@@ -141,10 +152,14 @@ export default defineComponent({
     /**
      * 打开编辑组弹窗
      */
-    const handleGroupDel = (row: any) => {
+    const openGroupDelDialog = (row: any) => {
+      state.groupDialogVisible = true;
+      state.groupOldObject = row;
+    };
+    const handleGroupDel = () => {
       const data = {
         conns: null, //暂存
-        delObject: row, //删除对象
+        delObject: state.groupOldObject, //删除对象
         deleteOptions: { isCascadeDelete: true }, //是否级联
       };
       getTreeNodeDel(data).then(() => {
@@ -152,6 +167,7 @@ export default defineComponent({
         //刷新树形菜单
         emit("queryRoot");
       });
+      state.groupDialogVisible = false;
     };
     /**
      * 节点点击event
@@ -166,6 +182,7 @@ export default defineComponent({
       handleGroupUpdate,
       saveServerGroup,
       switchGroupVisable,
+      openGroupDelDialog,
       handleGroupDel,
     };
   },

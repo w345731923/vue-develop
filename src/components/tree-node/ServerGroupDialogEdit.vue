@@ -6,6 +6,7 @@
     :close-on-click-modal="false"
     :destroy-on-close="true"
     v-model="state.visible"
+    @closed="dialogClose"
   >
     <!-- label-position="left"
       label-width="70px"
@@ -107,6 +108,12 @@ export default defineComponent({
         }
       });
     };
+    /**
+     * 窗口关闭回调
+     */
+    const dialogClose = () => {
+      ruleForm.serverGroupName = "";
+    };
     return {
       state,
       onClose,
@@ -114,6 +121,7 @@ export default defineComponent({
       rules,
       ruleForm,
       ruleFormRef,
+      dialogClose,
     };
   },
   methods: {},
