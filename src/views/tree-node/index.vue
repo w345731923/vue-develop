@@ -51,9 +51,9 @@
             </span>
           </div>
           <div class="tree-node-action">
-            <el-icon><document-add @click="handleGroupCreate" /></el-icon>
-            <el-icon><edit @click="openEditObject(data)" /></el-icon>
-            <el-icon><delete @click="openGroupDelDialog(data)" /></el-icon>
+            <el-icon><document-add @click="openObject(data, 0)" /></el-icon>
+            <el-icon><edit @click="openObject(data, 1)" /></el-icon>
+            <el-icon><delete @click="openObject(data, 2)" /></el-icon>
             <img src="../../assets/refresh.png" />
           </div>
         </div>
@@ -73,7 +73,7 @@
       width="30%"
       center
     >
-      <span>确定要删除{{ state.groupOldObject.object.displayName }}吗？</span>
+      <span>确定要删除'{{ state.groupOldObject.object.name }}'吗？</span>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="state.groupDialogVisible = false">取消</el-button>
@@ -89,6 +89,21 @@
       @saveModal="saveServer"
       @closeModal="switchServerVisable"
     />
+    <!-- Server删除确认框 -->
+    <el-dialog
+      v-model="state.serverDialogVisible"
+      title="删除连接"
+      width="30%"
+      center
+    >
+      <span>确定要删除'{{ state.serverObject.object.name }}'吗？</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="state.serverDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleServerDel">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -170,15 +185,18 @@ export default defineComponent({
     };
     /**
      * 编辑菜单对象
+     * 0-新建，1-编辑，2-删除
      */
-    const openEditObject = (data) => {
+    const openObject = (data: any, type: number) => {
       console.log("data", data.type);
       console.log("groupVisible", state.groupVisible);
 
       if (data.type === "ServerGroup") {
-        handleGroupUpdate(data);
+        if (type == 1) handleGroupUpdate(data);
+        else if (type == 2) openGroupDelDialog(data);
       } else {
-        handleServerUpdate(data);
+        if (type == 1) handleServerUpdate(data);
+        else if (type == 2) openServerDelDialog(data);
       }
     };
 
@@ -214,10 +232,9 @@ export default defineComponent({
         deleteOptions: { isCascadeDelete: true }, //是否级联
       };
       getTreeNodeDel(data).then(() => {
-        switchGroupVisable(false);
+        state.groupDialogVisible = false;
         emit("queryRoot");
       });
-      state.groupDialogVisible = false;
     };
 
     //---------------Server---------------------
@@ -246,18 +263,34 @@ export default defineComponent({
         emit("queryRoot");
       });
     };
+    //打开删除server弹窗
+    const openServerDelDialog = (row: any) => {
+      state.serverDialogVisible = true;
+      state.serverObject = row;
+    };
+    //删除server逻辑
+    const handleServerDel = () => {
+      const data = {
+        delObject: state.serverObject, //删除对象
+        deleteOptions: { isCascadeDelete: true }, //是否级联
+      };
+      getTreeNodeDel(data).then(() => {
+        state.serverDialogVisible = false;
+        emit("queryRoot");
+      });
+    };
     return {
       state,
-      openEditObject,
+      openObject,
       handleNodeClick,
       handleGroupUpdate,
       saveServerGroup,
       switchGroupVisable,
-      openGroupDelDialog,
       handleGroupDel,
       switchServerVisable,
       handleServerUpdate,
       saveServer,
+      handleServerDel,
     };
   },
   data() {

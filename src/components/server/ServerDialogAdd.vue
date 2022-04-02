@@ -18,7 +18,7 @@
       ref="ruleFormRef"
       :model="ruleForm"
       status-icon
-      label-width="80px"
+      label-width="100px"
     >
       <el-form-item label="连接名" prop="name">
         <el-input v-model="ruleForm.name" />
@@ -40,6 +40,13 @@
       </el-form-item>
       <el-form-item label="密码" prop="password">
         <el-input v-model="ruleForm.password" type="password" />
+      </el-form-item>
+      <el-form-item label="记住密码">
+        <el-switch v-model="ruleForm.isSavePassword" />
+      </el-form-item>
+      <el-form-item label="安全版数据库">
+        <el-switch v-model="ruleForm.isHGSE" />
+        <span style="margin-left:.75rem;color:red">请确认数据库是否为安全版</span>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -119,7 +126,6 @@ export default defineComponent({
       formEl.resetFields();
       emit("closeModal", false);
     };
-
 
     //保存
     const submitForm = (formEl: FormInstance | undefined) => {

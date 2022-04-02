@@ -18,7 +18,7 @@
       ref="ruleFormRef"
       :model="ruleForm"
       status-icon
-      label-width="80px"
+      label-width="100px"
     >
       <el-form-item label="连接名" prop="name">
         <el-input v-model="ruleForm.serverObject.object.name" />
@@ -39,7 +39,19 @@
         <el-input v-model="ruleForm.serverObject.object.userName" />
       </el-form-item>
       <el-form-item label="密码" prop="password">
-        <el-input v-model="ruleForm.serverObject.object.password" type="password" />
+        <el-input
+          v-model="ruleForm.serverObject.object.password"
+          type="password"
+        />
+      </el-form-item>
+      <el-form-item label="记住密码">
+        <el-switch v-model="ruleForm.serverObject.object.isSavePassword" />
+      </el-form-item>
+      <el-form-item label="安全版数据库">
+        <el-switch v-model="ruleForm.serverObject.object.isHGSE" />
+        <span style="margin-left: 0.75rem; color: red"
+          >请确认数据库是否为安全版</span
+        >
       </el-form-item>
     </el-form>
     <template #footer>
