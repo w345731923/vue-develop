@@ -21,7 +21,7 @@
               src="../../assets/server.png"
               v-if="data.type === 'ServerGroup'"
             />
-            <img src="../../assets/hgdb16.png" v-if="data.type === 'server'" />
+            <img src="../../assets/hgdb16.png" v-if="data.type === 'Server'" />
             <img
               src="../../assets/database.png"
               v-if="data.type === 'db-name'"
@@ -43,11 +43,16 @@
             <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
           </div>
           <div class="tree-node-name tree-node-name-gt">
-            {{ data.object.displayName }}
+            <span v-if="data.type === 'Server'">
+              <span v-html="data.object.displayName"></span>
+            </span>
+            <span v-else>
+              {{ data.object.displayName }}
+            </span>
           </div>
           <div class="tree-node-action">
             <el-icon><document-add @click="handleGroupCreate" /></el-icon>
-            <el-icon><edit @click="handleGroupUpdate(data)" /></el-icon>
+            <el-icon><edit @click="editObject" /></el-icon>
             <el-icon><delete @click="openGroupDelDialog(data)" /></el-icon>
             <img src="../../assets/refresh.png" />
           </div>
@@ -55,15 +60,20 @@
       </template>
     </el-tree>
     <!-- ServerGroup弹出框 -->
-    <ServerGroupDialogEdit
+    <GroupDialogEdit
       :visible="state.groupVisible"
       :groupOldName="state.groupOldName"
       @saveModal="saveServerGroup"
       @closeModal="switchGroupVisable"
     />
     <!-- ServerGroup删除确认框 -->
-    <el-dialog v-model="state.groupDialogVisible" title="删除对象" width="30%" center>
-      <span>确定要删除{{state.groupOldObject.object.displayName}}吗？</span>
+    <el-dialog
+      v-model="state.groupDialogVisible"
+      title="删除对象"
+      width="30%"
+      center
+    >
+      <span>确定要删除{{ state.groupOldObject.object.displayName }}吗？</span>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="state.groupDialogVisible = false">取消</el-button>
@@ -71,6 +81,20 @@
         </span>
       </template>
     </el-dialog>
+
+    <ServerDialogEdit
+      :visible="state.serverVisible"
+      :groupOldName="state.groupOldName"
+      @saveModal="saveServerGroup"
+      @closeModal="switchGroupVisable"
+    />
+
+    <!-- <ServerDialogEdit
+      :visible="state.groupVisible"
+      :groupOldName="state.groupOldName"
+      @saveModal="saveServerGroup"
+      @closeModal="switchGroupVisable"
+    />     -->
   </div>
 </template>
 
@@ -87,21 +111,36 @@ import {
   watchEffect,
 } from "vue";
 import { reactive, onMounted } from "vue";
-import { getTreeNodeDel, getTreeNodeRename } from "@/api/treeNode";
-import ServerGroupDialogEdit from "@/components/tree-node/ServerGroupDialogEdit.vue";
-import { ResponseData, TreeNodeServerGroup, ServerGroupForm } from "@/types";
+import { getTreeNodeDel, getTreeNodeRename, editServer } from "@/api/treeNode";
+import GroupDialogEdit from "@/components/server-group/ServerGroupDialogEdit.vue";
+import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
+
+import {
+  ResponseData,
+  TreeNodeServerGroup,
+  ServerGroupForm,
+  ServerEditForm,
+  ServerObject,
+} from "@/types";
 
 interface TreeNodeState {
+  //group
   groupVisible: Boolean;
   groupOldObject: TreeNodeServerGroup | undefined;
   groupOldName: String;
   groupDialogVisible: Boolean;
+  //server
+  serverVisible: Boolean;
+  serverOldObject: TreeNodeServerGroup | undefined;
+  serverOld: String;
+  serverDialogVisible: Boolean;
 }
 
 export default defineComponent({
   name: "treeNode",
   components: {
-    ServerGroupDialogEdit,
+    GroupDialogEdit,
+    ServerDialogEdit,
     DocumentAdd,
     Edit,
     Delete,
@@ -114,14 +153,34 @@ export default defineComponent({
   setup(props, { emit }) {
     console.log("treeNode props", props);
     const state = reactive<TreeNodeState>({
+      //group
       groupVisible: false,
       groupOldObject: undefined,
       groupOldName: "",
       groupDialogVisible: false,
+      //server
+      serverVisible: false,
+      serverOldObject: undefined,
+      serverOld: "",
+      serverDialogVisible: false,
     });
+    const editObject = (data) => {
+      console.log('data',data)
+      handleGroupUpdate(data);
+    };
+    /**
+     * 节点点击event
+     */
+    const handleNodeClick = (event: any) => {
+      var el = event.currentTarget;
+    };
 
     /**
-     * 打开编辑组弹窗
+     * Group编辑窗口开关
+     */
+    const switchGroupVisable = (flag: boolean) => (state.groupVisible = flag);
+    /**
+     * 打开编辑Group弹窗,并赋值
      */
     const handleGroupUpdate = (row: any) => {
       state.groupOldObject = row; //存储old值，用于save参数
@@ -129,11 +188,7 @@ export default defineComponent({
       switchGroupVisable(true);
     };
     /**
-     * 新建Group窗口开关
-     */
-    const switchGroupVisable = (flag: boolean) => (state.groupVisible = flag);
-    /**
-     * 保存修改Group
+     * 保存Group
      */
     const saveServerGroup = (form: ServerGroupForm) => {
       const data = {
@@ -150,12 +205,15 @@ export default defineComponent({
       });
     };
     /**
-     * 打开编辑组弹窗
+     * 打开删除group弹窗
      */
     const openGroupDelDialog = (row: any) => {
       state.groupDialogVisible = true;
       state.groupOldObject = row;
     };
+    /**
+     * 删除group逻辑
+     */
     const handleGroupDel = () => {
       const data = {
         conns: null, //暂存
@@ -170,20 +228,47 @@ export default defineComponent({
       state.groupDialogVisible = false;
     };
     /**
-     * 节点点击event
+     * server编辑窗口开关
      */
-    const handleNodeClick = (event: any) => {
-      var el = event.currentTarget;
+    const switchServerVisable = (flag: boolean) => (state.serverVisible = flag);
+    /**
+     * 打开编辑Group弹窗,并赋值
+     */
+    const handleServerUpdate = (row: any) => {
+      state.serverOldObject = row; //传给子界面
+      state.serverOld = JSON.stringify(row); //存储old值，用于save参数
+      switchServerVisable(true);
     };
-
+    /**
+     * 保存修改Server
+     */
+    const saveServer = (form: ServerGroupForm) => {
+      // const oldObject: ServerObject = JSON.parse(state.serverOld);
+      // const data: ServerEditForm = {
+      //   // newObject: form.serverGroupName,
+      //   oldObject: oldObject,
+      // };
+      // /**
+      //  * 重命名接口
+      //  */
+      // editServer(data).then(() => {
+      //   switchServerVisable(false);
+      //   //刷新树形菜单
+      //   emit("queryRoot");
+      // });
+    };
     return {
       state,
+      editObject,
       handleNodeClick,
       handleGroupUpdate,
       saveServerGroup,
       switchGroupVisable,
       openGroupDelDialog,
       handleGroupDel,
+      switchServerVisable,
+      handleServerUpdate,
+      saveServer
     };
   },
   data() {

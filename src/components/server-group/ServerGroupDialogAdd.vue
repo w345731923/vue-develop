@@ -1,7 +1,7 @@
 <template>
   <!-- :visible.sync="dialogFormVisible" -->
   <el-dialog
-    title="新增组"
+    title="新建组"
     width="400px"
     :close-on-click-modal="false"
     :destroy-on-close="true"

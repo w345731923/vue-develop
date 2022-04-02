@@ -1,5 +1,8 @@
 import { http } from "@/utils/http";
-import { ResponseData, TreeNodeDel, TreeNodeRename, TreeNodeServerGroup, ServerGroupForm } from '@/types'
+import {
+    ResponseData, TreeNodeDel, TreeNodeRename, TreeNodeServerGroup, ServerGroupForm
+    , ServerForm, ServerEditForm
+} from '@/types'
 
 
 export async function getRoot() {
@@ -23,10 +26,27 @@ export async function getTreeNodeRename(data: TreeNodeRename) {
     return await http.request<ResponseData>('/rename', { method: 'POST', data });
 }
 /**
- * 添加分组
+ * 新建group
  * @param {*} data  {'serverGroupName':string} 
  * @returns 
  */
 export async function addServerGroup(data: ServerGroupForm) {
     return await http.request<ResponseData>('/servergroup/add', { method: 'POST', data });
+}
+
+/**
+ * 新建server
+ * @param {*} data  
+ * @returns 
+ */
+export async function addServer(data: ServerForm) {
+    return await http.request<ResponseData>('/server/add', { method: 'POST', data });
+}
+/**
+ * 修改server
+ * @param {*} data  
+ * @returns 
+ */
+export async function editServer(data: ServerEditForm) {
+    return await http.request<ResponseData>('/server/edit', { method: 'POST', data });
 }

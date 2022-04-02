@@ -11,8 +11,8 @@
         active-text-color="none"
       >
         <!-- @select="handleSelect" -->
-        <el-menu-item index="5" @click="switchGroupVisable(true)">新建组</el-menu-item>
-        <el-menu-item index="6" @click="this.toolsEvent">新建节点</el-menu-item>
+        <el-menu-item @click="switchGroupVisable(true)">新建组</el-menu-item>
+        <el-menu-item @click="switchServerVisable(true)">新建连接</el-menu-item>
         <el-menu-item index="1" @click="this.toolsEvent"
           >SQL编辑器</el-menu-item
         >
@@ -21,25 +21,31 @@
       </el-menu>
     </div>
   </div>
-  <ServerGroupDialogAdd
+  <GroupDialogAdd
     :visible="state.groupVisible"
-    @saveModal="saveServerGroup"
+    @saveModal="saveGroup"
     @closeModal="switchGroupVisable"
+  />
+  <ServerDialogAdd
+    :visible="state.serverVisible"
+    @saveModal="saveServer"
+    @closeModal="switchServerVisable"
   />
 </template>
 
 <script lang="ts">
 import { reactive, onMounted } from "vue";
-import ServerGroupDialogAdd from "@/components/tree-node/ServerGroupDialogAdd.vue";
-import {
-  addServerGroup,
-} from "@/api/treeNode";
-import { ServerGroupForm } from '@/types'
+import GroupDialogAdd from "@/components/server-group/ServerGroupDialogAdd.vue";
+import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
+
+import { addServerGroup, addServer } from "@/api/treeNode";
+import { ServerGroupForm, Server, ServerObject } from "@/types";
 
 export default {
   name: "Header",
   components: {
-    ServerGroupDialogAdd,
+    GroupDialogAdd,
+    ServerDialogAdd,
   },
   props: {
     queryRoot: {
@@ -66,26 +72,60 @@ export default {
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,
+      serverVisible: false,
     });
     /**
      * 新建Group窗口开关
      */
-    const switchGroupVisable = (flag:boolean) => (state.groupVisible = flag);
+    const switchGroupVisable = (flag: boolean) => (state.groupVisible = flag);
     /**
-     * 保存新建组
+     * 保存group
      */
-    const saveServerGroup = (form:ServerGroupForm) => {
+    const saveGroup = (form: ServerGroupForm) => {
       addServerGroup(form).then(() => {
         switchGroupVisable(false);
-        emit('queryRoot')
+        emit("queryRoot");
       });
     };
-
+    /**
+     * 新建Server窗口开关
+     */
+    const switchServerVisable = (flag: boolean) => (state.serverVisible = flag);
+    /**
+     * 保存server
+     */
+    const saveServer = (form: Server) => {
+      const ServerObject: ServerObject = {
+        connectionId: "",
+        databaseOid: 0,
+        object: form,
+        serverId: "",
+        type: "Server",
+      };
+      const serverForm = {
+        parent: null,
+        newObject: ServerObject,
+      };
+      addServer(serverForm).then(() => {
+        console.log("addServer ..............");
+        switchServerVisable(false);
+        emit("queryRoot");
+      });
+    };
     return {
       state,
       switchGroupVisable,
-      saveServerGroup
+      saveGroup,
+      switchServerVisable,
+      saveServer,
     };
+    // export interface ServerObject {
+    //   connectionId: string,
+    //   databaseOid: number,
+    //   object: Server,
+    //   serverId: string,
+    //   type: string,
+    // }
   },
   methods: {
     // handleSelect(key, keyPath) {
