@@ -23,7 +23,6 @@ export interface LoginResp {
 
 export interface TreeNodeDel<T = any> {
   delObject: T;
-  conns: null;
   deleteOptions: { isCascadeDelete: boolean }
 }
 
@@ -52,6 +51,7 @@ export interface ServerGroup {
   leaf: boolean;
   database: string;
 }
+//新建group
 export interface ServerGroupForm {
   serverGroupName: string;
 }
@@ -66,8 +66,11 @@ export interface ServerForm {
  * 修改server
  */
 export interface ServerEditForm {
-  newObject: ServerObject
-  oldObject: ServerObject;
+  editDBObjectInfo: {
+    newObject: ServerObject
+    oldObject: ServerObject;
+  }
+  serverGroupName: string | null
 }
 export interface ServerObject {
   connectionId: string,

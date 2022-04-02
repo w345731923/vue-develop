@@ -1,25 +1,49 @@
 <template>
   <!-- :visible.sync="dialogFormVisible" -->
   <el-dialog
-    title="修改组"
+    title="修改连接"
     width="400px"
     :close-on-click-modal="false"
     :destroy-on-close="true"
     v-model="state.visible"
-    @closed="dialogClose"
+    @closed="onClose(ruleFormRef)"
   >
     <!-- label-position="left"
       label-width="70px"
       style="width: 300px; margin-left: 50px" 
             ref="dataForm" -->
 
-    <el-form :rules="rules" ref="ruleFormRef" :model="ruleForm" status-icon>
-      <el-form-item label="组名称" prop="serverGroupName">
-        <el-input v-model="ruleForm.serverGroupName" />
+    <el-form
+      :rules="rules"
+      ref="ruleFormRef"
+      :model="ruleForm"
+      status-icon
+      label-width="80px"
+    >
+      <el-form-item label="连接名" prop="name">
+        <el-input v-model="ruleForm.serverObject.object.name" />
+      </el-form-item>
+      <el-form-item label="主机" prop="hostAddress">
+        <el-input v-model="ruleForm.serverObject.object.hostAddress" />
+      </el-form-item>
+      <el-form-item label="端口" prop="port">
+        <el-input
+          v-model="ruleForm.serverObject.object.port"
+          oninput="value=value.replace(/[^\d]/g,'')"
+        />
+      </el-form-item>
+      <el-form-item label="数据库" prop="databaseName">
+        <el-input v-model="ruleForm.serverObject.object.databaseName" />
+      </el-form-item>
+      <el-form-item label="用户名" prop="userName">
+        <el-input v-model="ruleForm.serverObject.object.userName" />
+      </el-form-item>
+      <el-form-item label="密码" prop="password">
+        <el-input v-model="ruleForm.serverObject.object.password" type="password" />
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="onClose"> 取消 </el-button>
+      <el-button @click="onClose(ruleFormRef)"> 取消 </el-button>
       <el-button type="primary" @click="submitForm(ruleFormRef)">
         保存
       </el-button>
@@ -30,6 +54,7 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 import type { FormInstance } from "element-plus";
+import { Server } from "@/types";
 const ruleFormRef = ref<FormInstance>();
 const rules = reactive({
   serverGroupName: [
@@ -38,7 +63,7 @@ const rules = reactive({
 });
 
 export default defineComponent({
-  name: "ServerGroupDialogAdd",
+  name: "ServerDialogEdit",
   props: {
     saveModal: Function,
     closeModal: Function,
@@ -46,26 +71,41 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    groupOldName: {
-      type: String,
-      default: "",
-    },
+    serverObject: Object,
   },
   data() {
     return {};
   },
   setup(props, { emit }) {
-    const { visible, groupOldName } = toRefs(props);
+    const { visible, serverObject } = toRefs(props);
     const state = reactive({
       visible: visible.value,
-      serverGroupName: groupOldName.value,
     });
-    const ruleForm = reactive({
-      serverGroupName: groupOldName.value,
+    const ruleForm: any = reactive({
+      serverObject: undefined,
+      //  {
+      //   server: {
+      //     "@clazz": "com.highgo.developer.model.HgdbServer",
+      //     oid: "",
+      //     name: "",
+      //     hostAddress: "",
+      //     port: 5866,
+      //     databaseName: "",
+      //     userName: "",
+      //     password: "",
+      //     isSavePassword: false, //记住密码
+      //     isHGSE: false, //是否安全版
+      //     isShowTemplateDb: false, //显示范本数据库
+      //     isShowSystemSchema: false, //显示系统模式
+      //     useSSL: false, //开启ssl
+      //     sslModel: "", //ssl模式
+      //     sslKeyPath: "", //客户端密钥
+      //     sslCrtPath: "", //客户端证书
+      //     rootCrtPath: "", //根证书
+      //   },
+      // },
     });
-    /**
-     * 更新控制窗口变量
-     */
+    //visible
     watch(
       visible,
       (newValue) => {
@@ -73,29 +113,22 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    /**
-     * 更新group传入值
-     */
+    //record
     watch(
-      groupOldName,
+      serverObject,
       (newValue) => {
-        console.log("watch newValue=", newValue);
-        ruleForm.serverGroupName = newValue;
+        ruleForm.serverObject = newValue;
+        console.log("watch ruleForm", ruleForm);
       },
       { immediate: true }
     );
-    console.log("groupOldName", groupOldName);
-
-    /**
-     * 关闭窗口
-     */
-    const onClose = () => {
-      state.serverGroupName = "";
+    //关闭
+    const onClose = (formEl: FormInstance | undefined) => {
+      if (!formEl) return;
+      formEl.resetFields();
       emit("closeModal", false);
     };
-    /**
-     * 提交保存
-     */
+    //保存
     const submitForm = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
       console.log("submitForm", formEl);
@@ -108,12 +141,7 @@ export default defineComponent({
         }
       });
     };
-    /**
-     * 窗口关闭回调
-     */
-    const dialogClose = () => {
-      ruleForm.serverGroupName = "";
-    };
+
     return {
       state,
       onClose,
@@ -121,7 +149,6 @@ export default defineComponent({
       rules,
       ruleForm,
       ruleFormRef,
-      dialogClose,
     };
   },
   methods: {},

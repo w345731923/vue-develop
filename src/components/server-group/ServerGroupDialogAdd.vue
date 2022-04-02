@@ -6,7 +6,7 @@
     :close-on-click-modal="false"
     :destroy-on-close="true"
     v-model="state.visible"
-    @closed="dialogClose"
+    @closed="onClose"
   >
     <!-- label-position="left"
       label-width="70px"
@@ -70,6 +70,7 @@ export default defineComponent({
      * 取消按钮事件
      */
     const onClose = () => {
+      ruleForm.serverGroupName = "";
       emit("closeModal", false);
     };
     /**
@@ -87,12 +88,7 @@ export default defineComponent({
         }
       });
     };
-    /**
-     * 窗口关闭回调
-     */    
-    const dialogClose = () => {
-      ruleForm.serverGroupName = "";
-    };
+
     return {
       state,
       onClose,
@@ -100,7 +96,6 @@ export default defineComponent({
       ruleForm,
       rules,
       ruleFormRef,
-      dialogClose,
     };
   },
   methods: {},

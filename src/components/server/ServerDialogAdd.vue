@@ -6,7 +6,7 @@
     :close-on-click-modal="false"
     :destroy-on-close="true"
     v-model="state.visible"
-    @closed="dialogClose"
+    @closed="onClose(ruleFormRef)"
   >
     <!-- label-position="left"
       label-width="70px"
@@ -43,7 +43,7 @@
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="onClose"> 取消 </el-button>
+      <el-button @click="onClose(ruleFormRef)"> 取消 </el-button>
       <el-button type="primary" @click="submitForm(ruleFormRef)">
         保存
       </el-button>
@@ -58,7 +58,7 @@ import { Server } from "@/types";
 const ruleFormRef = ref<FormInstance>();
 
 const ruleForm: Server = reactive({
-  '@clazz':'com.highgo.developer.model.HgdbServer',
+  "@clazz": "com.highgo.developer.model.HgdbServer",
   oid: "",
   name: "",
   hostAddress: "",
@@ -113,15 +113,15 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    /**
-     * 取消按钮事件
-     */
-    const onClose = () => {
+    //关闭
+    const onClose = (formEl: FormInstance | undefined) => {
+      if (!formEl) return;
+      formEl.resetFields();
       emit("closeModal", false);
     };
-    /**
-     * 保存按钮事件
-     */
+
+
+    //保存
     const submitForm = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
       console.log("submitForm", formEl);
@@ -134,12 +134,7 @@ export default defineComponent({
         }
       });
     };
-    /**
-     * 窗口关闭回调
-     */
-    const dialogClose = () => {
-      // ruleForm.serverGroupName = "";
-    };
+
     return {
       state,
       onClose,
@@ -147,7 +142,6 @@ export default defineComponent({
       ruleForm,
       rules,
       ruleFormRef,
-      dialogClose,
     };
   },
   methods: {},

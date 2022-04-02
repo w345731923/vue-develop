@@ -6,7 +6,7 @@
     :close-on-click-modal="false"
     :destroy-on-close="true"
     v-model="state.visible"
-    @closed="dialogClose"
+    @closed="onClose(ruleFormRef)"
   >
     <!-- label-position="left"
       label-width="70px"
@@ -19,7 +19,7 @@
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="onClose"> 取消 </el-button>
+      <el-button @click="onClose(ruleFormRef)"> 取消 </el-button>
       <el-button type="primary" @click="submitForm(ruleFormRef)">
         保存
       </el-button>
@@ -38,7 +38,7 @@ const rules = reactive({
 });
 
 export default defineComponent({
-  name: "ServerGroupDialogAdd",
+  name: "ServerGroupDialogEdit",
   props: {
     saveModal: Function,
     closeModal: Function,
@@ -58,14 +58,11 @@ export default defineComponent({
     const { visible, groupOldName } = toRefs(props);
     const state = reactive({
       visible: visible.value,
-      serverGroupName: groupOldName.value,
     });
     const ruleForm = reactive({
       serverGroupName: groupOldName.value,
     });
-    /**
-     * 更新控制窗口变量
-     */
+    //visible
     watch(
       visible,
       (newValue) => {
@@ -73,9 +70,7 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    /**
-     * 更新group传入值
-     */
+    //record
     watch(
       groupOldName,
       (newValue) => {
@@ -84,18 +79,13 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    console.log("groupOldName", groupOldName);
-
-    /**
-     * 关闭窗口
-     */
-    const onClose = () => {
-      state.serverGroupName = "";
+    //关闭
+    const onClose = (formEl: FormInstance | undefined) => {
+      if (!formEl) return;
+      formEl.resetFields();
       emit("closeModal", false);
     };
-    /**
-     * 提交保存
-     */
+    //保存
     const submitForm = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
       console.log("submitForm", formEl);
@@ -108,12 +98,7 @@ export default defineComponent({
         }
       });
     };
-    /**
-     * 窗口关闭回调
-     */
-    const dialogClose = () => {
-      ruleForm.serverGroupName = "";
-    };
+
     return {
       state,
       onClose,
@@ -121,7 +106,6 @@ export default defineComponent({
       rules,
       ruleForm,
       ruleFormRef,
-      dialogClose,
     };
   },
   methods: {},
