@@ -49,7 +49,7 @@ import { ResponseData, LoginResp } from "@/types";
 import { ElMessage } from "element-plus";
 import { useRouter } from 'vue-router'
 const router = useRouter()
-console.log('router',router)
+
 const ruleFormRef = ref<FormInstance>();
 
 const ruleForm = reactive({

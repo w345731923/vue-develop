@@ -12,6 +12,7 @@ import {
 // import NProgress from "../progress";
 // import { loadEnv } from "@build/index";
 import { getToken } from "@/utils/auth";
+
 // import { useUserStoreHook } from "/@/store/modules/user";
 
 // 加载环境变量 VITE_PROXY_DOMAIN（开发环境）  VITE_PROXY_DOMAIN_REAL（打包后的线上环境）
@@ -53,7 +54,6 @@ class PureHttp {
       // (config: PureHttpRequestConfig) => {
       (config: any) => {
         const $config = config;
-
         // 优先判断post/get等方法是否传入回掉，否则执行初始化设置等回掉
         // if (typeof config.beforeRequestCallback === "function") {
         //   config.beforeRequestCallback($config);
@@ -65,16 +65,17 @@ class PureHttp {
         // }
         // return $config;
         const token = getToken();
-        // console.log('httpInterceptorsRequest token', $config.headers);
-        if (token) {
-          $config.headers["Authorization"] = "Bearer " + token;
-        } else {
-          ElMessage({
-            message: 'token失效，重新登录',
-            type: 'error',
-            duration: 5 * 1000
-          })
-        }
+        $config.headers["Authorization"] = "Bearer " + token;
+
+        // if (token) {
+        //   $config.headers["Authorization"] = "Bearer " + token;
+        // } else {
+        //   ElMessage({
+        //     message: 'token失效，重新登录',
+        //     type: 'error',
+        //     duration: 5 * 1000
+        //   })
+        // }
         return $config;
 
         // const token = getToken();
@@ -122,7 +123,6 @@ class PureHttp {
         //   PureHttp.initConfig.beforeResponseCallback(response);
         //   return response.data;
         // }
-
         const result = response.data;
         if (result.code !== 200) {
           ElMessage({
