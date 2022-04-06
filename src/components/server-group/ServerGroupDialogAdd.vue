@@ -54,6 +54,7 @@ export default defineComponent({
   data() {
     return {};
   },
+  emits: ["saveModal", "closeModal"],
   setup(props, { emit }) {
     const { visible } = toRefs(props);
     const state = reactive({

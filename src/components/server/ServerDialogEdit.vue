@@ -2,57 +2,104 @@
   <!-- :visible.sync="dialogFormVisible" -->
   <el-dialog
     title="修改连接"
-    width="400px"
+    width="600px"
     :close-on-click-modal="false"
     :destroy-on-close="true"
     v-model="state.visible"
     @closed="onClose(ruleFormRef)"
+    custom-class="server-dialog"
   >
-    <!-- label-position="left"
-      label-width="70px"
-      style="width: 300px; margin-left: 50px" 
-            ref="dataForm" -->
-
     <el-form
       :rules="rules"
       ref="ruleFormRef"
       :model="ruleForm"
       status-icon
-      label-width="100px"
+      label-width="120px"
     >
-      <el-form-item label="连接名" prop="name">
-        <el-input v-model="ruleForm.serverObject.object.name" />
-      </el-form-item>
-      <el-form-item label="主机" prop="hostAddress">
-        <el-input v-model="ruleForm.serverObject.object.hostAddress" />
-      </el-form-item>
-      <el-form-item label="端口" prop="port">
-        <el-input
-          v-model="ruleForm.serverObject.object.port"
-          oninput="value=value.replace(/[^\d]/g,'')"
-        />
-      </el-form-item>
-      <el-form-item label="数据库" prop="databaseName">
-        <el-input v-model="ruleForm.serverObject.object.databaseName" />
-      </el-form-item>
-      <el-form-item label="用户名" prop="userName">
-        <el-input v-model="ruleForm.serverObject.object.userName" />
-      </el-form-item>
-      <el-form-item label="密码" prop="password">
-        <el-input
-          v-model="ruleForm.serverObject.object.password"
-          type="password"
-        />
-      </el-form-item>
-      <el-form-item label="记住密码">
-        <el-switch v-model="ruleForm.serverObject.object.isSavePassword" />
-      </el-form-item>
-      <el-form-item label="安全版数据库">
-        <el-switch v-model="ruleForm.serverObject.object.isHGSE" />
-        <span style="margin-left: 0.75rem; color: red"
-          >请确认数据库是否为安全版</span
-        >
-      </el-form-item>
+      <!-- v-model="activeName" -->
+      <el-tabs model-value="first" type="card">
+        <el-tab-pane label="常规" name="first">
+          <el-form-item label="连接名" prop="name">
+            <el-input v-model="ruleForm.serverObject.object.name" />
+          </el-form-item>
+          <el-form-item label="主机" prop="hostAddress">
+            <el-input v-model="ruleForm.serverObject.object.hostAddress" />
+          </el-form-item>
+          <el-form-item label="端口" prop="port">
+            <el-input
+              v-model="ruleForm.serverObject.object.port"
+              oninput="value=value.replace(/[^\d]/g,'')"
+            />
+          </el-form-item>
+          <el-form-item label="数据库" prop="databaseName">
+            <el-input v-model="ruleForm.serverObject.object.databaseName" />
+          </el-form-item>
+          <el-form-item label="用户名" prop="userName">
+            <el-input v-model="ruleForm.serverObject.object.userName" />
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input
+              v-model="ruleForm.serverObject.object.password"
+              type="password"
+            />
+          </el-form-item>
+          <el-form-item label="记住密码">
+            <el-switch v-model="ruleForm.serverObject.object.isSavePassword" />
+          </el-form-item>
+          <el-form-item label="安全版数据库">
+            <el-switch v-model="ruleForm.serverObject.object.isHGSE" />
+            <span style="margin-left: 0.75rem; color: red"
+              >请确认数据库是否为安全版</span
+            >
+          </el-form-item>
+        </el-tab-pane>
+
+        <el-tab-pane label="高级" name="second">
+          <el-form-item label="显示范本数据库">
+            <el-switch
+              v-model="ruleForm.serverObject.object.isShowTemplateDb"
+            />
+          </el-form-item>
+          <el-form-item label="显示系统模式">
+            <el-switch
+              v-model="ruleForm.serverObject.object.isShowSystemSchema"
+            />
+          </el-form-item>
+        </el-tab-pane>
+        <el-tab-pane label="SSL" name="third">
+          <el-form-item label="使用SSL">
+            <el-switch v-model="ruleForm.serverObject.object.useSSL" />
+          </el-form-item>
+          <el-form-item label="SSL模式">
+            <el-select
+              v-model="ruleForm.serverObject.object.sslModel"
+              :disabled="!ruleForm.serverObject.object.useSSL"
+            >
+              <el-option label="require" value="require" />
+              <el-option label="verify-ca" value="verify-ca" />
+              <el-option label="verify-full" value="verify-full" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="客户端密钥" prop="sslKeyPath">
+            <el-input
+              v-model="ruleForm.serverObject.object.sslKeyPath"
+              :disabled="!ruleForm.serverObject.object.useSSL"
+            />
+          </el-form-item>
+          <el-form-item label="客户端证书" prop="sslCrtPath">
+            <el-input
+              v-model="ruleForm.serverObject.object.sslCrtPath"
+              :disabled="!ruleForm.serverObject.object.useSSL"
+            />
+          </el-form-item>
+          <el-form-item label="根证书" prop="rootCrtPath">
+            <el-input
+              v-model="ruleForm.serverObject.object.rootCrtPath"
+              :disabled="!ruleForm.serverObject.object.useSSL"
+            />
+          </el-form-item>
+        </el-tab-pane>
+      </el-tabs>
     </el-form>
     <template #footer>
       <el-button @click="onClose(ruleFormRef)"> 取消 </el-button>
@@ -66,12 +113,18 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 import type { FormInstance } from "element-plus";
-import { Server } from "@/types";
+import { ElMessage } from "element-plus";
 const ruleFormRef = ref<FormInstance>();
 const rules = reactive({
-  serverGroupName: [
-    { required: true, message: "请填写组名称", trigger: "blur" },
+  name: [{ required: true, message: "请输入连接名！", trigger: "blur" }],
+  hostAddress: [
+    { required: true, message: "请输入主机地址！", trigger: "blur" },
   ],
+  port: [{ required: true, message: "请输入端口号！", trigger: "blur" }],
+  databaseName: [
+    { required: true, message: "请输入数据库！", trigger: "blur" },
+  ],
+  userName: [{ required: true, message: "请输入用户名！", trigger: "blur" }],
 });
 
 export default defineComponent({
@@ -88,34 +141,37 @@ export default defineComponent({
   data() {
     return {};
   },
+  emits: ["saveModal","closeModal"],
   setup(props, { emit }) {
     const { visible, serverObject } = toRefs(props);
     const state = reactive({
       visible: visible.value,
     });
     const ruleForm: any = reactive({
-      serverObject: undefined,
-      //  {
-      //   server: {
-      //     "@clazz": "com.highgo.developer.model.HgdbServer",
-      //     oid: "",
-      //     name: "",
-      //     hostAddress: "",
-      //     port: 5866,
-      //     databaseName: "",
-      //     userName: "",
-      //     password: "",
-      //     isSavePassword: false, //记住密码
-      //     isHGSE: false, //是否安全版
-      //     isShowTemplateDb: false, //显示范本数据库
-      //     isShowSystemSchema: false, //显示系统模式
-      //     useSSL: false, //开启ssl
-      //     sslModel: "", //ssl模式
-      //     sslKeyPath: "", //客户端密钥
-      //     sslCrtPath: "", //客户端证书
-      //     rootCrtPath: "", //根证书
-      //   },
-      // },
+      // serverObject: undefined,
+      serverObject: {
+        object: {
+          server: {
+            "@clazz": "com.highgo.developer.model.HgdbServer",
+            oid: "",
+            name: "",
+            hostAddress: "",
+            port: 5866,
+            databaseName: "",
+            userName: "",
+            password: "",
+            isSavePassword: false, //记住密码
+            isHGSE: false, //是否安全版
+            isShowTemplateDb: false, //显示范本数据库
+            isShowSystemSchema: false, //显示系统模式
+            useSSL: false, //开启ssl
+            sslModel: "", //ssl模式
+            sslKeyPath: "", //客户端密钥
+            sslCrtPath: "", //客户端证书
+            rootCrtPath: "", //根证书
+          },
+        },
+      },
     });
     //visible
     watch(
@@ -167,5 +223,13 @@ export default defineComponent({
 });
 </script>
 
+<style>
+.el-dialog.server-dialog{
+  text-align: center;
+}
+</style>
 <style scoped>
+.el-tab-pane {
+  padding: 10px;
+}
 </style>

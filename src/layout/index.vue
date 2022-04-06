@@ -1,7 +1,8 @@
 <template>
   <div class="theme_flex_column">
     <el-header>
-      <v-header :tools="toolsEvent" @queryRoot="queryRoot" />
+      <v-header  @queryRoot="queryRoot" />
+      <!-- :tools="toolsEvent" -->
     </el-header>
     <div class="split_flex_row">
       <vSidebar
@@ -14,8 +15,9 @@
         class="pane_flex right home"
         :tabActiveName="tabActiveName"
         :editableTabs="editableTabs"
-        :removeTab="removeTab"
       />
+              <!-- :removeTab="removeTab" -->
+
     </div>
   </div>
 </template>
@@ -70,7 +72,6 @@ export default defineComponent({
      */
     const queryRoot = () => {
       getRoot().then((respon: ResponseData<TreeNodeServerGroup[]>) => {
-        console.log("queryRoot respon", respon.data);
         state.treeData = respon.data;
       });
     };

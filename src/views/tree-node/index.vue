@@ -4,7 +4,7 @@
       :data="treeData"
       node-key="id"
       :expand-on-click-node="false"
-      highlight-current="true"
+      :highlight-current="true"
       node-expand="handleNodeExpand"
       :load="loadNode"
       lazy
@@ -164,7 +164,6 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
-    console.log("treeNode props", props);
     const state = reactive<TreeNodeState>({
       //group
       groupVisible: false,
@@ -188,9 +187,6 @@ export default defineComponent({
      * 0-新建，1-编辑，2-删除
      */
     const openObject = (data: any, type: number) => {
-      console.log("data", data.type);
-      console.log("groupVisible", state.groupVisible);
-
       if (data.type === "ServerGroup") {
         if (type == 1) handleGroupUpdate(data);
         else if (type == 2) openGroupDelDialog(data);

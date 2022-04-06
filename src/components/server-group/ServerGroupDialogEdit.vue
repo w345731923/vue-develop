@@ -54,6 +54,7 @@ export default defineComponent({
   data() {
     return {};
   },
+  emits: ["saveModal","closeModal"],
   setup(props, { emit }) {
     const { visible, groupOldName } = toRefs(props);
     const state = reactive({
@@ -74,7 +75,6 @@ export default defineComponent({
     watch(
       groupOldName,
       (newValue) => {
-        console.log("watch newValue=", newValue);
         ruleForm.serverGroupName = newValue;
       },
       { immediate: true }

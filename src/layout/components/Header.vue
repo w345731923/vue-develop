@@ -2,8 +2,9 @@
   <div class="header">
     <div class="logo">瀚高管理工具</div>
     <div class="menu">
+      <!-- :default-active="activeIndex2" -->
+
       <el-menu
-        :default-active="activeIndex2"
         class="el-menu-demo"
         mode="horizontal"
         background-color="#338ecc"
@@ -13,10 +14,8 @@
         <!-- @select="handleSelect" -->
         <el-menu-item @click="switchGroupVisable(true)">新建组</el-menu-item>
         <el-menu-item @click="switchServerVisable(true)">新建连接</el-menu-item>
-        <el-menu-item index="1" @click="this.toolsEvent"
-          >SQL编辑器</el-menu-item
-        >
-        <el-menu-item index="2" @click="this.toolsEvent">新建表</el-menu-item>
+        <el-menu-item index="1">SQL编辑器</el-menu-item>
+        <el-menu-item index="2">新建表</el-menu-item>
         <el-menu-item index="4">Tool</el-menu-item>
       </el-menu>
     </div>
@@ -69,6 +68,7 @@ export default {
       default: null,
     },
   },
+  emits: ["queryRoot"],
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,

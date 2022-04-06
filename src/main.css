@@ -49,3 +49,7 @@ body{
 .el-tabs .el-tabs__content,.el-tabs .el-tabs__content .el-tab-pane{
     height: 100%;
 }
+/**对话框的body上间距调整*/
+.el-dialog__body{
+    padding: .75rem;
+}
