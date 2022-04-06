@@ -51,9 +51,9 @@
             </span>
           </div>
           <div class="tree-node-action">
-            <el-icon><document-add @click="openObject(data, 0)" /></el-icon>
-            <el-icon><edit @click="openObject(data, 1)" /></el-icon>
-            <el-icon><delete @click="openObject(data, 2)" /></el-icon>
+            <el-icon><document-add @click="openObjectEdit(data, 0)" /></el-icon>
+            <el-icon><edit @click="openObjectEdit(data, 1)" /></el-icon>
+            <el-icon><delete @click="openObjectEdit(data, 2)" /></el-icon>
             <img src="../../assets/refresh.png" />
           </div>
         </div>
@@ -82,13 +82,16 @@
       </template>
     </el-dialog>
 
-    <!-- Server弹出框 -->
-    <ServerDialogEdit
-      :visible="state.serverVisible"
-      :serverObject="state.serverObject"
-      @saveModal="saveServer"
-      @closeModal="switchServerVisable"
-    />
+    <template v-if="state.serverVisible">
+      <!-- Server弹出框 -->
+      <ServerDialogEdit
+        :visible="state.serverVisible"
+        :serverObject="state.serverObject"
+        @saveModal="saveServer"
+        @closeModal="switchServerVisable"
+      />
+    </template>
+
     <!-- Server删除确认框 -->
     <el-dialog
       v-model="state.serverDialogVisible"
@@ -186,7 +189,7 @@ export default defineComponent({
      * 编辑菜单对象
      * 0-新建，1-编辑，2-删除
      */
-    const openObject = (data: any, type: number) => {
+    const openObjectEdit = (data: any, type: number) => {
       if (data.type === "ServerGroup") {
         if (type == 1) handleGroupUpdate(data);
         else if (type == 2) openGroupDelDialog(data);
@@ -235,20 +238,25 @@ export default defineComponent({
 
     //---------------Server---------------------
     //Server编辑窗口开关
-    const switchServerVisable = (flag: boolean) => (state.serverVisible = flag);
+    const switchServerVisable = (flag: boolean) => {
+      state.serverVisible = flag;
+      console.log("switchServerVisable state", state);
+    };
     //打开编辑Server弹窗,并赋值
     const handleServerUpdate = (row: any) => {
-      state.serverObject = row; //传给子界面
+      console.log("handleServerUpdate state", row);
       state.serverOld = JSON.stringify(row); //存储old值，用于save参数
+      state.serverObject = row.object; //传给子界面
       switchServerVisable(true);
     };
     //保存Server
-    const saveServer = (form: ServerForm) => {
+    const saveServer = (form: Server) => {
       console.log("saveServer form", form);
-      // const oldObject: any = JSON.parse(state.serverOld);
+      const newObject: ServerObject = JSON.parse(state.serverOld);
+      newObject.object = form;
       const data: ServerEditForm = {
         editDBObjectInfo: {
-          newObject: form.serverObject,
+          newObject: newObject,
           oldObject: JSON.parse(state.serverOld),
         },
         serverGroupName: null,
@@ -277,7 +285,7 @@ export default defineComponent({
     };
     return {
       state,
-      openObject,
+      openObjectEdit,
       handleNodeClick,
       handleGroupUpdate,
       saveServerGroup,

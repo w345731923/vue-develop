@@ -102,7 +102,6 @@
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 import type { FormInstance } from "element-plus";
 import { Server } from "@/types";
-import type { TabsPaneContext } from "element-plus";
 import { ElMessage } from "element-plus";
 
 const ruleFormRef = ref<FormInstance>();
