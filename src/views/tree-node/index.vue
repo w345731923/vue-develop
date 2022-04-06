@@ -59,7 +59,8 @@
         </div>
       </template>
     </el-tree>
-    <!-- ServerGroup弹出框 -->
+
+  <!-- ===============================ServerGroup======================================= -->
     <GroupDialogEdit
       :visible="state.groupVisible"
       :groupOldName="state.groupOldName"
@@ -82,6 +83,7 @@
       </template>
     </el-dialog>
 
+  <!-- ===============================Server======================================= -->
     <template v-if="state.serverVisible">
       <!-- Server弹出框 -->
       <ServerDialogEdit
@@ -133,6 +135,7 @@ import {
   ServerGroupForm,
   ServerEditForm,
   ServerObject,
+  TreeNodeDel,
 } from "@/types";
 
 interface ServerForm {
@@ -238,30 +241,26 @@ export default defineComponent({
 
     //---------------Server---------------------
     //Server编辑窗口开关
-    const switchServerVisable = (flag: boolean) => {
-      state.serverVisible = flag;
-      console.log("switchServerVisable state", state);
-    };
+    const switchServerVisable = (flag: boolean) => (state.serverVisible = flag);
     //打开编辑Server弹窗,并赋值
     const handleServerUpdate = (row: any) => {
-      console.log("handleServerUpdate state", row);
       state.serverOld = JSON.stringify(row); //存储old值，用于save参数
+      //注意：这里传的是object对象，save时候需要把外面包一层
       state.serverObject = row.object; //传给子界面
       switchServerVisable(true);
     };
     //保存Server
     const saveServer = (form: Server) => {
-      console.log("saveServer form", form);
+      //包一层外部对象
       const newObject: ServerObject = JSON.parse(state.serverOld);
       newObject.object = form;
       const data: ServerEditForm = {
         editDBObjectInfo: {
-          newObject: newObject,
-          oldObject: JSON.parse(state.serverOld),
+          newObject: newObject,//new val
+          oldObject: JSON.parse(state.serverOld),//old val
         },
         serverGroupName: null,
       };
-      console.log("saveServer data", data);
       editServer(data).then(() => {
         switchServerVisable(false);
         emit("queryRoot");
@@ -274,7 +273,7 @@ export default defineComponent({
     };
     //删除server逻辑
     const handleServerDel = () => {
-      const data = {
+      const data: TreeNodeDel = {
         delObject: state.serverObject, //删除对象
         deleteOptions: { isCascadeDelete: true }, //是否级联
       };
