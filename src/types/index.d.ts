@@ -33,11 +33,11 @@ export interface TreeNodeRename<T = any> {
 /**
  * group
  */
-export interface TreeNodeServerGroup {
+export interface TreeNode<T> {
   type: string;//node类型
   databaseOid: number;
   serverId: string;
-  object: ServerGroup;
+  object: T;
 }
 export interface ServerGroup {
   oid: number;
@@ -59,7 +59,7 @@ export interface ServerGroupForm {
  * 新建server
  */
 export interface ServerForm {
-  parent: ServerObject | null;
+  parent: TreeNode<ServerGroup> | null;
   newObject: ServerObject
 }
 /**

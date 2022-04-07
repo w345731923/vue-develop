@@ -1,12 +1,13 @@
 import { http } from "@/utils/http";
 import {
-    ResponseData, TreeNodeDel, TreeNodeRename, TreeNodeServerGroup, ServerGroupForm
+    ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
+    ,ServerGroup
     , ServerForm, ServerEditForm
 } from '@/types'
 
 
 export async function getRoot() {
-    return await http.request<ResponseData<TreeNodeServerGroup[]>>('/root/list', { method: 'POST' })
+    return await http.request<ResponseData<TreeNode<ServerGroup>[]>>('/root/list', { method: 'POST' })
 }
 
 /**

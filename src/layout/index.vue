@@ -34,10 +34,10 @@ import {
   // getTreeNodeDel,
 } from "@/api/treeNode";
 import ServerGroupDialog from "@/components/tree-node/ServerGroupDialogAdd.vue";
-import { ResponseData, TreeNodeServerGroup, ServerGroupForm } from "@/types";
+import { ResponseData, TreeNode, ServerGroupForm } from "@/types";
 
 interface TreeNodeState {
-  treeData: TreeNodeServerGroup[]; //tree data
+  treeData: TreeNode<any>[]; //tree data
   dialogGroupVisible: boolean; //group dialog
   dialogGroupStatus: string; //group create or edit
   dialogGroupObj: ServerGroupForm;
@@ -71,7 +71,7 @@ export default defineComponent({
      * 查询Root根下节点
      */
     const queryRoot = () => {
-      getRoot().then((respon: ResponseData<TreeNodeServerGroup[]>) => {
+      getRoot().then((respon: ResponseData<TreeNode<any>[]>) => {
         state.treeData = respon.data;
       });
     };
