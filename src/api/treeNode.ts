@@ -1,7 +1,7 @@
 import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
-    ,ServerGroup
+    ,ServerGroup,ServerObject
     , ServerForm, ServerEditForm
 } from '@/types'
 
@@ -50,4 +50,12 @@ export async function addServer(data: ServerForm) {
  */
 export async function editServer(data: ServerEditForm) {
     return await http.request<ResponseData>('/server/edit', { method: 'POST', data });
+}
+/**
+ * 测试server
+ * @param {*} data  
+ * @returns 
+ */
+export async function testServer(data: ServerObject) {
+    return await http.request<ResponseData>('/server/testConnect', { method: 'POST', data });
 }

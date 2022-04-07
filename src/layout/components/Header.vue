@@ -5,15 +5,19 @@
       <!-- :default-active="activeIndex2" -->
 
       <el-menu
-        class="el-menu-demo"
         mode="horizontal"
         background-color="#338ecc"
         text-color="#fff"
         active-text-color="none"
+        @select="handleSelect"
       >
         <!-- @select="handleSelect" -->
-        <el-menu-item @click="switchGroupVisable(true)">新建组</el-menu-item>
-        <el-menu-item @click="switchServerVisable(true)">新建连接</el-menu-item>
+        <el-menu-item index="group" @click="switchGroupVisable(true)"
+          >新建组</el-menu-item
+        >
+        <el-menu-item index="server" @click="switchServerVisable(true)"
+          >新建连接</el-menu-item
+        >
         <el-menu-item index="1">SQL编辑器</el-menu-item>
         <el-menu-item index="2">新建表</el-menu-item>
         <el-menu-item index="4">Tool</el-menu-item>
@@ -29,6 +33,7 @@
     :visible="state.serverVisible"
     @saveModal="saveServer"
     @closeModal="switchServerVisable"
+    @testModal="handleTestServer"
   />
 </template>
 
@@ -37,14 +42,18 @@ import { reactive, onMounted } from "vue";
 import GroupDialogAdd from "@/components/server-group/ServerGroupDialogAdd.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 
-import { addServerGroup, addServer } from "@/api/treeNode";
+import { addServerGroup, addServer, testServer } from "@/api/treeNode";
 import { ServerGroupForm, Server, ServerObject } from "@/types";
+import { ElMessage } from "element-plus";
 
 export default {
   name: "Header",
   components: {
     GroupDialogAdd,
     ServerDialogAdd,
+  },
+  data() {
+    return {};
   },
   props: {
     queryRoot: {
@@ -91,9 +100,7 @@ export default {
      * 新建Server窗口开关
      */
     const switchServerVisable = (flag: boolean) => (state.serverVisible = flag);
-    /**
-     * 保存server
-     */
+    //save server
     const saveServer = (form: Server) => {
       const ServerObject: ServerObject = {
         connectionId: "",
@@ -112,27 +119,37 @@ export default {
         emit("queryRoot");
       });
     };
+    //test Server
+    const handleTestServer = (form: Server) => {
+      const ServerObject: ServerObject = {
+        connectionId: "",
+        databaseOid: 0,
+        object: form,
+        serverId: "",
+        type: "Server",
+      };
+      testServer(ServerObject).then(() => {
+        ElMessage({
+          message: "连接成功！",
+          type: "success",
+        });
+      });
+    };
+    const handleSelect = (key, keyPath) => {
+      console.log(key, keyPath);
+      // this.fatherMethod(key);
+    };
     return {
       state,
       switchGroupVisable,
       saveGroup,
       switchServerVisable,
       saveServer,
+      handleTestServer,
+      handleSelect,
     };
-    // export interface ServerObject {
-    //   connectionId: string,
-    //   databaseOid: number,
-    //   object: Server,
-    //   serverId: string,
-    //   type: string,
-    // }
   },
-  methods: {
-    // handleSelect(key, keyPath) {
-    //   console.log(key, keyPath);
-    //   this.fatherMethod(key);
-    // },
-  },
+  methods: {},
 };
 </script>
 

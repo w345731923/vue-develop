@@ -97,6 +97,7 @@
         :serverObject="state.serverObject"
         @saveModal="handleEditServer"
         @closeModal="switchServerEditVisable"
+        @testModal="handleTestServer"
       />
     </template>
 
@@ -136,6 +137,7 @@ import {
   getTreeNodeRename,
   addServer,
   editServer,
+  testServer,
 } from "@/api/treeNode";
 import GroupDialogEdit from "@/components/server-group/ServerGroupDialogEdit.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
@@ -150,10 +152,7 @@ import {
   ServerObject,
   TreeNodeDel,
 } from "@/types";
-
-interface ServerForm {
-  serverObject: ServerObject;
-}
+import { ElMessage } from "element-plus";
 
 interface TreeNodeState {
   //group
@@ -287,8 +286,26 @@ export default defineComponent({
       state.serverObject = row.object; //传给子界面
       switchServerEditVisable(true);
     };
+    //test server
+    const handleTestServer = (form: Server) => {
+      //包一层外部对象
+      const ServerObject: ServerObject = {
+        connectionId: "",
+        databaseOid: 0,
+        object: form,
+        serverId: "",
+        type: "Server",
+      };
+      testServer(ServerObject).then(() => {
+        ElMessage({
+          message: "连接成功！",
+          type: "success",
+        });
+      });
+    };
     //save Server
     const handleSaveServer = (form: Server) => {
+      //包一层外部对象
       const ServerObject: ServerObject = {
         connectionId: "",
         databaseOid: 0,
@@ -356,6 +373,7 @@ export default defineComponent({
       handleSaveServer,
       handleEditServer,
       handleServerDel,
+      handleTestServer,
     };
   },
   data() {

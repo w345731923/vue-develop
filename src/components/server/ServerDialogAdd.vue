@@ -7,6 +7,7 @@
     :destroy-on-close="true"
     v-model="state.visible"
     @closed="onClose(ruleFormRef)"
+    custom-class="server-dialog"
   >
     <el-form
       :rules="rules"
@@ -90,10 +91,15 @@
       </el-tabs>
     </el-form>
     <template #footer>
-      <el-button @click="onClose(ruleFormRef)"> 取消 </el-button>
-      <el-button type="primary" @click="submitForm(ruleFormRef)">
-        保存
-      </el-button>
+      <div style="display: flex; justify-content: space-between">
+        <el-button @click="onTest(ruleFormRef)">测试连接</el-button>
+        <span>
+          <el-button @click="onClose(ruleFormRef)"> 取消 </el-button>
+          <el-button type="primary" @click="submitForm(ruleFormRef)">
+            保存
+          </el-button>
+        </span>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -149,13 +155,13 @@ export default defineComponent({
   data() {
     return {};
   },
-  emits: ["saveModal","closeModal"],
+  emits: ["saveModal", "closeModal", "testModal"],
   setup(props, { emit }) {
     const { visible } = toRefs(props);
     const state = reactive({
       visible: visible.value,
     });
-    
+
     watch(
       visible,
       (newValue) => {
@@ -163,6 +169,22 @@ export default defineComponent({
       },
       { immediate: true }
     );
+    //测试连接
+    const onTest = (formEl: FormInstance | undefined) => {
+      if (!formEl) return;
+      formEl.validate((valid) => {
+        if (valid) {
+          emit("testModal", ruleForm);
+        } else {
+          ElMessage({
+            message: "请输入'修改连接'必填项！",
+            type: "warning",
+            duration: 5 * 1000,
+          });
+          return false;
+        }
+      });
+    };
     //关闭
     const onClose = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
@@ -191,6 +213,7 @@ export default defineComponent({
     return {
       state,
       onClose,
+      onTest,
       submitForm,
       ruleForm,
       rules,
@@ -204,5 +227,9 @@ export default defineComponent({
 <style scoped>
 .el-tab-pane {
   padding: 10px;
+}
+.el-dialog__footer {
+  display: flex;
+  justify-content: space-between;
 }
 </style>
