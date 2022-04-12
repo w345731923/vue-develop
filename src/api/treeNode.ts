@@ -60,6 +60,7 @@ export async function testServer(data: ServerObject) {
     return await http.request<ResponseData>('/server/testConnect', { method: 'POST', data });
 }
 /**
+ * @deprecated
  * 查询group下的server
  * @returns 
  */

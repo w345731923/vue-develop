@@ -112,6 +112,7 @@ export default {
           object: groupObject,
           serverId: "",
           type: "ServerGroup",
+          children:[]
         };
         emit("addTreeNode", "ServerGroup", null, data);
       });

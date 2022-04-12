@@ -15,7 +15,7 @@
         <div
           class="tree-node-row"
           aria-selected="false"
-          @click="handleNodeClick($event)"
+          @click="handleNodeClick($event, data, node)"
         >
           <div style="display: flex">
             <div class="tree-node-icon tree-node-icon-gt">
@@ -63,9 +63,11 @@
             </div>
           </div>
           <div class="tree-node-action">
-            <el-icon><document-add @click="openObjectAdd(data)" /></el-icon>
+            <el-icon
+              ><document-add @click="openObjectAdd(node, data)"
+            /></el-icon>
             <el-icon><edit @click="openObjectEdit(node, data)" /></el-icon>
-            <el-icon><delete @click="openObjectDel(data)" /></el-icon>
+            <el-icon><delete @click="openObjectDel(node, data)" /></el-icon>
             <!-- <img src="../../assets/refresh.png" /> -->
           </div>
           <!-- <el-dropdown ref="dropdown1" trigger="contextmenu" style="display:none">
@@ -122,7 +124,7 @@
       <!-- Server弹出框 -->
       <ServerDialogEdit
         :visible="state.serverEditVisible"
-        :serverObject="state.serverObject"
+        :serverObject="state.serverForm"
         @saveModal="handleEditServer"
         @closeModal="switchServerEditVisable"
         @testModal="handleTestServer"
@@ -147,7 +149,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts">
 import { DocumentAdd, Edit, Delete } from "@element-plus/icons-vue";
 import type Node from "element-plus/es/components/tree/src/model/node";
 interface Tree {
@@ -191,6 +193,7 @@ import {
 import { ElMessage } from "element-plus";
 
 interface TreeNodeState {
+  treeNode: Node | undefined;
   //group
   groupVisible: Boolean;
   groupOldObject: TreeNode<ServerGroup> | null;
@@ -199,6 +202,7 @@ interface TreeNodeState {
   //server
   serverAddVisible: Boolean;
   serverEditVisible: Boolean;
+  serverForm: Server | undefined;
   serverObject: Server | undefined;
   serverOld: string;
   serverDialogVisible: Boolean;
@@ -230,6 +234,7 @@ export default defineComponent({
       isLeaf: "leaf",
     };
     const state = reactive<TreeNodeState>({
+      treeNode: undefined,
       //group
       groupVisible: false,
       groupOldObject: null,
@@ -238,6 +243,7 @@ export default defineComponent({
       //server
       serverAddVisible: false,
       serverEditVisible: false,
+      serverForm: undefined,
       serverObject: undefined,
       serverOld: "",
       serverDialogVisible: false,
@@ -253,24 +259,24 @@ export default defineComponent({
     /**
      * 节点点击event
      */
-    const handleNodeClick = (event: any) => {
-      var el = event.currentTarget;
-      console.log("handleNodeClick event", event);
+    const handleNodeClick = (event: any, data: any, node: any) => {
+      console.log("handleNodeClick data", data, node);
     };
     /**
      * 新建菜单对象
      */
-    const openObjectAdd = (data: TreeNode<any>) => {
+    const openObjectAdd = (node: Node, data: TreeNode<any>) => {
       console.log("openObjectAdd data", data);
       if (data.type === "ServerGroup") {
         state.groupOldObject = data;
+        state.treeNode = node;
         switchServerAddVisable(true);
       }
     };
     /**
      * 编辑菜单对象
      */
-    const openObjectEdit = (node: any, data: TreeNode<any>) => {
+    const openObjectEdit = (node: Node, data: TreeNode<any>) => {
       if (data.type === "ServerGroup") {
         //group
         handleGroupUpdate(data);
@@ -282,11 +288,11 @@ export default defineComponent({
     /**
      * 删除菜单对象
      */
-    const openObjectDel = (data: TreeNode<any>) => {
+    const openObjectDel = (node: Node, data: TreeNode<any>) => {
       if (data.type === "ServerGroup") {
-        openGroupDelDialog(data);
+        openGroupDelDialog(node, data);
       } else {
-        openServerDelDialog(data);
+        openServerDelDialog(node, data);
       }
     };
 
@@ -317,9 +323,10 @@ export default defineComponent({
       });
     };
     //打开删除group弹窗
-    const openGroupDelDialog = (row: any) => {
+    const openGroupDelDialog = (node: Node, row: any) => {
       state.groupDialogVisible = true;
       state.groupOldObject = row;
+      state.treeNode = node;
     };
     //删除group逻辑
     const handleGroupDel = () => {
@@ -329,7 +336,8 @@ export default defineComponent({
       };
       getTreeNodeDel(data).then(() => {
         state.groupDialogVisible = false;
-        emit("delTreeNode", "ServerGroup", null, state.groupOldObject);
+        // emit("delTreeNode", "ServerGroup", null, state.groupOldObject);
+        treeRef.value.remove(state.treeNode);
       });
     };
 
@@ -340,7 +348,7 @@ export default defineComponent({
     const switchServerEditVisable = (flag: boolean) =>
       (state.serverEditVisible = flag);
     //打开编辑Server弹窗,并赋值
-    const handleServerUpdate = (node: Node, row: any) => {
+    const handleServerUpdate = (node: Node, row: TreeNode<Server>) => {
       console.log("handleServerUpdate node ", node);
       console.log("handleServerUpdate row ", row);
 
@@ -350,23 +358,23 @@ export default defineComponent({
       if (node.level == 2) {
         state.groupOldName = node.parent.data.object.name;
       }
-      // debugger;
+      state.treeNode = node;
       state.serverOld = JSON.stringify(row); //存储old值，用于save参数
       //注意：这里传的是object对象，save时候需要把外面包一层
-      state.serverObject = row.object; //传给子界面
+      state.serverForm = row.object; //传给子界面
       switchServerEditVisable(true);
     };
     //test server
     const handleTestServer = (form: Server) => {
       //包一层外部对象
-      const ServerObject: ServerObject = {
+      const serverObject: ServerObject = {
         connectionId: "",
         databaseOid: 0,
         object: form,
         serverId: "",
         type: "Server",
       };
-      testServer(ServerObject).then(() => {
+      testServer(serverObject).then(() => {
         ElMessage({
           message: "连接成功！",
           type: "success",
@@ -376,7 +384,7 @@ export default defineComponent({
     //save Server
     const handleSaveServer = (form: Server) => {
       //包一层外部对象
-      const ServerObject: ServerObject = {
+      const serverObject: ServerObject = {
         connectionId: "",
         databaseOid: 0,
         object: form,
@@ -385,11 +393,12 @@ export default defineComponent({
       };
       const serverForm = {
         parent: state.groupOldObject,
-        newObject: ServerObject,
+        newObject: serverObject,
       };
-      addServer(serverForm).then(() => {
+      addServer(serverForm).then((result: ResponseData) => {
         switchServerAddVisable(false);
-        emit("addTreeNode", "Server", state.groupOldObject, ServerObject);
+        // emit("addTreeNode", "Server", state.treeNode, result.data);
+        treeRef.value.append(result.data, state.treeNode);
       });
       switchServerAddVisable(false);
     };
@@ -407,19 +416,21 @@ export default defineComponent({
       };
       editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
         switchServerEditVisable(false);
-        emit(
-          "editTreeNode",
-          "Server",
-          null,
-          JSON.parse(state.serverOld),
-          result.data
-        );
+        // emit(
+        //   "editTreeNode",
+        //   "Server",
+        //   null,
+        //   JSON.parse(state.serverOld),
+        //   result.data
+        // );
+        state.treeNode?.setData(result.data);
       });
     };
     //打开删除server弹窗
-    const openServerDelDialog = (row: any) => {
+    const openServerDelDialog = (node: Node, data: any) => {
       state.serverDialogVisible = true;
-      state.serverObject = row;
+      state.serverObject = data;
+      state.treeNode = node;
     };
     //删除server逻辑
     const handleServerDel = () => {
@@ -429,13 +440,14 @@ export default defineComponent({
       };
       getTreeNodeDel(data).then(() => {
         state.serverDialogVisible = false;
-        emit("delTreeNode", "Server", null, state.serverObject);
+        // emit("delTreeNode", "Server", state.treeNode, state.serverObject);
+        treeRef.value.remove(state.treeNode);
       });
     };
     const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
       //需要记录已经展开的节点，不然刷新后都关闭了
 
-      console.log("node", node, resolve);
+      console.log("loadNode node", node);
       if (node.level === 0) {
         /**
          * ROOT节点，为了实现懒加载
@@ -445,13 +457,17 @@ export default defineComponent({
       }
 
       if (node.data.type == "ServerGroup") {
-        return getServerNode(node.data, resolve);
+        // return getServerNode(node.data, resolve);
+        return resolve(node.data.children);
       } else if (node.data.type == "Server") {
-        alert(111);
-        return;
+        alert("展开Server");
+        return resolve([]);
       }
     };
-    //get server list
+    /**
+     * @deprecated
+     * get server list
+     */
     const getServerNode = (node: any, resolve) => {
       let groupName = node.object.name;
       getServerList(groupName).then(

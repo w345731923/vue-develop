@@ -92,9 +92,8 @@ export default defineComponent({
       if (type == "ServerGroup") {
         state.treeData.push(node);
       } else if (type == "Server") {
-        debugger;
         if (parent) {
-          console.log("在父节点下新增节点");
+          alert("addTreeNode parent");
         } else {
           state.treeData.push(node);
         }
@@ -104,25 +103,33 @@ export default defineComponent({
     /**
      * 删除节点，根据唯一键删除树形菜单上节点
      */
-    const delTreeNode = (type: string, parent: any, node: any) => {
-      console.log("type ", type, parent, node);
-      if (type == "ServerGroup") {
-        //group - name
-        state.treeData = state.treeData.filter(
-          (element: TreeNode<ServerGroup>) =>
-            element.object.name != node.object.name
-        );
-      } else if (type == "Server") {
-        //server - serverId
-        state.treeData = state.treeData.filter(
-          (element: TreeNode<Server>) => element.serverId != node.serverId
-        );
-      } else if (type == "database") {
-        //database databaseOid
-        state.treeData = state.treeData.filter(
-          (element: TreeNode<Server>) => element.databaseOid != node.databaseOid
-        );
-      }
+    const delTreeNode = (type: string, parent: any, node: TreeNode<any>) => {
+      console.log("delTreeNode type ", type, parent, node);
+      // if (type == "ServerGroup") {
+      //   //group - name
+      //   state.treeData = state.treeData.filter(
+      //     (element: TreeNode<ServerGroup>) =>
+      //       element.object.name != node.object.name
+      //   );
+      // } else if (type == "Server") {
+      //   /**
+      //    * server - serverId唯一键
+      //    * 删除server有两种情况：a)group下删除server b)root下删除server
+      //    */
+      //   if (parent) {
+      //     alert("delTreeNode parent");
+      //   } else {
+      //     //b)root下删除server
+      //     state.treeData = state.treeData.filter(
+      //       (element: TreeNode<Server>) => element.serverId != node.serverId
+      //     );
+      //   }
+      // } else if (type == "database") {
+      //   //database databaseOid
+      //   state.treeData = state.treeData.filter(
+      //     (element: TreeNode<Server>) => element.databaseOid != node.databaseOid
+      //   );
+      // }
       console.log("state.treeData", state.treeData);
     };
     /**

@@ -39,6 +39,7 @@ export interface TreeNode<T> {
   serverId: string;
   object: T;
   connectionId: string;
+  children?:TreeNode[];
 }
 export interface ServerGroup {
   '@clazz': string;
