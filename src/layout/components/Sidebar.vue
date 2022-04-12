@@ -1,5 +1,11 @@
 <template>
-  <TreeNode :treeData="treeData" @queryRoot="queryRoot"/>
+  <TreeNode
+    :treeData="treeData"
+    @addTreeNode="addTreeNode"
+    @delTreeNode="delTreeNode"
+    @editTreeNode="editTreeNode"
+    @renameTreeNode="renameTreeNode"
+  />
 </template>
 
 <script lang="ts">
@@ -13,7 +19,10 @@ export default defineComponent({
   },
   props: {
     treeData: Array,
-    queryRoot:Function
+    addTreeNode: Function,
+    delTreeNode: Function,
+    editTreeNode: Function,
+    renameTreeNode: Function,    
   },
 });
 </script>

@@ -43,7 +43,14 @@ import GroupDialogAdd from "@/components/server-group/ServerGroupDialogAdd.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 
 import { addServerGroup, addServer, testServer } from "@/api/treeNode";
-import { ServerGroupForm, Server, ServerObject } from "@/types";
+import {
+  ServerGroupForm,
+  Server,
+  ServerObject,
+  TreeNode,
+  ServerGroup,
+  ResponseData,
+} from "@/types";
 import { ElMessage } from "element-plus";
 
 export default {
@@ -56,7 +63,7 @@ export default {
     return {};
   },
   props: {
-    queryRoot: {
+    addTreeNode: {
       type: Function,
       default: null,
     },
@@ -77,7 +84,7 @@ export default {
       default: null,
     },
   },
-  emits: ["queryRoot"],
+  emits: ["addTreeNode"],
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,
@@ -92,8 +99,21 @@ export default {
      */
     const saveGroup = (form: ServerGroupForm) => {
       addServerGroup(form).then(() => {
+        //后台保存成功，Tree追加节点
         switchGroupVisable(false);
-        emit("queryRoot");
+        const groupObject: ServerGroup = {
+          "@clazz": "com.highgo.developer.model.HgdbServerGroup",
+          name: form.serverGroupName,
+          displayName: form.serverGroupName,
+        };
+        const data: TreeNode<ServerGroup> = {
+          connectionId: "",
+          databaseOid: 0,
+          object: groupObject,
+          serverId: "",
+          type: "ServerGroup",
+        };
+        emit("addTreeNode", "ServerGroup", null, data);
       });
     };
     /**
@@ -113,10 +133,9 @@ export default {
         parent: null,
         newObject: ServerObject,
       };
-      addServer(serverForm).then(() => {
-        console.log("addServer ..............");
+      addServer(serverForm).then((result: ResponseData<TreeNode<Server>>) => {
         switchServerVisable(false);
-        emit("queryRoot");
+        emit("addTreeNode", "Server", null, result.data);
       });
     };
     //test Server

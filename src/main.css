@@ -24,7 +24,7 @@ body{
 .resizer_controls {
     position: relative;
     flex: 0 1 auto;
-    width: 2px;
+    width: 4px;
     cursor: col-resize;
     background-color: var(--mdc-theme-background, #dedede);
     z-index: 0;

@@ -5,57 +5,85 @@
       node-key="id"
       :expand-on-click-node="false"
       :highlight-current="true"
-      node-expand="handleNodeExpand"
       :load="loadNode"
       lazy
+      ref="treeRef"
+      :props="treeProps"
     >
+      <!-- @node-expand="handleNodeExpand" -->
       <template #default="{ node, data }">
         <div
           class="tree-node-row"
           aria-selected="false"
           @click="handleNodeClick($event)"
         >
-          <!-- <div class="tree-node-icon"> <img src="../../assets/server.png"></div>         -->
-          <div class="tree-node-icon tree-node-icon-gt">
-            <img
-              src="../../assets/server.png"
-              v-if="data.type === 'ServerGroup'"
-            />
-            <img src="../../assets/hgdb16.png" v-if="data.type === 'Server'" />
-            <img
-              src="../../assets/database.png"
-              v-if="data.type === 'db-name'"
-            />
-            <img
-              src="../../assets/folder_schema.png"
-              v-if="data.type === 'schema-group'"
-            />
-            <img src="../../assets/schema.png" v-if="data.type === 'schema'" />
-            <img
-              src="../../assets/folder_table.png"
-              v-if="data.type === 'table-group'"
-            />
-            <img src="../../assets/table.png" v-if="data.type === 'table'" />
-            <img
-              src="../../assets/folder_user.png"
-              v-if="data.type === 'role-group'"
-            />
-            <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
-          </div>
-          <div class="tree-node-name tree-node-name-gt">
-            <span v-if="data.type === 'Server'">
-              <span v-html="data.object.displayName"></span>
-            </span>
-            <span v-else>
-              {{ data.object.displayName }}
-            </span>
+          <div style="display: flex">
+            <div class="tree-node-icon tree-node-icon-gt">
+              <img
+                src="../../assets/server.png"
+                v-if="data.type === 'ServerGroup'"
+              />
+              <img
+                src="../../assets/hgdb16.png"
+                v-if="data.type === 'Server'"
+              />
+              <img
+                src="../../assets/database.png"
+                v-if="data.type === 'db-name'"
+              />
+              <img
+                src="../../assets/folder_schema.png"
+                v-if="data.type === 'schema-group'"
+              />
+              <img
+                src="../../assets/schema.png"
+                v-if="data.type === 'schema'"
+              />
+              <img
+                src="../../assets/folder_table.png"
+                v-if="data.type === 'table-group'"
+              />
+              <img src="../../assets/table.png" v-if="data.type === 'table'" />
+              <img
+                src="../../assets/folder_user.png"
+                v-if="data.type === 'role-group'"
+              />
+              <img
+                src="../../assets/user.png"
+                v-if="node.data.type === 'user'"
+              />
+            </div>
+            <div class="tree-node-name tree-node-name-gt">
+              <span v-if="data.type === 'Server'">
+                <span v-html="data.object.displayName"></span>
+              </span>
+              <span v-else>
+                {{ data.object.displayName }}
+              </span>
+            </div>
           </div>
           <div class="tree-node-action">
             <el-icon><document-add @click="openObjectAdd(data)" /></el-icon>
-            <el-icon><edit @click="openObjectEdit(data)" /></el-icon>
+            <el-icon><edit @click="openObjectEdit(node, data)" /></el-icon>
             <el-icon><delete @click="openObjectDel(data)" /></el-icon>
-            <img src="../../assets/refresh.png" />
+            <!-- <img src="../../assets/refresh.png" /> -->
           </div>
+          <!-- <el-dropdown ref="dropdown1" trigger="contextmenu" style="display:none">
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  ><el-icon
+                    ><document-add @click="openObjectAdd(data)" /></el-icon
+                ></el-dropdown-item>
+                <el-dropdown-item
+                  ><el-icon><edit @click="openObjectEdit(data)" /></el-icon
+                ></el-dropdown-item>
+                <el-dropdown-item
+                  ><el-icon><delete @click="openObjectDel(data)" /></el-icon
+                ></el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown> -->
         </div>
       </template>
     </el-tree>
@@ -119,8 +147,14 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { DocumentAdd, Edit, Delete } from "@element-plus/icons-vue";
+import type Node from "element-plus/es/components/tree/src/model/node";
+interface Tree {
+  name: string;
+  leaf?: boolean;
+  data: any;
+}
 
 import {
   defineComponent,
@@ -128,7 +162,7 @@ import {
   computed,
   ref,
   watch,
-  unref,
+  Ref,
   watchEffect,
 } from "vue";
 import { reactive, onMounted } from "vue";
@@ -138,12 +172,14 @@ import {
   addServer,
   editServer,
   testServer,
+  getServerList,
 } from "@/api/treeNode";
 import GroupDialogEdit from "@/components/server-group/ServerGroupDialogEdit.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
 
 import {
+  ResponseData,
   Server,
   ServerGroup,
   TreeNode,
@@ -158,7 +194,7 @@ interface TreeNodeState {
   //group
   groupVisible: Boolean;
   groupOldObject: TreeNode<ServerGroup> | null;
-  groupOldName: String;
+  groupOldName: string;
   groupDialogVisible: Boolean;
   //server
   serverAddVisible: Boolean;
@@ -180,10 +216,19 @@ export default defineComponent({
   },
   props: {
     treeData: Array,
-    queryRoot: Function,
+    addTreeNode: Function,
+    delTreeNode: Function,
+    editTreeNode: Function,
+    renameTreeNode: Function,
   },
 
   setup(props, { emit }) {
+    const treeRef: Ref = ref(null);
+    const treeProps = {
+      label: "name",
+      children: "zones",
+      isLeaf: "leaf",
+    };
     const state = reactive<TreeNodeState>({
       //group
       groupVisible: false,
@@ -197,11 +242,20 @@ export default defineComponent({
       serverOld: "",
       serverDialogVisible: false,
     });
+    const handleNodeExpand = (data: TreeNode<any>, node: any) => {
+      console.log(data, node);
+      if (data.type == "ServerGroup") {
+        console.log("ServerGroup", data);
+      } else if (data.type == "Server") {
+        console.log("Server", data);
+      }
+    };
     /**
      * 节点点击event
      */
     const handleNodeClick = (event: any) => {
       var el = event.currentTarget;
+      console.log("handleNodeClick event", event);
     };
     /**
      * 新建菜单对象
@@ -212,17 +266,17 @@ export default defineComponent({
         state.groupOldObject = data;
         switchServerAddVisable(true);
       }
-      //  else {
-      // }
     };
     /**
      * 编辑菜单对象
      */
-    const openObjectEdit = (data: TreeNode<any>) => {
+    const openObjectEdit = (node: any, data: TreeNode<any>) => {
       if (data.type === "ServerGroup") {
+        //group
         handleGroupUpdate(data);
       } else {
-        handleServerUpdate(data);
+        //server
+        handleServerUpdate(node, data);
       }
     };
     /**
@@ -242,7 +296,7 @@ export default defineComponent({
     //打开编辑Group弹窗,并赋值
     const handleGroupUpdate = (row: any) => {
       state.groupOldObject = row; //存储old值，用于save参数
-      state.groupOldName = row.object.displayName; //传给子界面
+      state.groupOldName = row.object.name; //传给子界面
       switchGroupVisable(true);
     };
     //保存Group
@@ -253,7 +307,13 @@ export default defineComponent({
       };
       getTreeNodeRename(data).then(() => {
         switchGroupVisable(false);
-        emit("queryRoot");
+        emit(
+          "renameTreeNode",
+          "ServerGroup",
+          null,
+          state.groupOldObject,
+          form.serverGroupName
+        );
       });
     };
     //打开删除group弹窗
@@ -269,7 +329,7 @@ export default defineComponent({
       };
       getTreeNodeDel(data).then(() => {
         state.groupDialogVisible = false;
-        emit("queryRoot");
+        emit("delTreeNode", "ServerGroup", null, state.groupOldObject);
       });
     };
 
@@ -280,7 +340,17 @@ export default defineComponent({
     const switchServerEditVisable = (flag: boolean) =>
       (state.serverEditVisible = flag);
     //打开编辑Server弹窗,并赋值
-    const handleServerUpdate = (row: any) => {
+    const handleServerUpdate = (node: Node, row: any) => {
+      console.log("handleServerUpdate node ", node);
+      console.log("handleServerUpdate row ", row);
+
+      /**
+       * 判断是否有父类
+       */
+      if (node.level == 2) {
+        state.groupOldName = node.parent.data.object.name;
+      }
+      // debugger;
       state.serverOld = JSON.stringify(row); //存储old值，用于save参数
       //注意：这里传的是object对象，save时候需要把外面包一层
       state.serverObject = row.object; //传给子界面
@@ -318,9 +388,8 @@ export default defineComponent({
         newObject: ServerObject,
       };
       addServer(serverForm).then(() => {
-        console.log("addServer ..............");
         switchServerAddVisable(false);
-        emit("queryRoot");
+        emit("addTreeNode", "Server", state.groupOldObject, ServerObject);
       });
       switchServerAddVisable(false);
     };
@@ -334,11 +403,17 @@ export default defineComponent({
           newObject: newObject, //new val
           oldObject: JSON.parse(state.serverOld), //old val
         },
-        serverGroupName: null,
+        serverGroupName: state.groupOldName,
       };
-      editServer(data).then(() => {
+      editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
         switchServerEditVisable(false);
-        emit("queryRoot");
+        emit(
+          "editTreeNode",
+          "Server",
+          null,
+          JSON.parse(state.serverOld),
+          result.data
+        );
       });
     };
     //打开删除server弹窗
@@ -354,11 +429,44 @@ export default defineComponent({
       };
       getTreeNodeDel(data).then(() => {
         state.serverDialogVisible = false;
-        emit("queryRoot");
+        emit("delTreeNode", "Server", null, state.serverObject);
       });
     };
+    const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
+      //需要记录已经展开的节点，不然刷新后都关闭了
+
+      console.log("node", node, resolve);
+      if (node.level === 0) {
+        /**
+         * ROOT节点，为了实现懒加载
+         * https://element-plus.gitee.io/zh-CN/component/tree.html#%E6%87%92%E5%8A%A0%E8%BD%BD%E8%87%AA%E5%AE%9A%E4%B9%89%E5%8F%B6%E5%AD%90%E8%8A%82%E7%82%B9
+         */
+        return resolve([]);
+      }
+
+      if (node.data.type == "ServerGroup") {
+        return getServerNode(node.data, resolve);
+      } else if (node.data.type == "Server") {
+        alert(111);
+        return;
+      }
+    };
+    //get server list
+    const getServerNode = (node: any, resolve) => {
+      let groupName = node.object.name;
+      getServerList(groupName).then(
+        (respon: ResponseData<TreeNode<Server>[]>) => {
+          console.log("succ respon ", respon);
+          resolve(respon.data);
+        }
+      );
+    };
     return {
+      treeRef,
       state,
+      treeProps,
+      handleNodeExpand,
+      loadNode,
       openObjectAdd,
       openObjectEdit,
       openObjectDel,
@@ -384,41 +492,21 @@ export default defineComponent({
       },
     };
   },
-  methods: {
-    loadNode(node: any, resolve: any) {
-      // console.log("node", node, resolve);
-      if (node.level === 0) {
-        return;
-      }
-      // if (node.level == 1) {
-      //   setTimeout(() => {
-      //     const data = [
-      //       {
-      //         label: "leaf",
-      //         leaf: true,
-      //       },
-      //       {
-      //         label: "zone",
-      //       },
-      //     ];
-
-      //     return resolve(data);
-      //   }, 500);
-      // }
-    },
-  },
+  methods: {},
 });
 </script>
 
 <style scoped>
 .tree-view {
-  min-width: 12%;
+  min-width: 10%;
+  max-width: 20%;
 }
 .el-tree {
   flex: 1;
+  width: 100%;
 }
 .el-tree-node__content .tree-node-row div {
-  margin-right: 6px;
+  margin-right: 2px;
   margin-left: 2px;
 }
 
@@ -427,8 +515,8 @@ export default defineComponent({
   box-sizing: border-box;
   height: 20px;
   display: flex;
-  align-content: center;
-  /* padding: 0 5px; */
+  /* align-content: center; */
+  align-content: space-between;
   user-select: none;
   white-space: nowrap;
   position: static;
@@ -439,6 +527,7 @@ export default defineComponent({
   flex-shrink: 0;
   width: 16px;
   height: 16px;
+  flex-shrink: 0;
 }
 .tree-node-icon-gt {
   position: relative;
@@ -454,6 +543,8 @@ export default defineComponent({
   height: 100%;
 }
 .tree-node-action {
+  flex-shrink: 0;
+  z-index: 2;
   box-sizing: border-box;
   margin-left: auto !important;
   margin-right: 16px !important;

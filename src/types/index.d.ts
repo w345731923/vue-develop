@@ -38,18 +38,19 @@ export interface TreeNode<T> {
   databaseOid: number;
   serverId: string;
   object: T;
+  connectionId: string;
 }
 export interface ServerGroup {
-  oid: number;
+  '@clazz': string;
+  oid?: number;
   name: string;
-  class: string;
-  isRoleLeaf: boolean;
-  displayName: string | undefined;
-  keyString: string;
-  schema: string;
-  caseModel: string;
-  leaf: boolean;
-  database: string;
+  isRoleLeaf?: boolean;
+  displayName?: string;//显示名称
+  caseModel?: string;
+  leaf?: boolean;
+  database?: string;
+  schema?: string;
+  keyString?: string;
 }
 //新建group
 export interface ServerGroupForm {
@@ -70,7 +71,7 @@ export interface ServerEditForm {
     newObject: ServerObject
     oldObject: ServerObject;
   }
-  serverGroupName: string | null
+  serverGroupName: string | null;
 }
 export interface ServerObject {
   connectionId: string,
@@ -97,4 +98,17 @@ export interface Server {
   sslKeyPath: string,//客户端密钥
   sslCrtPath: string,//客户端证书
   rootCrtPath: string,//根证书
+  driverProList?:[];//properties 第一版先不带
+  id?:string,
+  isRoleLeaf?: boolean;
+  displayName?: string;//显示名称    
+  serverGlobalInfo?:string,
+  defaultDatabase?:string,
+  loginInfo?:string,
+  sshInfo?:string,//当前版本不支持ssl
+  caseModel?: string;
+  leaf?: boolean;
+  database?: string;
+  schema?: string;
+  keyString?: string;
 }
