@@ -1,7 +1,7 @@
 import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
-    , ServerGroup, ServerObject, Server
+    , ServerGroup, Server
     , ServerForm, ServerEditForm
 } from '@/types'
 
@@ -56,14 +56,27 @@ export async function editServer(data: ServerEditForm) {
  * @param {*} data  
  * @returns 
  */
-export async function testServer(data: ServerObject) {
+export async function testServer(data: TreeNode<Server>) {
     return await http.request<ResponseData>('/server/testConnect', { method: 'POST', data });
 }
 /**
- * @deprecated
  * 查询group下的server
  * @returns 
  */
 export async function getServerList(groupName: string) {
     return await http.request<ResponseData<TreeNode<Server>[]>>('/servergroup/list/' + groupName, { method: 'POST' })
+}
+/**
+ * 给Server节点建立连接，并返回ConnectionID
+ * @returns 
+ */
+export async function serverConnect(data: TreeNode<Server>) {
+    return await http.request<ResponseData<TreeNode<Server>[]>>('/server/connect', { method: 'POST', data });
+}
+/**
+ * 查询server下的database
+ * @returns 
+ */
+export async function getDatabaseList(data: TreeNode<Server>) {
+    return await http.request<ResponseData<TreeNode<Server>[]>>('/server/list', { method: 'POST', data });
 }

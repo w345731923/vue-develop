@@ -46,7 +46,6 @@ import { addServerGroup, addServer, testServer } from "@/api/treeNode";
 import {
   ServerGroupForm,
   Server,
-  ServerObject,
   TreeNode,
   ServerGroup,
   ResponseData,
@@ -123,7 +122,7 @@ export default {
     const switchServerVisable = (flag: boolean) => (state.serverVisible = flag);
     //save server
     const saveServer = (form: Server) => {
-      const ServerObject: ServerObject = {
+      const ServerObject: TreeNode<Server> = {
         connectionId: "",
         databaseOid: 0,
         object: form,
@@ -141,7 +140,7 @@ export default {
     };
     //test Server
     const handleTestServer = (form: Server) => {
-      const ServerObject: ServerObject = {
+      const ServerObject: TreeNode<Server> = {
         connectionId: "",
         databaseOid: 0,
         object: form,

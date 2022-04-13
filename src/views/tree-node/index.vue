@@ -175,6 +175,8 @@ import {
   editServer,
   testServer,
   getServerList,
+  getDatabaseList,
+  serverConnect,
 } from "@/api/treeNode";
 import GroupDialogEdit from "@/components/server-group/ServerGroupDialogEdit.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
@@ -187,7 +189,6 @@ import {
   TreeNode,
   ServerGroupForm,
   ServerEditForm,
-  ServerObject,
   TreeNodeDel,
 } from "@/types";
 import { ElMessage } from "element-plus";
@@ -367,7 +368,7 @@ export default defineComponent({
     //test server
     const handleTestServer = (form: Server) => {
       //包一层外部对象
-      const serverObject: ServerObject = {
+      const serverObject: TreeNode<Server> = {
         connectionId: "",
         databaseOid: 0,
         object: form,
@@ -384,7 +385,7 @@ export default defineComponent({
     //save Server
     const handleSaveServer = (form: Server) => {
       //包一层外部对象
-      const serverObject: ServerObject = {
+      const serverObject: TreeNode<Server> = {
         connectionId: "",
         databaseOid: 0,
         object: form,
@@ -405,7 +406,7 @@ export default defineComponent({
     //edit Server
     const handleEditServer = (form: Server) => {
       //包一层外部对象
-      const newObject: ServerObject = JSON.parse(state.serverOld);
+      const newObject: TreeNode<Server> = JSON.parse(state.serverOld);
       newObject.object = form;
       const data: ServerEditForm = {
         editDBObjectInfo: {
@@ -461,11 +462,10 @@ export default defineComponent({
         // return resolve(node.data.children);
       } else if (node.data.type == "Server") {
         alert("展开Server");
-        return resolve([]);
+        return getDatabase(node.data, resolve);
       }
     };
     /**
-     * @deprecated
      * get server list
      */
     const getServerNode = (node: any, resolve) => {
@@ -476,6 +476,22 @@ export default defineComponent({
           resolve(respon.data);
         }
       );
+    };
+    /**
+     * get server list
+     */
+    const getDatabase = (node: any, resolve) => {
+      serverConnect(node).then((respon: any) => {
+        console.log("serverConnect succ respon ", respon);
+        // resolve(respon.data);
+        node.connectionId = respon.data;
+        getDatabaseList(node).then((respon: any) => {
+          console.log("getDatabaseList succ respon ", respon);
+          resolve(respon.data);
+        });
+        resolve([]);
+      });
+      resolve([]);
     };
     return {
       treeRef,
