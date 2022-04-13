@@ -142,15 +142,15 @@ export default defineComponent({
       newObject: any
     ) => {
       console.log("type ", type, parent, oldObject, newObject);
-      if (type == "Server") {
-        state.treeData.forEach((element: TreeNode<Server>) => {
-          if (element.serverId == oldObject.serverId) {
-            element.object = newObject.object;
-          }
-        });
-      } else if (type == "database") {
-        //database databaseOid
-      }
+      // if (type == "Server") {
+      //   state.treeData.forEach((element: TreeNode<Server>) => {
+      //     if (element.serverId == oldObject.serverId) {
+      //       element.object = newObject.object;
+      //     }
+      //   });
+      // } else if (type == "database") {
+      //   //database databaseOid
+      // }
       console.log("state.treeData", state.treeData);
     };
     /**

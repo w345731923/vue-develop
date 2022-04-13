@@ -457,8 +457,8 @@ export default defineComponent({
       }
 
       if (node.data.type == "ServerGroup") {
-        // return getServerNode(node.data, resolve);
-        return resolve(node.data.children);
+        return getServerNode(node.data, resolve);
+        // return resolve(node.data.children);
       } else if (node.data.type == "Server") {
         alert("展开Server");
         return resolve([]);
