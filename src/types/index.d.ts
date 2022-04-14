@@ -36,9 +36,9 @@ export interface TreeNodeRename<T = any> {
 export interface TreeNode<T> {
   type: string;//node类型
   databaseOid: number;
-  serverId: string;
+  serverId: string | null;
   object: T;
-  connectionId: string;
+  connectionId: string | null;
   children?:TreeNode[];
 }
 export interface ServerGroup {
@@ -109,56 +109,30 @@ export interface Server {
 }
 export interface Database {
   '@clazz': string;
-  oid: string,
-  name: string,//连接名
-  hostAddress: string,
-  port: number,
-  databaseName: string,
-  userName: string,
-  password: string,
-  isSavePassword: boolean,//记住密码
-  isHGSE: boolean,//是否安全版
-  isShowTemplateDb: boolean,//显示范本数据库
-  isShowSystemSchema: boolean,//显示系统模式
-  useSSL: boolean,//开启ssl
-  sslModel: string,//ssl模式
-  sslKeyPath: string,//客户端密钥
-  sslCrtPath: string,//客户端证书
-  rootCrtPath: string,//根证书
-  driverProList?:[];//properties 第一版先不带
-  id?:string,
+  oid?: string,
+  name: string,//数据库名
+  encoding: string;//编码 "UTF8"
+  collation: string;//排序规则排序  "zh_CN.UTF-8"
+  characterType: string;//字符分类  "zh_CN.UTF-8"
+  connectionLimit: numnber;//连接限制 -1
+  description: string;//注释
+  databaseowner: string;//拥有者
+  spcname: string;//表空间  "pg_default"
+  templateName: string;//范本
+  datistemplate: boolean;//是范本
+  datallowconn: boolean;//允许连接
+  isTerminatingDueToNoInputTimeout?: boolean;//
+  displayName?: string;//显示html名称  
   isRoleLeaf?: boolean;
-  displayName?: string;//显示名称    
-  serverGlobalInfo?:string,
-  defaultDatabase?:string,
-  loginInfo?:string,
-  sshInfo?:string,//当前版本不支持ssl
   caseModel?: string;
   leaf?: boolean;
-  database?: string;
   schema?: string;
   keyString?: string;
 }
-
-// @clazz: "com.highgo.developer.model.HgdbDatabase"
-// oid: 13214
-// name: "postgres"
-// isRoleLeaf: false
-// owner: null
-// template: null
-// encoding: "UTF8"
-// collation: "zh_CN.UTF-8"
-// characterType: "zh_CN.UTF-8"
-// connectionLimit: -1
-// description: "default administrative connection database"
-// databaseowner: "apache"
-// spcname: "pg_default"
-// templateName: ""
-// datistemplate: false
-// datallowconn: true
-// isTerminatingDueToNoInputTimeout: false
-// displayName: "<strong>postgres</strong>"
-// schema: null
-// caseModel: "Upper"
-// leaf: false
-// keyString: null
+/**
+ * 新建database
+ */
+ export interface DatabaseForm {
+  parent: TreeNode<Server> | null;
+  newObject: TreeNode<Database>
+}

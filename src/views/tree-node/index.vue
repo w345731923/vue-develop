@@ -29,7 +29,7 @@
               />
               <img
                 src="../../assets/database.png"
-                v-if="data.type === 'db-name'"
+                v-if="data.type === 'Database'"
               />
               <img
                 src="../../assets/folder_schema.png"
@@ -54,7 +54,7 @@
               />
             </div>
             <div class="tree-node-name tree-node-name-gt">
-              <span v-if="data.type === 'Server'">
+              <span v-if="data.type === 'Server' || data.type === 'Database'">
                 <span v-html="data.object.displayName"></span>
               </span>
               <span v-else>
@@ -67,7 +67,8 @@
               ><document-add @click="openObjectAdd(node, data)"
             /></el-icon>
             <el-icon><edit @click="openObjectEdit(node, data)" /></el-icon>
-            <el-icon><delete @click="openObjectDel(node, data)" /></el-icon>
+            <el-icon><delete @click="openRemoveNodeDialog(node)" /></el-icon>
+            <el-icon><money @click="openRenameNodeDialog(node)" /></el-icon>
             <!-- <img src="../../assets/refresh.png" /> -->
           </div>
           <!-- <el-dropdown ref="dropdown1" trigger="contextmenu" style="display:none">
@@ -90,6 +91,37 @@
       </template>
     </el-tree>
 
+    <!-- ===============================删除节点======================================= -->
+    <template v-if="state.removeDialogVisible">
+      <el-dialog
+        v-model="state.removeDialogVisible"
+        title="删除对象"
+        width="30%"
+        center
+      >
+        <span>确定要删除'{{ state.treeNode.data.object.name }}'吗？</span>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="state.removeDialogVisible = false"
+              >取消</el-button
+            >
+            <el-button type="primary" @click="handleRemoveNodeSubmit"
+              >确认</el-button
+            >
+          </span>
+        </template>
+      </el-dialog>
+    </template>
+    <!-- ===============================重命名节点======================================= -->
+    <template v-if="state.renameDialogVisible">
+      <RenameNodeDialog
+        :visible="state.renameDialogVisible"
+        :data="state.treeNode.data"
+        @saveModal="handleRenameNodeSubmit"
+        @closeModal="state.renameDialogVisible = false"
+      />
+    </template>
+
     <!-- ===============================ServerGroup======================================= -->
     <GroupDialogEdit
       :visible="state.groupVisible"
@@ -97,21 +129,6 @@
       @saveModal="saveServerGroup"
       @closeModal="switchGroupVisable"
     />
-    <!-- ServerGroup删除确认框 -->
-    <el-dialog
-      v-model="state.groupDialogVisible"
-      title="删除对象"
-      width="30%"
-      center
-    >
-      <span>确定要删除'{{ state.groupOldObject.object.name }}'吗？</span>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="state.groupDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleGroupDel">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
 
     <!-- ===============================Server======================================= -->
     <ServerDialogAdd
@@ -131,26 +148,20 @@
       />
     </template>
 
-    <!-- Server删除确认框 -->
-    <el-dialog
-      v-model="state.serverDialogVisible"
-      title="删除连接"
-      width="30%"
-      center
-    >
-      <span>确定要删除'{{ state.serverObject.object.name }}'吗？</span>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="state.serverDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleServerDel">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- ===============================db======================================= -->
+    <template v-if="state.dbAddVisible">
+      <DBDialogAdd
+        :visible="state.dbAddVisible"
+        :dbForm="state.dbForm"
+        @saveModal="handleSaveDB"
+        @closeModal="switchDBAddVisable"
+      />
+    </template>
   </div>
 </template>
 
 <script lang="ts">
-import { DocumentAdd, Edit, Delete } from "@element-plus/icons-vue";
+import { DocumentAdd, Edit, Delete, Money } from "@element-plus/icons-vue";
 import type Node from "element-plus/es/components/tree/src/model/node";
 interface Tree {
   name: string;
@@ -177,10 +188,13 @@ import {
   getServerList,
   getDatabaseList,
   serverConnect,
+  addDB,
 } from "@/api/treeNode";
+import RenameNodeDialog from "./renameNode.vue";
 import GroupDialogEdit from "@/components/server-group/ServerGroupDialogEdit.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
+import DBDialogAdd from "@/components/database/DBDialogAdd.vue";
 
 import {
   ResponseData,
@@ -190,34 +204,47 @@ import {
   ServerGroupForm,
   ServerEditForm,
   TreeNodeDel,
+  Database,
+  DatabaseForm,
+  TreeNodeRename,
 } from "@/types";
 import { ElMessage } from "element-plus";
 
 interface TreeNodeState {
-  treeNode: Node | undefined;
+  treeNode: Node | null;
+  removeDialogVisible: Boolean;
+  renameDialogVisible: Boolean;
+
   //group
   groupVisible: Boolean;
   groupOldObject: TreeNode<ServerGroup> | null;
   groupOldName: string;
-  groupDialogVisible: Boolean;
+
   //server
   serverAddVisible: Boolean;
   serverEditVisible: Boolean;
-  serverForm: Server | undefined;
-  serverObject: Server | undefined;
+  serverForm: Server | null;
+  serverObject: TreeNode<Server> | null;
   serverOld: string;
-  serverDialogVisible: Boolean;
+
+  //database
+  dbAddVisible: Boolean;
+  dbEditVisible: Boolean;
+  dbForm: Database | null;
 }
 
 export default defineComponent({
   name: "treeNode",
   components: {
-    GroupDialogEdit,
-    ServerDialogAdd,
-    ServerDialogEdit,
     DocumentAdd,
     Edit,
     Delete,
+    Money,
+    RenameNodeDialog,
+    GroupDialogEdit,
+    ServerDialogAdd,
+    ServerDialogEdit,
+    DBDialogAdd,
   },
   props: {
     treeData: Array,
@@ -235,19 +262,26 @@ export default defineComponent({
       isLeaf: "leaf",
     };
     const state = reactive<TreeNodeState>({
-      treeNode: undefined,
+      treeNode: null,
+      removeDialogVisible: false, //移除节点
+      renameDialogVisible: false, //重命名节点
+
       //group
       groupVisible: false,
       groupOldObject: null,
       groupOldName: "",
-      groupDialogVisible: false,
+
       //server
       serverAddVisible: false,
       serverEditVisible: false,
-      serverForm: undefined,
-      serverObject: undefined,
+      serverForm: null,
+      serverObject: null,
       serverOld: "",
-      serverDialogVisible: false,
+
+      //db
+      dbAddVisible: false,
+      dbEditVisible: false,
+      dbForm: null,
     });
     const handleNodeExpand = (data: TreeNode<any>, node: any) => {
       console.log(data, node);
@@ -261,7 +295,9 @@ export default defineComponent({
      * 节点点击event
      */
     const handleNodeClick = (event: any, data: any, node: any) => {
-      console.log("handleNodeClick data", data, node);
+      console.log("handleNodeClick node", node);
+      console.log("handleNodeClick data", data);
+      console.log("handleNodeClick tree", treeRef.value);
     };
     /**
      * 新建菜单对象
@@ -269,9 +305,35 @@ export default defineComponent({
     const openObjectAdd = (node: Node, data: TreeNode<any>) => {
       console.log("openObjectAdd data", data);
       if (data.type === "ServerGroup") {
+        //新建Server
         state.groupOldObject = data;
         state.treeNode = node;
         switchServerAddVisable(true);
+      } else if (data.type === "Server") {
+        //新建数据库
+        state.treeNode = node;
+        //连接server使用的dbname
+        const dbname = node.data.object.databaseName;
+        //查找默认db数据
+        const defaultDatabase = node.childNodes.filter((element: Node) => {
+          if (dbname == element.data.object.name) return true;
+        })[0];
+
+        state.dbForm = {
+          "@clazz": "com.highgo.developer.model.HgdbDatabase",
+          name: "", //数据库名
+          encoding: defaultDatabase.data.object.encoding, //编码 "UTF8"
+          collation: defaultDatabase.data.object.collation, //排序规则排序  "zh_CN.UTF-8"
+          characterType: "", //字符分类  "zh_CN.UTF-8"
+          connectionLimit: defaultDatabase.data.object.connectionLimit, //连接限制 -1
+          description: "", //注释
+          databaseowner: defaultDatabase.data.object.databaseowner, //拥有者
+          spcname: defaultDatabase.data.object.spcname, //表空间  "pg_default"
+          templateName: "", //范本
+          datistemplate: false, //是范本
+          datallowconn: false, //允许连接
+        };
+        switchDBAddVisable(true);
       }
     };
     /**
@@ -287,16 +349,50 @@ export default defineComponent({
       }
     };
     /**
-     * 删除菜单对象
+     * 删除节点弹窗
      */
-    const openObjectDel = (node: Node, data: TreeNode<any>) => {
-      if (data.type === "ServerGroup") {
-        openGroupDelDialog(node, data);
-      } else {
-        openServerDelDialog(node, data);
-      }
+    const openRemoveNodeDialog = (node: Node) => {
+      state.treeNode = node;
+      state.removeDialogVisible = true;
     };
-
+    /**
+     * 删除节点提交
+     */
+    const handleRemoveNodeSubmit = () => {
+      const data: TreeNodeDel = {
+        delObject: state.treeNode?.data, //删除对象
+        deleteOptions: { isCascadeDelete: true }, //是否级联
+      };
+      getTreeNodeDel(data).then(() => {
+        state.removeDialogVisible = false;
+        treeRef.value.remove(state.treeNode);
+      });
+    };
+    /**
+     * 重命名节点弹窗
+     */
+    const openRenameNodeDialog = (node: Node) => {
+      state.treeNode = node;
+      state.renameDialogVisible = true;
+    };
+    /**
+     * 重命名节点提交
+     */
+    const handleRenameNodeSubmit = (form: { name: string }) => {
+      const data: TreeNodeRename = {
+        dbObject: state.treeNode?.data, //删除对象
+        newName: form.name, //是否级联
+      };
+      getTreeNodeRename(data).then(() => {
+        debugger
+        const src: TreeNode<any> = treeRef.value.data.filter(
+          (element: TreeNode<any>) =>
+            element.object.name == state.treeNode?.data.object.name
+        )[0];
+        src.object.name = form.name;
+        debugger;
+      });
+    };
     //---------------Group---------------------
     //Group编辑窗口开关
     const switchGroupVisable = (flag: boolean) => (state.groupVisible = flag);
@@ -321,24 +417,6 @@ export default defineComponent({
           state.groupOldObject,
           form.serverGroupName
         );
-      });
-    };
-    //打开删除group弹窗
-    const openGroupDelDialog = (node: Node, row: any) => {
-      state.groupDialogVisible = true;
-      state.groupOldObject = row;
-      state.treeNode = node;
-    };
-    //删除group逻辑
-    const handleGroupDel = () => {
-      const data = {
-        delObject: state.groupOldObject, //删除对象
-        deleteOptions: { isCascadeDelete: true }, //是否级联
-      };
-      getTreeNodeDel(data).then(() => {
-        state.groupDialogVisible = false;
-        // emit("delTreeNode", "ServerGroup", null, state.groupOldObject);
-        treeRef.value.remove(state.treeNode);
       });
     };
 
@@ -417,34 +495,38 @@ export default defineComponent({
       };
       editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
         switchServerEditVisable(false);
-        // emit(
-        //   "editTreeNode",
-        //   "Server",
-        //   null,
-        //   JSON.parse(state.serverOld),
-        //   result.data
-        // );
         state.treeNode?.setData(result.data);
       });
     };
-    //打开删除server弹窗
-    const openServerDelDialog = (node: Node, data: any) => {
-      state.serverDialogVisible = true;
-      state.serverObject = data;
-      state.treeNode = node;
-    };
-    //删除server逻辑
-    const handleServerDel = () => {
-      const data: TreeNodeDel = {
-        delObject: state.serverObject, //删除对象
-        deleteOptions: { isCascadeDelete: true }, //是否级联
+
+    //---------------database---------------------
+    //db编辑窗口开关
+    const switchDBAddVisable = (flag: boolean) => (state.dbAddVisible = flag);
+    const switchDBEditVisable = (flag: boolean) => (state.dbEditVisible = flag);
+    //save db
+    const handleSaveDB = (form: Database) => {
+      const server: any = state.treeNode?.data;
+      //包一层外部对象
+      const newObject: TreeNode<Database> = {
+        connectionId: server.connectionId,
+        databaseOid: 0,
+        object: form,
+        serverId: server.serverId,
+        type: "Database",
       };
-      getTreeNodeDel(data).then(() => {
-        state.serverDialogVisible = false;
-        // emit("delTreeNode", "Server", state.treeNode, state.serverObject);
-        treeRef.value.remove(state.treeNode);
+      const serverForm: DatabaseForm = {
+        parent: server,
+        newObject: newObject,
+      };
+      addDB(serverForm).then((result: ResponseData) => {
+        switchDBAddVisable(false);
+        treeRef.value.append(result.data, state.treeNode);
       });
     };
+
+    /**
+     * 展开属性菜单 懒加载
+     */
     const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
       //需要记录已经展开的节点，不然刷新后都关闭了
 
@@ -461,7 +543,6 @@ export default defineComponent({
         return getServerNode(node.data, resolve);
         // return resolve(node.data.children);
       } else if (node.data.type == "Server") {
-        alert("展开Server");
         return getDatabase(node.data, resolve);
       }
     };
@@ -498,22 +579,29 @@ export default defineComponent({
       state,
       treeProps,
       handleNodeExpand,
+
       loadNode,
+      openRemoveNodeDialog,
+      openRenameNodeDialog,
+      handleRemoveNodeSubmit,
+      handleRenameNodeSubmit,
+
       openObjectAdd,
       openObjectEdit,
-      openObjectDel,
+
       handleNodeClick,
       handleGroupUpdate,
       saveServerGroup,
       switchGroupVisable,
-      handleGroupDel,
       switchServerAddVisable,
       switchServerEditVisable,
       handleServerUpdate,
       handleSaveServer,
       handleEditServer,
-      handleServerDel,
       handleTestServer,
+      switchDBAddVisable,
+      switchDBEditVisable,
+      handleSaveDB,
     };
   },
   data() {

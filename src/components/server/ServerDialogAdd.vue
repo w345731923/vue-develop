@@ -147,6 +147,7 @@ export default defineComponent({
   props: {
     saveModal: Function,
     closeModal: Function,
+    testModal: Function,
     visible: {
       type: Boolean,
       default: false,
