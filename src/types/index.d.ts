@@ -30,6 +30,12 @@ export interface TreeNodeRename<T = any> {
   dbObject: T;
   newName: string;
 }
+export interface DropDownMenu {
+  key: number;
+  text: string;
+  disabled:boolean;
+  onClick: Function
+}
 /**
  * group
  */
@@ -39,7 +45,7 @@ export interface TreeNode<T> {
   serverId: string | null;
   object: T;
   connectionId: string | null;
-  children?:TreeNode[];
+  children?: TreeNode[];
 }
 export interface ServerGroup {
   '@clazz': string;
@@ -93,14 +99,14 @@ export interface Server {
   sslKeyPath: string,//客户端密钥
   sslCrtPath: string,//客户端证书
   rootCrtPath: string,//根证书
-  driverProList?:[];//properties 第一版先不带
-  id?:string,
+  driverProList?: [];//properties 第一版先不带
+  id?: string,
   isRoleLeaf?: boolean;
   displayName?: string;//显示名称    
-  serverGlobalInfo?:string,
-  defaultDatabase?:string,
-  loginInfo?:string,
-  sshInfo?:string,//当前版本不支持ssl
+  serverGlobalInfo?: string,
+  defaultDatabase?: string,
+  loginInfo?: string,
+  sshInfo?: string,//当前版本不支持ssl
   caseModel?: string;
   leaf?: boolean;
   database?: string;
@@ -132,7 +138,7 @@ export interface Database {
 /**
  * 新建database
  */
- export interface DatabaseForm {
+export interface DatabaseForm {
   parent: TreeNode<Server> | null;
   newObject: TreeNode<Database>
 }

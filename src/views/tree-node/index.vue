@@ -10,67 +10,83 @@
       ref="treeRef"
       :props="treeProps"
     >
-      <!-- @node-expand="handleNodeExpand" -->
       <template #default="{ node, data }">
         <div
           class="tree-node-row"
           aria-selected="false"
           @click="handleNodeClick($event, data, node)"
         >
-          <div style="display: flex">
-            <div class="tree-node-icon tree-node-icon-gt">
-              <img
-                src="../../assets/server.png"
-                v-if="data.type === 'ServerGroup'"
-              />
-              <img
-                src="../../assets/hgdb16.png"
-                v-if="data.type === 'Server'"
-              />
-              <img
-                src="../../assets/database.png"
-                v-if="data.type === 'Database'"
-              />
-              <img
-                src="../../assets/folder_schema.png"
-                v-if="data.type === 'schema-group'"
-              />
-              <img
-                src="../../assets/schema.png"
-                v-if="data.type === 'schema'"
-              />
-              <img
-                src="../../assets/folder_table.png"
-                v-if="data.type === 'table-group'"
-              />
-              <img src="../../assets/table.png" v-if="data.type === 'table'" />
-              <img
-                src="../../assets/folder_user.png"
-                v-if="data.type === 'role-group'"
-              />
-              <img
-                src="../../assets/user.png"
-                v-if="node.data.type === 'user'"
-              />
-            </div>
-            <div class="tree-node-name tree-node-name-gt">
-              <span v-if="data.type === 'Server' || data.type === 'Database'">
-                <span v-html="data.object.displayName"></span>
-              </span>
-              <span v-else>
-                {{ data.object.displayName }}
-              </span>
-            </div>
+          <div class="tree-node-icon tree-node-icon-gt">
+            <img
+              src="../../assets/server.png"
+              v-if="data.type === 'ServerGroup'"
+            />
+            <img src="../../assets/hgdb16.png" v-if="data.type === 'Server'" />
+            <img
+              src="../../assets/database.png"
+              v-if="data.type === 'Database'"
+            />
+            <img
+              src="../../assets/folder_schema.png"
+              v-if="data.type === 'schema-group'"
+            />
+            <img src="../../assets/schema.png" v-if="data.type === 'schema'" />
+            <img
+              src="../../assets/folder_table.png"
+              v-if="data.type === 'table-group'"
+            />
+            <img src="../../assets/table.png" v-if="data.type === 'table'" />
+            <img
+              src="../../assets/folder_user.png"
+              v-if="data.type === 'role-group'"
+            />
+            <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
           </div>
-          <div class="tree-node-action">
+          <div
+            class="tree-node-name tree-node-name-gt"
+            style="padding-right: 16px"
+          >
+            <span v-if="data.type === 'Server' || data.type === 'Database'">
+              <span v-html="data.object.displayName"></span>
+            </span>
+            <span v-else>
+              {{ data.object.displayName }}
+            </span>
+          </div>
+          <div class="tree-node-button">
+            <el-dropdown
+              ref="buttonDropdown"
+              trigger="click"
+              @command="handleCommand"
+            >
+              <!-- style="margin-right: 30px" -->
+              <el-icon><message-box @click="addDropDownMenu(node)" /></el-icon>
+              <!-- <el-icon><message-box @click="nodeButtonExpand(node)" /></el-icon> -->
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    class="dropMenu-item"
+                    v-for="(item, index) in state.dropdownMenu"
+                    :key="index"
+                    :command="{ menu: item, node: node }"
+                    :disabled="item.disabled"
+                    >{{ item.text }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+
+          <!-- <div class="tree-node-action">
             <el-icon
               ><document-add @click="openObjectAdd(node, data)"
             /></el-icon>
             <el-icon><edit @click="openObjectEdit(node, data)" /></el-icon>
             <el-icon><delete @click="openRemoveNodeDialog(node)" /></el-icon>
             <el-icon><money @click="openRenameNodeDialog(node)" /></el-icon>
-            <!-- <img src="../../assets/refresh.png" /> -->
-          </div>
+          </div> -->
+          <!-- <img src="../../assets/refresh.png" /> -->
+
           <!-- <el-dropdown ref="dropdown1" trigger="contextmenu" style="display:none">
             <template #dropdown>
               <el-dropdown-menu>
@@ -161,7 +177,13 @@
 </template>
 
 <script lang="ts">
-import { DocumentAdd, Edit, Delete, Money } from "@element-plus/icons-vue";
+import {
+  // DocumentAdd,
+  Edit,
+  Delete,
+  Money,
+  MessageBox,
+} from "@element-plus/icons-vue";
 import type Node from "element-plus/es/components/tree/src/model/node";
 interface Tree {
   name: string;
@@ -198,6 +220,7 @@ import DBDialogAdd from "@/components/database/DBDialogAdd.vue";
 
 import {
   ResponseData,
+  ServerForm,
   Server,
   ServerGroup,
   TreeNode,
@@ -207,10 +230,13 @@ import {
   Database,
   DatabaseForm,
   TreeNodeRename,
+  DropDownMenu,
 } from "@/types";
-import { ElMessage } from "element-plus";
+import { breadcrumbProps, ElMessage } from "element-plus";
 
 interface TreeNodeState {
+  dropdownMenu: DropDownMenu[];
+
   treeNode: Node | null;
   removeDialogVisible: Boolean;
   renameDialogVisible: Boolean;
@@ -236,10 +262,11 @@ interface TreeNodeState {
 export default defineComponent({
   name: "treeNode",
   components: {
-    DocumentAdd,
-    Edit,
-    Delete,
-    Money,
+    MessageBox,
+    // DocumentAdd,
+    // Edit,
+    // Delete,
+    // Money,
     RenameNodeDialog,
     GroupDialogEdit,
     ServerDialogAdd,
@@ -255,13 +282,15 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
-    const treeRef: Ref = ref(null);
+    const treeRef: Ref = ref(null); //树形结果对象
+    const buttonDropdown = ref(); //节点扩展按钮下拉对象
     const treeProps = {
       label: "name",
       children: "zones",
       isLeaf: "leaf",
     };
     const state = reactive<TreeNodeState>({
+      dropdownMenu: [],
       treeNode: null,
       removeDialogVisible: false, //移除节点
       renameDialogVisible: false, //重命名节点
@@ -283,14 +312,7 @@ export default defineComponent({
       dbEditVisible: false,
       dbForm: null,
     });
-    const handleNodeExpand = (data: TreeNode<any>, node: any) => {
-      console.log(data, node);
-      if (data.type == "ServerGroup") {
-        console.log("ServerGroup", data);
-      } else if (data.type == "Server") {
-        console.log("Server", data);
-      }
-    };
+
     /**
      * 节点点击event
      */
@@ -300,16 +322,102 @@ export default defineComponent({
       console.log("handleNodeClick tree", treeRef.value);
     };
     /**
+     * 0删除，1重命名，2刷新，
+     * 11新建连接
+     * 20打开连接，21关闭连接，22新建数据库，23修改密码，24编辑连接
+     */
+    const addDropDownMenu = (node: Node) => {
+      console.log("addDropDownMenu node =", node);
+      state.dropdownMenu = [];
+      let menu: DropDownMenu[] = [];
+      const removeMenu = {
+        key: 0,
+        text: "删除",
+        disabled: false,
+        onClick: openRemoveNodeDialog,
+      };
+      const renameMenu = {
+        key: 1,
+        text: "重命名",
+        disabled: false,
+        onClick: openRenameNodeDialog,
+      };
+      const refreshMenu = {
+        key: 2,
+        text: "刷新",
+        disabled: true,
+        onClick: openRenameNodeDialog,
+      };
+      const treeNode = node.data as TreeNode<any>;
+      if (treeNode.type == "ServerGroup") {
+        menu.push({
+          key: 11,
+          text: "新建连接",
+          disabled: false,
+          onClick: openObjectAdd,
+        });
+        menu.push(removeMenu);
+        menu.push(renameMenu);
+        menu.push(refreshMenu);
+      } else if (treeNode.type == "Server") {
+        const connectionId = treeNode.connectionId;
+        if (connectionId) {
+          menu.push({
+            key: 21,
+            text: "关闭连接",
+            disabled: true,
+            onClick: openRemoveNodeDialog,
+          });
+          menu.push({
+            key: 22,
+            text: "新建数据库",
+            disabled: false,
+            onClick: openObjectAdd,
+          });
+          menu.push({
+            key: 23,
+            text: "修改密码",
+            disabled: true,
+            onClick: openRenameNodeDialog,
+          });
+        } else {
+          menu.push({
+            key: 20,
+            text: "打开连接",
+            disabled: true,
+            onClick: openObjectAdd,
+          });
+        }
+        menu.push({
+          key: 24,
+          text: "编辑连接",
+          disabled: false,
+          onClick: openObjectEdit,
+        });
+        menu.push(removeMenu);
+        menu.push(renameMenu);
+        menu.push(refreshMenu);
+      }
+      state.dropdownMenu = menu;
+    };
+    /**
+     * 右键选择了一个按钮
+     */
+    const handleCommand = (row: { menu: any; node: Node }) => {
+      row.menu.onClick(row.node);
+    };
+
+    /**
      * 新建菜单对象
      */
-    const openObjectAdd = (node: Node, data: TreeNode<any>) => {
-      console.log("openObjectAdd data", data);
-      if (data.type === "ServerGroup") {
+    const openObjectAdd = (node: Node) => {
+      console.log("openObjectAdd node", node);
+      const type = node.data.type;
+      if (type === "ServerGroup") {
         //新建Server
-        state.groupOldObject = data;
         state.treeNode = node;
         switchServerAddVisable(true);
-      } else if (data.type === "Server") {
+      } else if (type === "Server") {
         //新建数据库
         state.treeNode = node;
         //连接server使用的dbname
@@ -339,13 +447,10 @@ export default defineComponent({
     /**
      * 编辑菜单对象
      */
-    const openObjectEdit = (node: Node, data: TreeNode<any>) => {
-      if (data.type === "ServerGroup") {
-        //group
-        handleGroupUpdate(data);
-      } else {
-        //server
-        handleServerUpdate(node, data);
+    const openObjectEdit = (node: Node) => {
+      const type = node.data.type;
+      if (type === "Server") {
+        handleServerUpdate(node);
       }
     };
     /**
@@ -383,25 +488,19 @@ export default defineComponent({
         dbObject: state.treeNode?.data, //删除对象
         newName: form.name, //是否级联
       };
-      getTreeNodeRename(data).then(() => {
-        debugger
-        const src: TreeNode<any> = treeRef.value.data.filter(
-          (element: TreeNode<any>) =>
-            element.object.name == state.treeNode?.data.object.name
-        )[0];
-        src.object.name = form.name;
-        debugger;
+      getTreeNodeRename(data).then((result: ResponseData<TreeNode<any>>) => {
+        // const src: TreeNode<any> = treeRef.value.data.filter(
+        //   (element: TreeNode<any>) =>
+        //     element.object.name == state.treeNode?.data.object.name
+        // )[0];
+        // src.object.name = form.name;
+        state.renameDialogVisible = false;
+        state.treeNode?.setData(result.data);
       });
     };
     //---------------Group---------------------
     //Group编辑窗口开关
     const switchGroupVisable = (flag: boolean) => (state.groupVisible = flag);
-    //打开编辑Group弹窗,并赋值
-    const handleGroupUpdate = (row: any) => {
-      state.groupOldObject = row; //存储old值，用于save参数
-      state.groupOldName = row.object.name; //传给子界面
-      switchGroupVisable(true);
-    };
     //保存Group
     const saveServerGroup = (form: ServerGroupForm) => {
       const data = {
@@ -426,11 +525,11 @@ export default defineComponent({
       (state.serverAddVisible = flag);
     const switchServerEditVisable = (flag: boolean) =>
       (state.serverEditVisible = flag);
-    //打开编辑Server弹窗,并赋值
-    const handleServerUpdate = (node: Node, row: TreeNode<Server>) => {
-      console.log("handleServerUpdate node ", node);
-      console.log("handleServerUpdate row ", row);
 
+    //修改Server的弹窗
+    const handleServerUpdate = (node: Node) => {
+      console.log("handleServerUpdate node ", node);
+      const row = node.data as TreeNode<Server>;
       /**
        * 判断是否有父类
        */
@@ -443,7 +542,7 @@ export default defineComponent({
       state.serverForm = row.object; //传给子界面
       switchServerEditVisable(true);
     };
-    //test server
+    //测试连接
     const handleTestServer = (form: Server) => {
       //包一层外部对象
       const serverObject: TreeNode<Server> = {
@@ -470,13 +569,12 @@ export default defineComponent({
         serverId: "",
         type: "Server",
       };
-      const serverForm = {
-        parent: state.groupOldObject,
+      const serverForm: ServerForm = {
+        parent: state.treeNode!.data as TreeNode<ServerGroup>,
         newObject: serverObject,
       };
       addServer(serverForm).then((result: ResponseData) => {
         switchServerAddVisable(false);
-        // emit("addTreeNode", "Server", state.treeNode, result.data);
         treeRef.value.append(result.data, state.treeNode);
       });
       switchServerAddVisable(false);
@@ -578,8 +676,9 @@ export default defineComponent({
       treeRef,
       state,
       treeProps,
-      handleNodeExpand,
-
+      buttonDropdown,
+      addDropDownMenu,
+      handleCommand,
       loadNode,
       openRemoveNodeDialog,
       openRenameNodeDialog,
@@ -590,7 +689,6 @@ export default defineComponent({
       openObjectEdit,
 
       handleNodeClick,
-      handleGroupUpdate,
       saveServerGroup,
       switchGroupVisable,
       switchServerAddVisable,
@@ -662,23 +760,29 @@ export default defineComponent({
 .tree-node-name-gt {
   height: 100%;
 }
-.tree-node-action {
+.tree-node-row .tree-node-button {
+  margin-left: auto !important;
+  margin-right: 16px !important;
+  visibility: hidden;
+}
+
+/* .tree-node-action {
   flex-shrink: 0;
   z-index: 2;
   box-sizing: border-box;
   margin-left: auto !important;
   margin-right: 16px !important;
   visibility: hidden;
-}
+} */
 /**图标间距 */
 .tree-node-action .el-icon {
   margin-right: 3px;
 }
-.el-tree-node__content:hover .tree-node-action,
+.el-tree-node__content:hover .tree-node-button,
 .el-tree--highlight-current
   .el-tree-node.is-current
   > .el-tree-node__content
-  .tree-node-action {
+  .tree-node-button {
   visibility: visible;
 }
 </style>
