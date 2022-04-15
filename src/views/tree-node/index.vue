@@ -59,9 +59,7 @@
               trigger="click"
               @command="handleCommand"
             >
-              <!-- style="margin-right: 30px" -->
               <el-icon><message-box @click="addDropDownMenu(node)" /></el-icon>
-              <!-- <el-icon><message-box @click="nodeButtonExpand(node)" /></el-icon> -->
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item
@@ -76,36 +74,34 @@
               </template>
             </el-dropdown>
           </div>
-
-          <!-- <div class="tree-node-action">
-            <el-icon
-              ><document-add @click="openObjectAdd(node, data)"
-            /></el-icon>
-            <el-icon><edit @click="openObjectEdit(node, data)" /></el-icon>
-            <el-icon><delete @click="openRemoveNodeDialog(node)" /></el-icon>
-            <el-icon><money @click="openRenameNodeDialog(node)" /></el-icon>
-          </div> -->
-          <!-- <img src="../../assets/refresh.png" /> -->
-
-          <!-- <el-dropdown ref="dropdown1" trigger="contextmenu" style="display:none">
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item
-                  ><el-icon
-                    ><document-add @click="openObjectAdd(data)" /></el-icon
-                ></el-dropdown-item>
-                <el-dropdown-item
-                  ><el-icon><edit @click="openObjectEdit(data)" /></el-icon
-                ></el-dropdown-item>
-                <el-dropdown-item
-                  ><el-icon><delete @click="openObjectDel(data)" /></el-icon
-                ></el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown> -->
         </div>
       </template>
     </el-tree>
+
+    <!-- ===============================关闭连接======================================= -->
+    <template v-if="state.closeConnectDialogVisible">
+      <el-dialog
+        :close-on-click-modal="false"
+        v-model="state.closeConnectDialogVisible"
+        title="关闭连接"
+        width="30%"
+        center
+      >
+        <span>保存服务器信息必须关闭服务器连接。要关闭连接吗？</span>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="state.closeConnectDialogVisible = false"
+              >取消</el-button
+            >
+            <el-button
+              type="primary"
+              @click="handleEditServer(state.closeConnectForm)"
+              >确认</el-button
+            >
+          </span>
+        </template>
+      </el-dialog>
+    </template>
 
     <!-- ===============================删除节点======================================= -->
     <template v-if="state.removeDialogVisible">
@@ -138,14 +134,6 @@
       />
     </template>
 
-    <!-- ===============================ServerGroup======================================= -->
-    <GroupDialogEdit
-      :visible="state.groupVisible"
-      :groupOldName="state.groupOldName"
-      @saveModal="saveServerGroup"
-      @closeModal="switchGroupVisable"
-    />
-
     <!-- ===============================Server======================================= -->
     <ServerDialogAdd
       :visible="state.serverAddVisible"
@@ -158,13 +146,13 @@
       <ServerDialogEdit
         :visible="state.serverEditVisible"
         :serverObject="state.serverForm"
-        @saveModal="handleEditServer"
+        @saveModal="isConnect"
         @closeModal="switchServerEditVisable"
         @testModal="handleTestServer"
       />
     </template>
 
-    <!-- ===============================db======================================= -->
+    <!-- ===============================database======================================= -->
     <template v-if="state.dbAddVisible">
       <DBDialogAdd
         :visible="state.dbAddVisible"
@@ -207,13 +195,13 @@ import {
   addServer,
   editServer,
   testServer,
+  closeServer,
   getServerList,
   getDatabaseList,
   serverConnect,
   addDB,
 } from "@/api/treeNode";
 import RenameNodeDialog from "./renameNode.vue";
-import GroupDialogEdit from "@/components/server-group/ServerGroupDialogEdit.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
 import DBDialogAdd from "@/components/database/DBDialogAdd.vue";
@@ -236,10 +224,11 @@ import { breadcrumbProps, ElMessage } from "element-plus";
 
 interface TreeNodeState {
   dropdownMenu: DropDownMenu[];
-
   treeNode: Node | null;
   removeDialogVisible: Boolean;
   renameDialogVisible: Boolean;
+  closeConnectDialogVisible: Boolean;
+  closeConnectForm: Server | null;
 
   //group
   groupVisible: Boolean;
@@ -268,7 +257,6 @@ export default defineComponent({
     // Delete,
     // Money,
     RenameNodeDialog,
-    GroupDialogEdit,
     ServerDialogAdd,
     ServerDialogEdit,
     DBDialogAdd,
@@ -294,7 +282,8 @@ export default defineComponent({
       treeNode: null,
       removeDialogVisible: false, //移除节点
       renameDialogVisible: false, //重命名节点
-
+      closeConnectDialogVisible: false, //关闭连接
+      closeConnectForm: null, //存储关闭连接时候form对象
       //group
       groupVisible: false,
       groupOldObject: null,
@@ -365,8 +354,8 @@ export default defineComponent({
           menu.push({
             key: 21,
             text: "关闭连接",
-            disabled: true,
-            onClick: openRemoveNodeDialog,
+            disabled: false,
+            onClick: handleCloseConnect,
           });
           menu.push({
             key: 22,
@@ -396,6 +385,38 @@ export default defineComponent({
         });
         menu.push(removeMenu);
         menu.push(renameMenu);
+        menu.push(refreshMenu);
+      } else if (treeNode.type == "Database") {
+        const defDB = node.parent.data.object.databaseName as string;
+        if (treeNode.object.name == defDB) {
+          //默认库
+          menu.push({
+            key: 30,
+            text: "关闭数据库",
+            disabled: true,
+            onClick: handleCloseConnect,
+          });
+        } else {
+          menu.push({
+            key: 31,
+            text: "打开数据库",
+            disabled: true,
+            onClick: handleCloseConnect,
+          });
+        }
+        menu.push({
+          key: 32,
+          text: "新建数据库",
+          disabled: true,
+          onClick: openObjectAdd,
+        });
+        menu.push({
+          key: 33,
+          text: "编辑数据库",
+          disabled: true,
+          onClick: openRenameNodeDialog,
+        });
+        menu.push(removeMenu);
         menu.push(refreshMenu);
       }
       state.dropdownMenu = menu;
@@ -489,35 +510,11 @@ export default defineComponent({
         newName: form.name, //是否级联
       };
       getTreeNodeRename(data).then((result: ResponseData<TreeNode<any>>) => {
-        // const src: TreeNode<any> = treeRef.value.data.filter(
-        //   (element: TreeNode<any>) =>
-        //     element.object.name == state.treeNode?.data.object.name
-        // )[0];
-        // src.object.name = form.name;
         state.renameDialogVisible = false;
-        state.treeNode?.setData(result.data);
+        state.treeNode!.data = result.data;
       });
     };
     //---------------Group---------------------
-    //Group编辑窗口开关
-    const switchGroupVisable = (flag: boolean) => (state.groupVisible = flag);
-    //保存Group
-    const saveServerGroup = (form: ServerGroupForm) => {
-      const data = {
-        newName: form.serverGroupName,
-        dbObject: state.groupOldObject,
-      };
-      getTreeNodeRename(data).then(() => {
-        switchGroupVisable(false);
-        emit(
-          "renameTreeNode",
-          "ServerGroup",
-          null,
-          state.groupOldObject,
-          form.serverGroupName
-        );
-      });
-    };
 
     //---------------Server---------------------
     //Server编辑窗口开关
@@ -533,11 +530,12 @@ export default defineComponent({
       /**
        * 判断是否有父类
        */
+      state.groupOldName = "";
       if (node.level == 2) {
         state.groupOldName = node.parent.data.object.name;
       }
-      state.treeNode = node;
       state.serverOld = JSON.stringify(row); //存储old值，用于save参数
+      state.treeNode = node; //用于请求成功后的更新
       //注意：这里传的是object对象，save时候需要把外面包一层
       state.serverForm = row.object; //传给子界面
       switchServerEditVisable(true);
@@ -577,26 +575,61 @@ export default defineComponent({
         switchServerAddVisable(false);
         treeRef.value.append(result.data, state.treeNode);
       });
-      switchServerAddVisable(false);
     };
-    //edit Server
+    //验证是否已连接
+    const isConnect = (form: Server) => {
+      if (state.treeNode?.data.connectionId) {
+        //正在连接，提示关闭
+        state.closeConnectForm = form;
+        state.closeConnectDialogVisible = true;
+      } else {
+        //未打开连接，保存
+        handleEditServer(form);
+      }
+    };
+
+    //更新连接---a)关闭连接，保存 b)直接保存
     const handleEditServer = (form: Server) => {
-      //包一层外部对象
       const newObject: TreeNode<Server> = JSON.parse(state.serverOld);
       newObject.object = form;
+
       const data: ServerEditForm = {
         editDBObjectInfo: {
           newObject: newObject, //new val
-          oldObject: JSON.parse(state.serverOld), //old val
+          oldObject: JSON.parse(state.serverOld),
         },
         serverGroupName: state.groupOldName,
       };
-      editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
-        switchServerEditVisable(false);
-        state.treeNode?.setData(result.data);
-      });
+      if (state.treeNode?.data.connectionId) {
+        //关闭连接
+        const connectionIds: string[] = new Array(
+          state.treeNode?.data.connectionId
+        );
+        closeServer(connectionIds).then(() => {
+          state.closeConnectDialogVisible = false;
+          handleCloseConnect(state.treeNode!);
+          // editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
+          //   switchServerEditVisable(false);
+          //   state.treeNode!.data = result.data;
+          // });
+        });
+      } else {
+        editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
+          switchServerEditVisable(false);
+          state.treeNode!.data = result.data;
+        });
+      }
     };
-
+    const handleCloseConnect = (node: Node) => {
+      node.childNodes = [];
+      node.expanded = false;
+      node.data.connectionId = "";
+      // node.childNodes.forEach((element: Node) => {
+      //   debugger
+      //   treeRef.value.remove(element)
+      // });
+      console.log(treeRef, node.childNodes);
+    };
     //---------------database---------------------
     //db编辑窗口开关
     const switchDBAddVisable = (flag: boolean) => (state.dbAddVisible = flag);
@@ -680,23 +713,23 @@ export default defineComponent({
       addDropDownMenu,
       handleCommand,
       loadNode,
+      handleNodeClick,
+
       openRemoveNodeDialog,
       openRenameNodeDialog,
       handleRemoveNodeSubmit,
       handleRenameNodeSubmit,
-
       openObjectAdd,
       openObjectEdit,
 
-      handleNodeClick,
-      saveServerGroup,
-      switchGroupVisable,
       switchServerAddVisable,
       switchServerEditVisable,
       handleServerUpdate,
       handleSaveServer,
+      isConnect,
       handleEditServer,
       handleTestServer,
+      handleCloseConnect,
       switchDBAddVisable,
       switchDBEditVisable,
       handleSaveDB,

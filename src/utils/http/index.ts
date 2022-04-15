@@ -25,8 +25,8 @@ const defaultConfig: AxiosRequestConfig = {
   //     ? VITE_PROXY_DOMAIN_REAL
   //     : VITE_PROXY_DOMAIN,
   // 当前使用mock模拟请求，将baseURL制空，如果你的环境用到了http请求，请删除下面的baseURL启用上面的baseURL，并将11行、16行代码注释取消
-  // baseURL: "http://192.168.110.117:8088",
-  baseURL: "http://192.168.8.250:8088",
+  baseURL: "http://192.168.110.117:8088",
+  // baseURL: "http://192.168.8.250:8088",
   timeout: 1000,
   headers: {
     Accept: "application/json, text/plain, */*",
