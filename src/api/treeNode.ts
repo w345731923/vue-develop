@@ -2,7 +2,7 @@ import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
-    , ServerForm, ServerEditForm, DatabaseForm
+    , ServerForm, ServerEditForm, DatabaseForm,Database
 } from '@/types'
 
 
@@ -86,7 +86,7 @@ export async function serverConnect(data: TreeNode<Server>) {
  * @returns 
  */
 export async function getDatabaseList(data: TreeNode<Server>) {
-    return await http.request<ResponseData<TreeNode<Server>[]>>('/server/list', { method: 'POST', data });
+    return await http.request<ResponseData<TreeNode<Database>[]>>('/server/list', { method: 'POST', data });
 }
 /**
  * 新建server

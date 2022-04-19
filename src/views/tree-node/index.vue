@@ -307,8 +307,8 @@ export default defineComponent({
      */
     const handleNodeClick = (event: any, data: any, node: any) => {
       console.log("handleNodeClick node", node);
-      console.log("handleNodeClick data", data);
-      console.log("handleNodeClick tree", treeRef.value);
+      // console.log("handleNodeClick data", data);
+      // console.log("handleNodeClick tree", treeRef.value);
     };
     /**
      * 0删除，1重命名，2刷新，
@@ -316,7 +316,7 @@ export default defineComponent({
      * 20打开连接，21关闭连接，22新建数据库，23修改密码，24编辑连接
      */
     const addDropDownMenu = (node: Node) => {
-      console.log("addDropDownMenu node =", node);
+      // console.log("addDropDownMenu node =", node);
       state.dropdownMenu = [];
       let menu: DropDownMenu[] = [];
       const removeMenu = {
@@ -349,13 +349,13 @@ export default defineComponent({
         menu.push(renameMenu);
         menu.push(refreshMenu);
       } else if (treeNode.type == "Server") {
-        const connectionId = treeNode.connectionId;
-        if (connectionId) {
+        const count = node.childNodes.length;
+        if (count > 0) {
           menu.push({
             key: 21,
             text: "关闭连接",
             disabled: false,
-            onClick: handleCloseConnect,
+            onClick: handleCloseNode,
           });
           menu.push({
             key: 22,
@@ -373,8 +373,8 @@ export default defineComponent({
           menu.push({
             key: 20,
             text: "打开连接",
-            disabled: true,
-            onClick: openObjectAdd,
+            disabled: false,
+            onClick: handleOpenConnect,
           });
         }
         menu.push({
@@ -394,14 +394,14 @@ export default defineComponent({
             key: 30,
             text: "关闭数据库",
             disabled: true,
-            onClick: handleCloseConnect,
+            onClick: handleCloseDB,
           });
         } else {
           menu.push({
             key: 31,
             text: "打开数据库",
             disabled: true,
-            onClick: handleCloseConnect,
+            onClick: handleCloseDB,
           });
         }
         menu.push({
@@ -578,7 +578,8 @@ export default defineComponent({
     };
     //验证是否已连接
     const isConnect = (form: Server) => {
-      if (state.treeNode?.data.connectionId) {
+      debugger;
+      if (state.treeNode!.childNodes.length > 0) {
         //正在连接，提示关闭
         state.closeConnectForm = form;
         state.closeConnectDialogVisible = true;
@@ -600,18 +601,19 @@ export default defineComponent({
         },
         serverGroupName: state.groupOldName,
       };
-      if (state.treeNode?.data.connectionId) {
+      debugger;
+      if (state.treeNode!.childNodes.length > 0) {
         //关闭连接
         const connectionIds: string[] = new Array(
           state.treeNode?.data.connectionId
         );
         closeServer(connectionIds).then(() => {
           state.closeConnectDialogVisible = false;
-          handleCloseConnect(state.treeNode!);
-          // editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
-          //   switchServerEditVisable(false);
-          //   state.treeNode!.data = result.data;
-          // });
+          handleCloseNode(state.treeNode!);
+          editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
+            switchServerEditVisable(false);
+            state.treeNode!.data = result.data;
+          });
         });
       } else {
         editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
@@ -620,16 +622,40 @@ export default defineComponent({
         });
       }
     };
-    const handleCloseConnect = (node: Node) => {
+    /**
+     * 打开连接
+     */
+    const handleOpenConnect = (node: Node) => {
+      node.loadData(function (data: any) {
+        console.log("handleOpenConnect", data);
+        if (data.length == 0) {
+          return handleCloseNode(node);
+        }
+        node.expanded = true;
+      });
+    };
+    /**
+     * 关闭节点
+     */
+    const handleCloseNode = (node: Node) => {
       node.childNodes = [];
       node.expanded = false;
+      node.isLeaf = false;
+      node.loaded = false;
+      node.loading = false;
       node.data.connectionId = "";
-      // node.childNodes.forEach((element: Node) => {
-      //   debugger
-      //   treeRef.value.remove(element)
-      // });
-      console.log(treeRef, node.childNodes);
     };
+    /**
+     * 关闭数据库
+     */
+    const handleCloseDB = (node: Node) => {
+      node.childNodes = [];
+      node.expanded = false;
+      node.isLeaf = false;
+      node.loaded = false;
+      node.data.connectionId = "";
+    };
+
     //---------------database---------------------
     //db编辑窗口开关
     const switchDBAddVisable = (flag: boolean) => (state.dbAddVisible = flag);
@@ -659,8 +685,6 @@ export default defineComponent({
      * 展开属性菜单 懒加载
      */
     const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
-      //需要记录已经展开的节点，不然刷新后都关闭了
-
       console.log("loadNode node", node);
       if (node.level === 0) {
         /**
@@ -669,40 +693,62 @@ export default defineComponent({
          */
         return resolve([]);
       }
-
       if (node.data.type == "ServerGroup") {
-        return getServerNode(node.data, resolve);
+        return getServerNode(node, resolve);
         // return resolve(node.data.children);
       } else if (node.data.type == "Server") {
-        return getDatabase(node.data, resolve);
+        return getDatabase(node, resolve);
       }
     };
     /**
      * get server list
      */
-    const getServerNode = (node: any, resolve) => {
-      let groupName = node.object.name;
+    const getServerNode = (node: Node, resolve) => {
+      const nodeData = node.data as TreeNode<ServerGroup>;
+      let groupName = nodeData.object.name;
       getServerList(groupName).then(
         (respon: ResponseData<TreeNode<Server>[]>) => {
           console.log("succ respon ", respon);
           resolve(respon.data);
+        },
+        (err) => {
+          console.log("err", err);
+          handleCloseNode(node);
         }
       );
     };
     /**
      * get server list
      */
-    const getDatabase = (node: any, resolve) => {
-      serverConnect(node).then((respon: any) => {
-        console.log("serverConnect succ respon ", respon);
-        // resolve(respon.data);
-        node.connectionId = respon.data;
-        getDatabaseList(node).then((respon: any) => {
-          console.log("getDatabaseList succ respon ", respon);
-          resolve(respon.data);
-        });
-        resolve([]);
-      });
+    const getDatabase = (node: Node, resolve) => {
+      const nodeData = node.data as TreeNode<Server>;
+      serverConnect(nodeData).then(
+        (respon: ResponseData<any>) => {
+          console.log("serverConnect succ respon ", respon);
+          nodeData.connectionId = respon.data;
+          getDatabaseList(nodeData).then(
+            (respon: ResponseData<any>) => {
+              console.log("getDatabaseList succ respon ", respon);
+              respon.data.forEach((element: TreeNode<Database>) => {
+                //赋值connectionId
+                if (element.object.name == nodeData.object.databaseName) {
+                  element.connectionId = nodeData.connectionId;
+                }
+              });
+              resolve(respon.data);
+            },
+            (err) => {
+              console.log("err", err);
+              handleCloseNode(node);
+            }
+          );
+          resolve([]);
+        },
+        (err) => {
+          console.log("err", err);
+          handleCloseNode(node);
+        }
+      );
       resolve([]);
     };
     return {
@@ -729,7 +775,9 @@ export default defineComponent({
       isConnect,
       handleEditServer,
       handleTestServer,
-      handleCloseConnect,
+      handleOpenConnect,
+      handleCloseNode,
+      handleCloseDB,
       switchDBAddVisable,
       switchDBEditVisable,
       handleSaveDB,
@@ -796,6 +844,7 @@ export default defineComponent({
 .tree-node-row .tree-node-button {
   margin-left: auto !important;
   margin-right: 16px !important;
+  margin-top: 3px;
   visibility: hidden;
 }
 
