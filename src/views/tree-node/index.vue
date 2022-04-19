@@ -165,6 +165,14 @@
         @closeModal="switchDBAddVisable"
       />
     </template>
+    <template v-if="state.dbAddVisible">
+      <DBEditDialog
+        :visible="state.dbEditVisible"
+        :dbForm="state.dbForm"
+        @saveModal="handleSaveDB"
+        @closeModal="switchDBEditVisable"
+      />
+    </template>
   </div>
 </template>
 
@@ -212,6 +220,7 @@ import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
 import ServerPwdDialog from "@/components/server-password/index.vue";
 
 import DBDialogAdd from "@/components/database/DBDialogAdd.vue";
+import DBEditDialog from "@/components/database/DBEditDialog.vue";
 
 import {
   ResponseData,
@@ -418,14 +427,14 @@ export default defineComponent({
         menu.push({
           key: 32,
           text: "新建数据库",
-          disabled: true,
+          disabled: false,
           onClick: openObjectAdd,
         });
         menu.push({
           key: 33,
           text: "编辑数据库",
-          disabled: true,
-          onClick: openRenameNodeDialog,
+          disabled: false,
+          onClick: openObjectEdit,
         });
         menu.push(removeMenu);
         menu.push(refreshMenu);
@@ -452,16 +461,21 @@ export default defineComponent({
         //新建Server
         state.treeNode = node;
         switchServerAddVisable(true);
-      } else if (type === "Server") {
+      } else if (type === "Server" || type === "Database") {
         //新建数据库
-        state.treeNode = node;
+        if (type === "Server") {
+          state.treeNode = node;
+        } else {
+          state.treeNode = node.parent;
+        }
         //连接server使用的dbname
-        const dbname = node.data.object.databaseName;
+        const dbname = state.treeNode.data.object.databaseName;
         //查找默认db数据
-        const defaultDatabase = node.childNodes.filter((element: Node) => {
-          if (dbname == element.data.object.name) return true;
-        })[0];
-
+        const defaultDatabase: Node = state.treeNode.childNodes.filter(
+          (element: Node) => {
+            if (dbname == element.data.object.name) return true;
+          }
+        )[0];
         state.dbForm = {
           "@clazz": "com.highgo.developer.model.HgdbDatabase",
           name: "", //数据库名
