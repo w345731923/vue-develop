@@ -140,7 +140,11 @@
       @saveModal="handleSaveServer"
       @closeModal="switchServerAddVisable"
     />
-
+    <ServerPwdDialog
+      :visible="state.serverPwdVisible"
+      @saveModal="handleServerPwdSubmit"
+      @closeModal="switchServerPwdVisable"
+    />
     <template v-if="state.serverEditVisible">
       <!-- Server弹出框 -->
       <ServerDialogEdit
@@ -200,10 +204,13 @@ import {
   getDatabaseList,
   serverConnect,
   addDB,
+  updatePassword,
 } from "@/api/treeNode";
 import RenameNodeDialog from "./renameNode.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
+import ServerPwdDialog from "@/components/server-password/index.vue";
+
 import DBDialogAdd from "@/components/database/DBDialogAdd.vue";
 
 import {
@@ -219,6 +226,7 @@ import {
   DatabaseForm,
   TreeNodeRename,
   DropDownMenu,
+  ServerPwdForm,
 } from "@/types";
 import { breadcrumbProps, ElMessage } from "element-plus";
 
@@ -241,6 +249,7 @@ interface TreeNodeState {
   serverForm: Server | null;
   serverObject: TreeNode<Server> | null;
   serverOld: string;
+  serverPwdVisible: Boolean;
 
   //database
   dbAddVisible: Boolean;
@@ -259,6 +268,7 @@ export default defineComponent({
     RenameNodeDialog,
     ServerDialogAdd,
     ServerDialogEdit,
+    ServerPwdDialog,
     DBDialogAdd,
   },
   props: {
@@ -295,6 +305,7 @@ export default defineComponent({
       serverForm: null,
       serverObject: null,
       serverOld: "",
+      serverPwdVisible: false,
 
       //db
       dbAddVisible: false,
@@ -366,8 +377,8 @@ export default defineComponent({
           menu.push({
             key: 23,
             text: "修改密码",
-            disabled: true,
-            onClick: openRenameNodeDialog,
+            disabled: false,
+            onClick: openServerPwdDialog,
           });
         } else {
           menu.push({
@@ -424,7 +435,10 @@ export default defineComponent({
     /**
      * 右键选择了一个按钮
      */
-    const handleCommand = (row: { menu: any; node: Node }) => {
+    const handleCommand = (row: { menu: DropDownMenu; node: Node }) => {
+      // if (row.menu.key == 23) {
+      //   return row.menu.onClick(true);
+      // }
       row.menu.onClick(row.node);
     };
 
@@ -588,8 +602,7 @@ export default defineComponent({
         handleEditServer(form);
       }
     };
-
-    //更新连接---a)关闭连接，保存 b)直接保存
+    //修改连接 ---a)关闭连接，保存 b)直接保存
     const handleEditServer = (form: Server) => {
       const newObject: TreeNode<Server> = JSON.parse(state.serverOld);
       newObject.object = form;
@@ -601,7 +614,6 @@ export default defineComponent({
         },
         serverGroupName: state.groupOldName,
       };
-      debugger;
       if (state.treeNode!.childNodes.length > 0) {
         //关闭连接
         const connectionIds: string[] = new Array(
@@ -621,6 +633,29 @@ export default defineComponent({
           state.treeNode!.data = result.data;
         });
       }
+    };
+    /**
+     * 修改密码弹窗
+     */
+    const openServerPwdDialog = (node: Node) => {
+      state.treeNode = node;
+      switchServerPwdVisable(true);
+    };
+    const switchServerPwdVisable = (flag: boolean) => {
+      state.serverPwdVisible = flag;
+    };
+    /**
+     * 修改密码弹窗
+     */
+    const handleServerPwdSubmit = (form: ServerPwdForm) => {
+      debugger;
+      if (state.treeNode?.level == 2) {
+        form.serverGroupName = state.treeNode.data.object.name;
+      }
+      form.serverID = state.treeNode!.data.connectionId;
+      updatePassword(form).then((result: ResponseData<any>) => {
+        switchServerPwdVisable(false);
+      });
     };
     /**
      * 打开连接
@@ -775,6 +810,8 @@ export default defineComponent({
       isConnect,
       handleEditServer,
       handleTestServer,
+      switchServerPwdVisable,
+      handleServerPwdSubmit,
       handleOpenConnect,
       handleCloseNode,
       handleCloseDB,

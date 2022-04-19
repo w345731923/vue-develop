@@ -2,7 +2,7 @@ import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
-    , ServerForm, ServerEditForm, DatabaseForm,Database
+    , ServerForm, ServerEditForm, DatabaseForm,Database,ServerPwdForm
 } from '@/types'
 
 
@@ -66,6 +66,13 @@ export async function closeServer(data: string[]) {
  */
 export async function testServer(data: TreeNode<Server>) {
     return await http.request<ResponseData>('/server/testConnect', { method: 'POST', data });
+}
+/**
+ * 修改密码
+ * @returns 
+ */
+ export async function updatePassword(data: ServerPwdForm) {
+    return await http.request<ResponseData<any>>('/server/updatePassword', { method: 'POST', data });
 }
 /**
  * 查询group下的server

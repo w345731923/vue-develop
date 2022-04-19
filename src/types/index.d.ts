@@ -113,6 +113,13 @@ export interface Server {
   schema?: string;
   keyString?: string;
 }
+export interface ServerPwdForm {
+  newPassword: string,
+  oldPassword: string,
+  serverGroupName: string,
+  serverID: string,
+}
+
 export interface Database {
   '@clazz': string;
   oid?: string,
