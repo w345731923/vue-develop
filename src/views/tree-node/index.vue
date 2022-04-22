@@ -487,7 +487,7 @@ export default defineComponent({
           spcname: defaultDatabase.data.object.spcname, //表空间  "pg_default"
           templateName: "", //范本
           datistemplate: false, //是范本
-          datallowconn: false, //允许连接
+          datallowconn: true, //允许连接
         };
         switchDBAddVisable(true);
       }
@@ -624,7 +624,6 @@ export default defineComponent({
         newObject: newObject, //new val
         oldObject: oldObject,
       };
-      debugger;
       if (state.treeNode!.childNodes.length > 0) {
         //关闭连接
         closeServer(oldObject).then(() => {
@@ -722,10 +721,10 @@ export default defineComponent({
         nodePath: getNodePath(state.treeNode!),
         type: "Database",
       };
-      debugger;
       addDB(newObject).then((result: ResponseData) => {
         switchDBAddVisable(false);
-        treeRef.value.append(result.data, state.treeNode);
+        if (result.data != null)
+          treeRef.value.append(result.data, state.treeNode);
       });
     };
 
@@ -779,7 +778,6 @@ export default defineComponent({
           getDatabaseList(nodeData).then(
             (resp2: ResponseData<any>) => {
               console.log("getDatabaseList succ respon ", resp2, node, resp);
-              debugger;
               resp2.data.forEach((element: TreeNode<Database>) => {
                 //赋值connectionId
                 if (element.object.name == nodeData.object.databaseName) {
