@@ -1,6 +1,6 @@
 <template>
   <div class="box">
-    <div class="tool-buttons" :id="identity">
+    <!-- <div class="tool-buttons" :id="identity">
       <div class="row-button">
         <el-button-group>
           <el-button size="small" color="#f2f2f2">
@@ -72,7 +72,6 @@
       <div class="codemirror pane_flex">
         <CodeMirror />
       </div>
-      <!-- <img src="../assets/database.png" /> -->
       <div class="resizer_controls resizer_controls_column"></div>
       <div class="query-result pane_flex">
         <el-tabs model-value="info" type="card">
@@ -86,23 +85,21 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script>
-import CodeMirror from "./codemirror/CodeMirror.vue";
-import { Avatar } from "@element-plus/icons-vue";
-import TableEditor from "../components/TableEditor.vue";
-// import { getList } from "@/api/test";
-// import { reactive, toRefs } from "vue";
+// import CodeMirror from "./codemirror/CodeMirror.vue";
+// import { Avatar } from "@element-plus/icons-vue";
+// import TableEditor from "../components/TableEditor.vue";
 
 export default {
   name: "sqleditor",
   components: {
-    CodeMirror,
-    Avatar,
-    TableEditor,
+    // CodeMirror,
+    // Avatar,
+    // TableEditor,
   },
   props: ["identity"],
   setup() {

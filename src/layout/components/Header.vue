@@ -83,7 +83,7 @@ export default {
       default: null,
     },
   },
-  emits: ["addTreeNode"],
+  emits: ["addTreeNode","toolsEvent"],
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,
@@ -107,11 +107,11 @@ export default {
         };
         const data: TreeNode<ServerGroup> = {
           connectionId: "",
-          databaseOid: 0,
+          contextId: "",
           object: groupObject,
-          serverId: "",
+          nodePath: "",
           type: "ServerGroup",
-          children:[]
+          children: [],
         };
         emit("addTreeNode", "ServerGroup", null, data);
       });
@@ -122,18 +122,14 @@ export default {
     const switchServerVisable = (flag: boolean) => (state.serverVisible = flag);
     //save server
     const saveServer = (form: Server) => {
-      const ServerObject: TreeNode<Server> = {
+      const serverObject: TreeNode<Server> = {
         connectionId: "",
-        databaseOid: 0,
+        contextId: "",
         object: form,
-        serverId: "",
+        nodePath: "",
         type: "Server",
       };
-      const serverForm = {
-        parent: null,
-        newObject: ServerObject,
-      };
-      addServer(serverForm).then((result: ResponseData<TreeNode<Server>>) => {
+      addServer(serverObject).then((result: ResponseData<TreeNode<Server>>) => {
         switchServerVisable(false);
         emit("addTreeNode", "Server", null, result.data);
       });
@@ -142,9 +138,9 @@ export default {
     const handleTestServer = (form: Server) => {
       const ServerObject: TreeNode<Server> = {
         connectionId: "",
-        databaseOid: 0,
+        contextId: "",
         object: form,
-        serverId: "",
+        nodePath: "",
         type: "Server",
       };
       testServer(ServerObject).then(() => {
@@ -155,8 +151,10 @@ export default {
       });
     };
     const handleSelect = (key, keyPath) => {
-      console.log(key, keyPath);
-      // this.fatherMethod(key);
+      console.log('header key ',key);
+      if (key != "group" && key != "server") {
+        emit("toolsEvent", key);
+      }
     };
     return {
       state,

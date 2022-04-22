@@ -6,7 +6,7 @@
       closable
       @tab-remove="handleRemoveTab"
     >
-          <!-- @tab-click="handleClick" -->
+      <!-- @tab-click="handleClick" -->
       <el-tab-pane
         v-for="item in editableTabs"
         :key="item.name"
@@ -15,6 +15,14 @@
       >
         <component :is="item.content"></component>
       </el-tab-pane>
+      <!-- <el-tab-pane
+        v-for="item in editableTabs"
+        :key="item.name"
+        :label="item.title"
+        :name="item.name"
+      >
+        {{ item.content }}
+      </el-tab-pane> -->
     </el-tabs>
   </div>
 </template>
@@ -40,9 +48,7 @@ export default {
     // SQLEditor,
     // TableEditor,
   },
-  mounted() {
-
-  },
+  mounted() {},
   methods: {
     // handleClick(tab, event) {
     //   console.log(tab, event);

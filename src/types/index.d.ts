@@ -4,12 +4,6 @@ export interface ResponseData<T = any> {
   message: string;
   data: T;
 }
-// export interface TreeNode<T = any> {
-//   type: string;//node类型
-//   databaseOid: number;
-//   serverId: string;
-//   object: T;
-// }
 
 export interface Login {
   username: string;
@@ -33,16 +27,14 @@ export interface TreeNodeRename<T = any> {
 export interface DropDownMenu {
   key: number;
   text: string;
-  disabled:boolean;
+  disabled: boolean;
   onClick: Function
 }
-/**
- * group
- */
+
 export interface TreeNode<T> {
   type: string;//node类型
-  databaseOid: number;
-  serverId: string | null;
+  contextId: string,//SQL编辑器
+  nodePath: string,  //node整体路径
   object: T;
   connectionId: string | null;
   children?: TreeNode[];
@@ -74,11 +66,8 @@ export interface ServerForm {
  * 修改server
  */
 export interface ServerEditForm {
-  editDBObjectInfo: {
-    newObject: TreeNode<Server>
-    oldObject: TreeNode<Server>;
-  }
-  serverGroupName: string | null;
+  newObject: TreeNode<Server>
+  oldObject: TreeNode<Server>;
 }
 
 export interface Server {
@@ -141,11 +130,4 @@ export interface Database {
   leaf?: boolean;
   schema?: string;
   keyString?: string;
-}
-/**
- * 新建database
- */
-export interface DatabaseForm {
-  parent: TreeNode<Server> | null;
-  newObject: TreeNode<Database>
 }

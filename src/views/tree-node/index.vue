@@ -165,14 +165,14 @@
         @closeModal="switchDBAddVisable"
       />
     </template>
-    <template v-if="state.dbAddVisible">
+    <!-- <template v-if="state.dbEditVisible">
       <DBEditDialog
         :visible="state.dbEditVisible"
         :dbForm="state.dbForm"
         @saveModal="handleSaveDB"
         @closeModal="switchDBEditVisable"
       />
-    </template>
+    </template> -->
   </div>
 </template>
 
@@ -239,6 +239,8 @@ import {
 } from "@/types";
 import { breadcrumbProps, ElMessage } from "element-plus";
 
+import { getNodePath } from "@/utils/tree";
+
 interface TreeNodeState {
   dropdownMenu: DropDownMenu[];
   treeNode: Node | null;
@@ -283,9 +285,6 @@ export default defineComponent({
   props: {
     treeData: Array,
     addTreeNode: Function,
-    delTreeNode: Function,
-    editTreeNode: Function,
-    renameTreeNode: Function,
   },
 
   setup(props, { emit }) {
@@ -375,7 +374,7 @@ export default defineComponent({
             key: 21,
             text: "关闭连接",
             disabled: false,
-            onClick: handleCloseNode,
+            onClick: handleCloseConnect,
           });
           menu.push({
             key: 22,
@@ -513,8 +512,12 @@ export default defineComponent({
      * 删除节点提交
      */
     const handleRemoveNodeSubmit = () => {
+      const nodePath = getNodePath(state.treeNode!);
+      const delObject = state.treeNode?.data as TreeNode<any>;
+      delObject.nodePath = nodePath;
+
       const data: TreeNodeDel = {
-        delObject: state.treeNode?.data, //删除对象
+        delObject: delObject, //删除对象
         deleteOptions: { isCascadeDelete: true }, //是否级联
       };
       getTreeNodeDel(data).then(() => {
@@ -573,9 +576,9 @@ export default defineComponent({
       //包一层外部对象
       const serverObject: TreeNode<Server> = {
         connectionId: "",
-        databaseOid: 0,
+        contextId: "",
         object: form,
-        serverId: "",
+        nodePath: "",
         type: "Server",
       };
       testServer(serverObject).then(() => {
@@ -590,23 +593,18 @@ export default defineComponent({
       //包一层外部对象
       const serverObject: TreeNode<Server> = {
         connectionId: "",
-        databaseOid: 0,
+        contextId: "",
         object: form,
-        serverId: "",
+        nodePath: getNodePath(state.treeNode!),
         type: "Server",
       };
-      const serverForm: ServerForm = {
-        parent: state.treeNode!.data as TreeNode<ServerGroup>,
-        newObject: serverObject,
-      };
-      addServer(serverForm).then((result: ResponseData) => {
+      addServer(serverObject).then((result: ResponseData) => {
         switchServerAddVisable(false);
         treeRef.value.append(result.data, state.treeNode);
       });
     };
     //验证是否已连接
     const isConnect = (form: Server) => {
-      debugger;
       if (state.treeNode!.childNodes.length > 0) {
         //正在连接，提示关闭
         state.closeConnectForm = form;
@@ -620,20 +618,16 @@ export default defineComponent({
     const handleEditServer = (form: Server) => {
       const newObject: TreeNode<Server> = JSON.parse(state.serverOld);
       newObject.object = form;
-
+      const oldObject: TreeNode<Server> = JSON.parse(state.serverOld);
+      oldObject.nodePath = getNodePath(state.treeNode!);
       const data: ServerEditForm = {
-        editDBObjectInfo: {
-          newObject: newObject, //new val
-          oldObject: JSON.parse(state.serverOld),
-        },
-        serverGroupName: state.groupOldName,
+        newObject: newObject, //new val
+        oldObject: oldObject,
       };
+      debugger;
       if (state.treeNode!.childNodes.length > 0) {
         //关闭连接
-        const connectionIds: string[] = new Array(
-          state.treeNode?.data.connectionId
-        );
-        closeServer(connectionIds).then(() => {
+        closeServer(oldObject).then(() => {
           state.closeConnectDialogVisible = false;
           handleCloseNode(state.treeNode!);
           editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
@@ -662,7 +656,6 @@ export default defineComponent({
      * 修改密码弹窗
      */
     const handleServerPwdSubmit = (form: ServerPwdForm) => {
-      debugger;
       if (state.treeNode?.level == 2) {
         form.serverGroupName = state.treeNode.data.object.name;
       }
@@ -684,7 +677,16 @@ export default defineComponent({
       });
     };
     /**
-     * 关闭节点
+     * 关闭连接
+     */
+    const handleCloseConnect = (node: Node) => {
+      const oldObject = node.data as TreeNode<Server>;
+      closeServer(oldObject).then(() => {
+        handleCloseNode(node);
+      });
+    };
+    /**
+     * 关闭树形节点
      */
     const handleCloseNode = (node: Node) => {
       node.childNodes = [];
@@ -715,16 +717,13 @@ export default defineComponent({
       //包一层外部对象
       const newObject: TreeNode<Database> = {
         connectionId: server.connectionId,
-        databaseOid: 0,
+        contextId: "",
         object: form,
-        serverId: server.serverId,
+        nodePath: getNodePath(state.treeNode!),
         type: "Database",
       };
-      const serverForm: DatabaseForm = {
-        parent: server,
-        newObject: newObject,
-      };
-      addDB(serverForm).then((result: ResponseData) => {
+      debugger;
+      addDB(newObject).then((result: ResponseData) => {
         switchDBAddVisable(false);
         treeRef.value.append(result.data, state.treeNode);
       });
@@ -771,20 +770,24 @@ export default defineComponent({
      */
     const getDatabase = (node: Node, resolve) => {
       const nodeData = node.data as TreeNode<Server>;
+      nodeData.nodePath = getNodePath(node);
       serverConnect(nodeData).then(
-        (respon: ResponseData<any>) => {
-          console.log("serverConnect succ respon ", respon);
-          nodeData.connectionId = respon.data;
+        (resp: ResponseData<any>) => {
+          console.log("serverConnect succ respon ", resp);
+          const connectionId = resp.data;
+          nodeData.connectionId = connectionId;
           getDatabaseList(nodeData).then(
-            (respon: ResponseData<any>) => {
-              console.log("getDatabaseList succ respon ", respon);
-              respon.data.forEach((element: TreeNode<Database>) => {
+            (resp2: ResponseData<any>) => {
+              console.log("getDatabaseList succ respon ", resp2, node, resp);
+              debugger;
+              resp2.data.forEach((element: TreeNode<Database>) => {
                 //赋值connectionId
                 if (element.object.name == nodeData.object.databaseName) {
-                  element.connectionId = nodeData.connectionId;
+                  element.connectionId = connectionId;
                 }
               });
-              resolve(respon.data);
+              nodeData.connectionId = connectionId;
+              resolve(resp2.data);
             },
             (err) => {
               console.log("err", err);

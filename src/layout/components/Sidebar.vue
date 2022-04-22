@@ -2,9 +2,6 @@
   <TreeNode
     :treeData="treeData"
     @addTreeNode="addTreeNode"
-    @delTreeNode="delTreeNode"
-    @editTreeNode="editTreeNode"
-    @renameTreeNode="renameTreeNode"
   />
 </template>
 
@@ -20,9 +17,6 @@ export default defineComponent({
   props: {
     treeData: Array,
     addTreeNode: Function,
-    delTreeNode: Function,
-    editTreeNode: Function,
-    renameTreeNode: Function,    
   },
 });
 </script>

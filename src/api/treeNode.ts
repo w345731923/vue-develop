@@ -2,7 +2,7 @@ import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
-    , ServerForm, ServerEditForm, DatabaseForm,Database,ServerPwdForm
+    , ServerForm, ServerEditForm, DatabaseForm, Database, ServerPwdForm
 } from '@/types'
 
 
@@ -40,7 +40,7 @@ export async function addServerGroup(data: ServerGroupForm) {
  * @param {*} data  
  * @returns 
  */
-export async function addServer(data: ServerForm) {
+export async function addServer(data: TreeNode<Server>) {
     return await http.request<ResponseData>('/server/add', { method: 'POST', data });
 }
 /**
@@ -56,7 +56,7 @@ export async function editServer(data: ServerEditForm) {
  * @param {*} data  
  * @returns 
  */
-export async function closeServer(data: string[]) {
+export async function closeServer(data: TreeNode<Server>) {
     return await http.request<ResponseData>('/server/close', { method: 'POST', data });
 }
 /**
@@ -71,7 +71,7 @@ export async function testServer(data: TreeNode<Server>) {
  * 修改密码
  * @returns 
  */
- export async function updatePassword(data: ServerPwdForm) {
+export async function updatePassword(data: ServerPwdForm) {
     return await http.request<ResponseData<any>>('/server/updatePassword', { method: 'POST', data });
 }
 /**
@@ -96,10 +96,10 @@ export async function getDatabaseList(data: TreeNode<Server>) {
     return await http.request<ResponseData<TreeNode<Database>[]>>('/server/list', { method: 'POST', data });
 }
 /**
- * 新建server
+ * 新建database
  * @param {*} data  
  * @returns 
  */
-export async function addDB(data: DatabaseForm) {
+export async function addDB(data: TreeNode<Database>) {
     return await http.request<ResponseData>('/database/add', { method: 'POST', data });
 }
