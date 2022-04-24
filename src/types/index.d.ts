@@ -39,6 +39,17 @@ export interface TreeNode<T> {
   connectionId: string | null;
   children?: TreeNode[];
 }
+//create SQL预览
+export interface SQLCreatePreview<T = any, S = any> {
+  newObject: T;
+  parent: S;
+}
+//alter SQL预览
+export interface SQLAlterPreview<T = any> {
+  newObject: T;
+  oldObject: T;
+}
+
 export interface ServerGroup {
   '@clazz': string;
   oid?: number;

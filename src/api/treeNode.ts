@@ -2,7 +2,7 @@ import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
-    , ServerForm, ServerEditForm, Database, ServerPwdForm,DatabaseEditForm
+    , ServerForm, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview
 } from '@/types'
 
 
@@ -108,7 +108,7 @@ export async function addDB(data: TreeNode<Database>) {
  * @param {*} data  
  * @returns 
  */
- export async function editDatabase(data: DatabaseEditForm) {
+export async function editDatabase(data: DatabaseEditForm) {
     return await http.request<ResponseData>('/database/edit', { method: 'POST', data });
 }
 /**
@@ -125,7 +125,7 @@ export async function getDatabaseRole(connectionID: string) {
  * 查询database 表空间
  * @returns 
  */
- export async function getDatabaseTableSpace(connectionID: string) {
+export async function getDatabaseTableSpace(connectionID: string) {
     const headers = { 'content-type': 'application/x-www-form-urlencoded' };
     return await http.request<ResponseData<string[]>>('/dbinfo/findTableSpace?connectionID=' + connectionID, {
         method: 'POST', headers
@@ -135,9 +135,23 @@ export async function getDatabaseRole(connectionID: string) {
  * 查询database 范本
  * @returns 
  */
- export async function getDatabaseTempDB(connectionID: string) {
+export async function getDatabaseTempDB(connectionID: string) {
     const headers = { 'content-type': 'application/x-www-form-urlencoded' };
     return await http.request<ResponseData<string[]>>('/dbinfo/findTempDB?connectionID=' + connectionID, {
         method: 'POST', headers
     });
+}
+/**
+ * create sql预览
+ * @returns 
+ */
+export async function showCreateSQL(data: SQLCreatePreview) {
+    return await http.request<ResponseData<string>>('/showCreateSQL', { method: 'POST', data });
+}
+/**
+ * alter sql预览
+ * @returns 
+ */
+export async function showAlterSQL(data: SQLAlterPreview) {
+    return await http.request<ResponseData<string>>('/showAlterSQL', { method: 'POST', data });
 }

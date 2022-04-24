@@ -158,17 +158,19 @@
 
     <!-- ===============================database======================================= -->
     <template v-if="state.dbAddVisible">
-      <DBAddDialog
+      <DBFormDialog
         :visible="state.dbAddVisible"
         :dbForm="state.dbForm"
+        :parentForm="state.parentForm"
         @saveModal="handleSaveDB"
         @closeModal="switchDBAddVisable"
       />
     </template>
     <template v-if="state.dbEditVisible">
-      <DBEditDialog
+      <DBFormDialog
         :visible="state.dbEditVisible"
         :dbForm="state.dbForm"
+        :treeNodeString="state.treeNodeString"
         @saveModal="handleDBUpdateSubmit"
         @closeModal="switchDBEditVisable"
       />
@@ -220,8 +222,7 @@ import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
 import ServerPwdDialog from "@/components/server-password/index.vue";
 
-import DBAddDialog from "@/components/database/DatabaseAddDialog.vue";
-import DBEditDialog from "@/components/database/DatabaseEditDialog.vue";
+import DBFormDialog from "@/components/database/DatabaseAddDialog.vue";
 
 import {
   ResponseData,
@@ -251,6 +252,7 @@ interface TreeNodeState {
   closeConnectForm: Server | null;
 
   treeNodeString: string;
+  parentForm: TreeNode<any> | null; //sql预览的父类
 
   //group
   groupVisible: Boolean;
@@ -278,8 +280,7 @@ export default defineComponent({
     ServerDialogAdd,
     ServerDialogEdit,
     ServerPwdDialog,
-    DBAddDialog,
-    DBEditDialog,
+    DBFormDialog,
   },
   props: {
     treeData: Array,
@@ -303,6 +304,8 @@ export default defineComponent({
       closeConnectForm: null, //存储关闭连接时候form对象
 
       treeNodeString: "",
+      parentForm: null,
+
       //group
       groupVisible: false,
       groupOldObject: null,
@@ -464,6 +467,8 @@ export default defineComponent({
         } else {
           state.treeNode = node.parent;
         }
+        state.parentForm = state.treeNode.data as TreeNode<any>;
+
         //连接server使用的dbname
         const dbname = state.treeNode.data.object.databaseName;
         //查找默认db数据
@@ -476,7 +481,7 @@ export default defineComponent({
           "@clazz": "com.highgo.developer.model.HgdbDatabase",
           name: "", //数据库名
           encoding: defaultDatabase.data.object.encoding, //编码 "UTF8"
-          collation: defaultDatabase.data.object.collation, //排序规则排序  "zh_CN.UTF-8"
+          collation: "", //排序规则排序  "zh_CN.UTF-8"
           characterType: "", //字符分类  "zh_CN.UTF-8"
           connectionLimit: defaultDatabase.data.object.connectionLimit, //连接限制 -1
           description: "", //注释
@@ -727,8 +732,8 @@ export default defineComponent({
       console.log("handleDBUpdate node ", node);
       const row = node.data as TreeNode<Database>;
       state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
-
       state.treeNode = node; //用于请求成功后的更新
+
       state.dbForm = row.object; //传给子界面
       state.dbForm.connectionId = node.data.connectionId;
       switchDBEditVisable(true);
@@ -875,7 +880,8 @@ export default defineComponent({
 <style scoped>
 .tree-view {
   min-width: 10%;
-  max-width: 20%;
+  /* max-width: 20%; */
+  max-width: auto;
 }
 .el-tree {
   flex: 1;
