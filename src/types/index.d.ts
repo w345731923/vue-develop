@@ -105,13 +105,13 @@ export interface Server {
 export interface ServerPwdForm {
   newPassword: string,
   oldPassword: string,
-  serverGroupName: string,
-  serverID: string,
+  newPassword1?: string,
+  nodePath: string,
 }
 /**
  * 修改Database
  */
- export interface DatabaseEditForm {
+export interface DatabaseEditForm {
   newObject: TreeNode<Database>
   oldObject: TreeNode<Database>;
 }
@@ -136,5 +136,5 @@ export interface Database {
   leaf?: boolean;
   schema?: string;
   keyString?: string;
-  connectionId?:string;//临时变量
+  connectionId?: string;//临时变量
 }

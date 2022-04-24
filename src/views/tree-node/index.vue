@@ -655,11 +655,8 @@ export default defineComponent({
      * 修改密码弹窗
      */
     const handleServerPwdSubmit = (form: ServerPwdForm) => {
-      if (state.treeNode?.level == 2) {
-        form.serverGroupName = state.treeNode.data.object.name;
-      }
-      form.serverID = state.treeNode!.data.connectionId;
-      updatePassword(form).then((result: ResponseData<any>) => {
+      form.nodePath = getNodePath(state.treeNode!);
+      updatePassword(form).then(() => {
         switchServerPwdVisable(false);
       });
     };

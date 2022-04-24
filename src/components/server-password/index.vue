@@ -38,15 +38,14 @@
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 import type { FormInstance } from "element-plus";
 import { ElMessage } from "element-plus";
-
+import { ServerPwdForm } from "@/types";
 const ruleFormRef = ref<FormInstance>();
 
-const ruleForm = reactive({
+const ruleForm: ServerPwdForm = reactive({
   oldPassword: "",
   newPassword: "",
   newPassword1: "",
-  serverGroupName: "",
-  serverID: "",
+  nodePath: "",
 });
 const rules = reactive({
   oldPassword: [{ required: true, message: "请填写原密码", trigger: "blur" }],
