@@ -108,7 +108,13 @@ export interface ServerPwdForm {
   serverGroupName: string,
   serverID: string,
 }
-
+/**
+ * 修改Database
+ */
+ export interface DatabaseEditForm {
+  newObject: TreeNode<Database>
+  oldObject: TreeNode<Database>;
+}
 export interface Database {
   '@clazz': string;
   oid?: string,
@@ -130,4 +136,5 @@ export interface Database {
   leaf?: boolean;
   schema?: string;
   keyString?: string;
+  connectionId?:string;//临时变量
 }

@@ -2,7 +2,7 @@ import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
-    , ServerForm, ServerEditForm, DatabaseForm, Database, ServerPwdForm
+    , ServerForm, ServerEditForm, Database, ServerPwdForm,DatabaseEditForm
 } from '@/types'
 
 
@@ -102,4 +102,42 @@ export async function getDatabaseList(data: TreeNode<Server>) {
  */
 export async function addDB(data: TreeNode<Database>) {
     return await http.request<ResponseData>('/database/add', { method: 'POST', data });
+}
+/**
+ * 新建database
+ * @param {*} data  
+ * @returns 
+ */
+ export async function editDatabase(data: DatabaseEditForm) {
+    return await http.request<ResponseData>('/database/edit', { method: 'POST', data });
+}
+/**
+ * 查询database 角色
+ * @returns 
+ */
+export async function getDatabaseRole(connectionID: string) {
+    const headers = { 'content-type': 'application/x-www-form-urlencoded' };
+    return await http.request<ResponseData<string[]>>('/dbinfo/findRole?connectionID=' + connectionID, {
+        method: 'POST', headers
+    });
+}
+/**
+ * 查询database 表空间
+ * @returns 
+ */
+ export async function getDatabaseTableSpace(connectionID: string) {
+    const headers = { 'content-type': 'application/x-www-form-urlencoded' };
+    return await http.request<ResponseData<string[]>>('/dbinfo/findTableSpace?connectionID=' + connectionID, {
+        method: 'POST', headers
+    });
+}
+/**
+ * 查询database 范本
+ * @returns 
+ */
+ export async function getDatabaseTempDB(connectionID: string) {
+    const headers = { 'content-type': 'application/x-www-form-urlencoded' };
+    return await http.request<ResponseData<string[]>>('/dbinfo/findTempDB?connectionID=' + connectionID, {
+        method: 'POST', headers
+    });
 }

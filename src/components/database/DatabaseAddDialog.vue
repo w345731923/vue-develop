@@ -24,14 +24,24 @@
           </el-form-item>
           <el-form-item label="拥有者" prop="hostAddress">
             <el-select v-model="form.databaseowner">
-              <el-option label="Zone one" value="shanghai" />
-              <el-option label="Zone two" value="beijing" />
+              <!-- <el-option label="Zone one" value="shanghai" />
+              <el-option label="Zone two" value="beijing" /> -->
+              <el-option
+                v-for="role in state.roleList"
+                :key="role"
+                :label="role"
+                :value="role"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="范本" prop="templateName">
-            <el-select v-model="form.templateName">
-              <el-option label="Zone one" value="shanghai" />
-              <el-option label="Zone two" value="beijing" />
+            <el-select v-model="form.templateName" placeholder=" ">
+              <el-option
+                v-for="temp in state.tempDBList"
+                :key="temp"
+                :label="temp"
+                :value="temp"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="编码" prop="encoding">
@@ -48,8 +58,12 @@
           </el-form-item>
           <el-form-item label="表空间" prop="spcname">
             <el-select v-model="form.spcname">
-              <el-option label="pg_default" value="pg_default" />
-              <el-option label="pg_global" value="pg_global" />
+              <el-option
+                v-for="space in state.tableSpaceList"
+                :key="space"
+                :label="space"
+                :value="space"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="连接限制">
@@ -67,7 +81,7 @@
         </el-tab-pane>
         <el-tab-pane label="注释" name="second">
           <el-form-item label-width="0">
-            <el-input v-model="form.description" type="textarea" :rows="20"/>
+            <el-input v-model="form.description" type="textarea" :rows="20" />
           </el-form-item>
         </el-tab-pane>
         <el-tab-pane label="SQL预览" name="third"> </el-tab-pane>
@@ -85,8 +99,13 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 import type { FormInstance } from "element-plus";
-import { Database } from "@/types";
+import { ResponseData } from "@/types";
 import { ElMessage } from "element-plus";
+import {
+  getDatabaseRole,
+  getDatabaseTableSpace,
+  getDatabaseTempDB,
+} from "@/api/treeNode";
 
 const ruleFormRef = ref<FormInstance>();
 // const form: Database = reactive({
@@ -106,9 +125,14 @@ const ruleFormRef = ref<FormInstance>();
 const rules = reactive({
   name: [{ required: true, message: "请输入数据库名！", trigger: "blur" }],
 });
-
+interface stateProps {
+  visible: boolean;
+  roleList: string[];
+  tempDBList: string[];
+  tableSpaceList: string[];
+}
 export default defineComponent({
-  name: "ServerGroupDialogAdd",
+  name: "DatabaseEditDialog",
   props: {
     saveModal: Function,
     closeModal: Function,
@@ -124,9 +148,13 @@ export default defineComponent({
   emits: ["saveModal", "closeModal"],
   setup(props, { emit }) {
     const { visible, dbForm } = toRefs(props);
-    const state = reactive({
+    const state: stateProps = reactive({
       visible: visible.value,
+      roleList: [], //角色
+      tempDBList: [], //范本
+      tableSpaceList: [], //表空间
     });
+
     watch(
       visible,
       (newValue) => {
@@ -135,6 +163,20 @@ export default defineComponent({
       { immediate: true }
     );
     const form = dbForm.value;
+
+    getDatabaseRole(form?.connectionId).then((resp: ResponseData<string[]>) => {
+      state.roleList = resp.data;
+    });
+    getDatabaseTempDB(form?.connectionId).then(
+      (resp: ResponseData<string[]>) => {
+        state.tempDBList = resp.data;
+      }
+    );
+    getDatabaseTableSpace(form?.connectionId).then(
+      (resp: ResponseData<string[]>) => {
+        state.tableSpaceList = resp.data;
+      }
+    );
 
     //关闭
     const onClose = (formEl: FormInstance | undefined) => {

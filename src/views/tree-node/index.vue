@@ -158,21 +158,21 @@
 
     <!-- ===============================database======================================= -->
     <template v-if="state.dbAddVisible">
-      <DBDialogAdd
+      <DBAddDialog
         :visible="state.dbAddVisible"
         :dbForm="state.dbForm"
         @saveModal="handleSaveDB"
         @closeModal="switchDBAddVisable"
       />
     </template>
-    <!-- <template v-if="state.dbEditVisible">
+    <template v-if="state.dbEditVisible">
       <DBEditDialog
         :visible="state.dbEditVisible"
         :dbForm="state.dbForm"
-        @saveModal="handleSaveDB"
+        @saveModal="handleDBUpdateSubmit"
         @closeModal="switchDBEditVisable"
       />
-    </template> -->
+    </template>
   </div>
 </template>
 
@@ -213,14 +213,15 @@ import {
   serverConnect,
   addDB,
   updatePassword,
+  editDatabase,
 } from "@/api/treeNode";
 import RenameNodeDialog from "./renameNode.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
 import ServerPwdDialog from "@/components/server-password/index.vue";
 
-import DBDialogAdd from "@/components/database/DBDialogAdd.vue";
-import DBEditDialog from "@/components/database/DBEditDialog.vue";
+import DBAddDialog from "@/components/database/DatabaseAddDialog.vue";
+import DBEditDialog from "@/components/database/DatabaseEditDialog.vue";
 
 import {
   ResponseData,
@@ -232,10 +233,10 @@ import {
   ServerEditForm,
   TreeNodeDel,
   Database,
-  DatabaseForm,
   TreeNodeRename,
   DropDownMenu,
   ServerPwdForm,
+  DatabaseEditForm,
 } from "@/types";
 import { breadcrumbProps, ElMessage } from "element-plus";
 
@@ -249,6 +250,8 @@ interface TreeNodeState {
   closeConnectDialogVisible: Boolean;
   closeConnectForm: Server | null;
 
+  treeNodeString: string;
+
   //group
   groupVisible: Boolean;
   groupOldObject: TreeNode<ServerGroup> | null;
@@ -259,7 +262,6 @@ interface TreeNodeState {
   serverEditVisible: Boolean;
   serverForm: Server | null;
   serverObject: TreeNode<Server> | null;
-  serverOld: string;
   serverPwdVisible: Boolean;
 
   //database
@@ -272,15 +274,12 @@ export default defineComponent({
   name: "treeNode",
   components: {
     MessageBox,
-    // DocumentAdd,
-    // Edit,
-    // Delete,
-    // Money,
     RenameNodeDialog,
     ServerDialogAdd,
     ServerDialogEdit,
     ServerPwdDialog,
-    DBDialogAdd,
+    DBAddDialog,
+    DBEditDialog,
   },
   props: {
     treeData: Array,
@@ -302,6 +301,8 @@ export default defineComponent({
       renameDialogVisible: false, //重命名节点
       closeConnectDialogVisible: false, //关闭连接
       closeConnectForm: null, //存储关闭连接时候form对象
+
+      treeNodeString: "",
       //group
       groupVisible: false,
       groupOldObject: null,
@@ -312,7 +313,6 @@ export default defineComponent({
       serverEditVisible: false,
       serverForm: null,
       serverObject: null,
-      serverOld: "",
       serverPwdVisible: false,
 
       //db
@@ -444,9 +444,6 @@ export default defineComponent({
      * 右键选择了一个按钮
      */
     const handleCommand = (row: { menu: DropDownMenu; node: Node }) => {
-      // if (row.menu.key == 23) {
-      //   return row.menu.onClick(true);
-      // }
       row.menu.onClick(row.node);
     };
 
@@ -488,6 +485,7 @@ export default defineComponent({
           templateName: "", //范本
           datistemplate: false, //是范本
           datallowconn: true, //允许连接
+          connectionId: node.data.connectionId as string,
         };
         switchDBAddVisable(true);
       }
@@ -499,6 +497,8 @@ export default defineComponent({
       const type = node.data.type;
       if (type === "Server") {
         handleServerUpdate(node);
+      } else if (type === "Database") {
+        handleDBUpdate(node);
       }
     };
     /**
@@ -565,7 +565,7 @@ export default defineComponent({
       if (node.level == 2) {
         state.groupOldName = node.parent.data.object.name;
       }
-      state.serverOld = JSON.stringify(row); //存储old值，用于save参数
+      state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
       state.treeNode = node; //用于请求成功后的更新
       //注意：这里传的是object对象，save时候需要把外面包一层
       state.serverForm = row.object; //传给子界面
@@ -616,9 +616,9 @@ export default defineComponent({
     };
     //修改连接 ---a)关闭连接，保存 b)直接保存
     const handleEditServer = (form: Server) => {
-      const newObject: TreeNode<Server> = JSON.parse(state.serverOld);
+      const newObject: TreeNode<Server> = JSON.parse(state.treeNodeString);
       newObject.object = form;
-      const oldObject: TreeNode<Server> = JSON.parse(state.serverOld);
+      const oldObject: TreeNode<Server> = JSON.parse(state.treeNodeString);
       oldObject.nodePath = getNodePath(state.treeNode!);
       const data: ServerEditForm = {
         newObject: newObject, //new val
@@ -710,7 +710,6 @@ export default defineComponent({
     //db编辑窗口开关
     const switchDBAddVisable = (flag: boolean) => (state.dbAddVisible = flag);
     const switchDBEditVisable = (flag: boolean) => (state.dbEditVisible = flag);
-    //save db
     const handleSaveDB = (form: Database) => {
       const server: any = state.treeNode?.data;
       //包一层外部对象
@@ -725,6 +724,31 @@ export default defineComponent({
         switchDBAddVisable(false);
         if (result.data != null)
           treeRef.value.append(result.data, state.treeNode);
+      });
+    };
+    const handleDBUpdate = (node: Node) => {
+      console.log("handleDBUpdate node ", node);
+      const row = node.data as TreeNode<Database>;
+      state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
+
+      state.treeNode = node; //用于请求成功后的更新
+      state.dbForm = row.object; //传给子界面
+      state.dbForm.connectionId = node.data.connectionId;
+      switchDBEditVisable(true);
+    };
+    const handleDBUpdateSubmit = (form: Database) => {
+      console.log("handleDBUpdateSubmit form ", form);
+      const newObject: TreeNode<Database> = JSON.parse(state.treeNodeString);
+      newObject.object = form;
+      const oldObject: TreeNode<Database> = JSON.parse(state.treeNodeString);
+      oldObject.nodePath = getNodePath(state.treeNode!);
+      const data: DatabaseEditForm = {
+        newObject: newObject,
+        oldObject: oldObject,
+      };
+      editDatabase(data).then((result: ResponseData) => {
+        switchDBEditVisable(false);
+        state.treeNode!.data = result.data;
       });
     };
 
@@ -815,6 +839,8 @@ export default defineComponent({
       openRenameNodeDialog,
       handleRemoveNodeSubmit,
       handleRenameNodeSubmit,
+      handleCloseNode,
+
       openObjectAdd,
       openObjectEdit,
 
@@ -828,11 +854,13 @@ export default defineComponent({
       switchServerPwdVisable,
       handleServerPwdSubmit,
       handleOpenConnect,
-      handleCloseNode,
+
       handleCloseDB,
       switchDBAddVisable,
       switchDBEditVisable,
+      handleDBUpdate,
       handleSaveDB,
+      handleDBUpdateSubmit,
     };
   },
   data() {
