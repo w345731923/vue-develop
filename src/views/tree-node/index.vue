@@ -24,18 +24,30 @@
             <img src="../../assets/hgdb16.png" v-if="data.type === 'Server'" />
             <img
               src="../../assets/database.png"
-              v-if="data.type === 'Database'"
+              v-if="data.type === 'Database' && data.index == null"
             />
             <img
               src="../../assets/folder_schema.png"
-              v-if="data.type === 'schema-group'"
+              v-if="data.type === 'Database' && data.index == 0"
             />
-            <img src="../../assets/schema.png" v-if="data.type === 'schema'" />
+            <img
+              src="../../assets/folder_table.png"
+              v-if="data.type === 'Database' && data.index == 1"
+            />
+            <img
+              src="../../assets/folder_schema.png"
+              v-if="data.type === 'Database' && data.index == 2"
+            />
+            <img
+              src="../../assets/folder_schema.png"
+              v-if="data.type === 'Database' && data.index == 3"
+            />
+            <img src="../../assets/schema.png" v-if="data.type === 'Schema'" />
             <img
               src="../../assets/folder_table.png"
               v-if="data.type === 'table-group'"
             />
-            <img src="../../assets/table.png" v-if="data.type === 'table'" />
+            <img src="../../assets/table.png" v-if="data.type === 'Table'" />
             <img
               src="../../assets/folder_user.png"
               v-if="data.type === 'role-group'"
@@ -46,12 +58,13 @@
             class="tree-node-name tree-node-name-gt"
             style="padding-right: 16px"
           >
-            <span v-if="data.type === 'Server' || data.type === 'Database'">
+            <span v-if="data.type == 'Database' && data.index >= 0">
+              <span>{{ data.text }}</span>
+            </span>
+            <span v-else-if="data.type == 'Server' || data.type == 'Database'">
               <span v-html="data.object.displayName"></span>
             </span>
-            <span v-else>
-              {{ data.object.displayName }}
-            </span>
+            <span v-else> {{ data.object.displayName }}</span>
           </div>
           <div class="tree-node-button">
             <el-dropdown
@@ -160,7 +173,7 @@
     <template v-if="state.dbAddVisible">
       <DBFormDialog
         :visible="state.dbAddVisible"
-        :dbForm="state.dbForm"
+        :defaultForm="state.defaultForm"
         :parentForm="state.parentForm"
         @saveModal="handleSaveDB"
         @closeModal="switchDBAddVisable"
@@ -169,12 +182,22 @@
     <template v-if="state.dbEditVisible">
       <DBFormDialog
         :visible="state.dbEditVisible"
-        :dbForm="state.dbForm"
+        :defaultForm="state.defaultForm"
         :treeNodeString="state.treeNodeString"
         @saveModal="handleDBUpdateSubmit"
         @closeModal="switchDBEditVisable"
       />
     </template>
+    <!-- ===============================schema======================================= -->
+    <template v-if="state.schemaAddVisible">
+      <SchemaFormDialog
+        :visible="state.schemaAddVisible"
+        :defaultForm="state.defaultForm"
+        :parentForm="state.parentForm"
+        @saveModal="handleSaveDB"
+        @closeModal="switchDBAddVisable"
+      />
+    </template>        
   </div>
 </template>
 
@@ -216,13 +239,15 @@ import {
   addDB,
   updatePassword,
   editDatabase,
+  getSchemaList,
 } from "@/api/treeNode";
 import RenameNodeDialog from "./renameNode.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
 import ServerPwdDialog from "@/components/server-password/index.vue";
 
-import DBFormDialog from "@/components/database/DatabaseAddDialog.vue";
+import DBFormDialog from "@/components/database/DatabaseDialog.vue";
+import SchemaFormDialog from "@/components/schema/SchemaDialog.vue";
 
 import {
   ResponseData,
@@ -239,7 +264,7 @@ import {
   ServerPwdForm,
   DatabaseEditForm,
 } from "@/types";
-import { breadcrumbProps, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 
 import { getNodePath } from "@/utils/tree";
 
@@ -253,6 +278,7 @@ interface TreeNodeState {
 
   treeNodeString: string;
   parentForm: TreeNode<any> | null; //sql预览的父类
+  defaultForm: any;
 
   //group
   groupVisible: Boolean;
@@ -269,7 +295,10 @@ interface TreeNodeState {
   //database
   dbAddVisible: Boolean;
   dbEditVisible: Boolean;
-  dbForm: Database | null;
+
+  //schema
+  schemaAddVisible: Boolean;
+  schemaEditVisible: Boolean;
 }
 
 export default defineComponent({
@@ -305,6 +334,7 @@ export default defineComponent({
 
       treeNodeString: "",
       parentForm: null,
+      defaultForm: null,
 
       //group
       groupVisible: false,
@@ -321,7 +351,9 @@ export default defineComponent({
       //db
       dbAddVisible: false,
       dbEditVisible: false,
-      dbForm: null,
+      //schema
+      schemaAddVisible: false,
+      schemaEditVisible: false,
     });
 
     /**
@@ -409,36 +441,63 @@ export default defineComponent({
         menu.push(renameMenu);
         menu.push(refreshMenu);
       } else if (treeNode.type == "Database") {
-        const defDB = node.parent.data.object.databaseName as string;
-        if (treeNode.object.name == defDB) {
-          //默认库
+        if (treeNode.index == undefined) {
+          //database
+          const defDB = node.parent.data.object.databaseName as string;
+          if (treeNode.object.name == defDB) {
+            //默认库
+            menu.push({
+              key: 30,
+              text: "关闭数据库",
+              disabled: false,
+              onClick: handleCloseDB,
+            });
+          } else {
+            menu.push({
+              key: 31,
+              text: "打开数据库",
+              disabled: false,
+              onClick: handleOpenDB,
+            });
+          }
           menu.push({
-            key: 30,
-            text: "关闭数据库",
-            disabled: true,
-            onClick: handleCloseDB,
+            key: 32,
+            text: "新建数据库",
+            disabled: false,
+            onClick: openObjectAdd,
           });
-        } else {
           menu.push({
-            key: 31,
-            text: "打开数据库",
-            disabled: true,
-            onClick: handleCloseDB,
+            key: 33,
+            text: "编辑数据库",
+            disabled: false,
+            onClick: openObjectEdit,
+          });
+          menu.push(removeMenu);
+        } else {
+          //模式、角色、表空间、管理
+          menu.push({
+            key: 40,
+            text: "新建模式",
+            disabled: false,
+            onClick: openObjectAdd,
           });
         }
+        menu.push(refreshMenu);
+      } else if (treeNode.type == "Schema") {
         menu.push({
-          key: 32,
-          text: "新建数据库",
+          key: 50,
+          text: "新建模式",
           disabled: false,
           onClick: openObjectAdd,
         });
         menu.push({
-          key: 33,
-          text: "编辑数据库",
+          key: 51,
+          text: "编辑模式",
           disabled: false,
           onClick: openObjectEdit,
         });
         menu.push(removeMenu);
+        menu.push(renameMenu);
         menu.push(refreshMenu);
       }
       state.dropdownMenu = menu;
@@ -456,11 +515,16 @@ export default defineComponent({
     const openObjectAdd = (node: Node) => {
       console.log("openObjectAdd node", node);
       const type = node.data.type;
+      const index = node.data.index;
+
       if (type === "ServerGroup") {
         //新建Server
         state.treeNode = node;
         switchServerAddVisable(true);
-      } else if (type === "Server" || type === "Database") {
+      } else if (
+        type === "Server" ||
+        (type === "Database" && index == undefined)
+      ) {
         //新建数据库
         if (type === "Server") {
           state.treeNode = node;
@@ -477,7 +541,7 @@ export default defineComponent({
             if (dbname == element.data.object.name) return true;
           }
         )[0];
-        state.dbForm = {
+        state.defaultForm = {
           "@clazz": "com.highgo.developer.model.HgdbDatabase",
           name: "", //数据库名
           encoding: defaultDatabase.data.object.encoding, //编码 "UTF8"
@@ -493,6 +557,20 @@ export default defineComponent({
           connectionId: node.data.connectionId as string,
         };
         switchDBAddVisable(true);
+      } else if (type === "Database" || type === "Schema") {
+        //新建schema
+        if (type === "Database") {
+          state.treeNode = node;
+        } else {
+          state.treeNode = node.parent;
+        }
+        state.parentForm = state.treeNode.data as TreeNode<any>;
+        state.defaultForm = {
+          "@clazz": "com.highgo.developer.model.HgdbDatabase",
+          name: "", //数据库名
+          rolname: state.treeNode.data.object.databaseowner, //拥有者
+        };
+        switchSchemaAddVisable(true);
       }
     };
     /**
@@ -550,6 +628,18 @@ export default defineComponent({
         state.treeNode!.data = result.data;
       });
     };
+    /**
+     * 关闭树形节点
+     */
+    const handleCloseNode = (node: Node) => {
+      node.childNodes = [];
+      node.expanded = false;
+      node.isLeaf = false;
+      node.loaded = false;
+      node.loading = false;
+      node.data.connectionId = "";
+    };
+
     //---------------Group---------------------
 
     //---------------Server---------------------
@@ -686,27 +776,6 @@ export default defineComponent({
         handleCloseNode(node);
       });
     };
-    /**
-     * 关闭树形节点
-     */
-    const handleCloseNode = (node: Node) => {
-      node.childNodes = [];
-      node.expanded = false;
-      node.isLeaf = false;
-      node.loaded = false;
-      node.loading = false;
-      node.data.connectionId = "";
-    };
-    /**
-     * 关闭数据库
-     */
-    const handleCloseDB = (node: Node) => {
-      node.childNodes = [];
-      node.expanded = false;
-      node.isLeaf = false;
-      node.loaded = false;
-      node.data.connectionId = "";
-    };
 
     //---------------database---------------------
     //db编辑窗口开关
@@ -734,8 +803,8 @@ export default defineComponent({
       state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
       state.treeNode = node; //用于请求成功后的更新
 
-      state.dbForm = row.object; //传给子界面
-      state.dbForm.connectionId = node.data.connectionId;
+      state.defaultForm = row.object; //传给子界面
+      state.defaultForm.connectionId = node.data.connectionId;
       switchDBEditVisable(true);
     };
     const handleDBUpdateSubmit = (form: Database) => {
@@ -753,7 +822,34 @@ export default defineComponent({
         state.treeNode!.data = result.data;
       });
     };
-
+    //打开数据库
+    const handleOpenDB = (node: Node) => {
+      console.log("handleOpenDB node ", node);
+    };
+    //关闭数据库
+    const handleCloseDB = (node: Node) => {
+      console.log("handleCloseDB node ", node);
+    };
+    //---------------database---------------------
+    //db编辑窗口开关
+    const switchSchemaAddVisable = (flag: boolean) =>
+      (state.schemaAddVisible = flag);
+    const handleSaveSchema = (form: Database) => {
+      // const server: any = state.treeNode?.data;
+      // //包一层外部对象
+      // const newObject: TreeNode<Database> = {
+      //   connectionId: server.connectionId,
+      //   contextId: "",
+      //   object: form,
+      //   nodePath: getNodePath(state.treeNode!),
+      //   type: "Database",
+      // };
+      // addDB(newObject).then((result: ResponseData) => {
+      //   switchDBAddVisable(false);
+      //   if (result.data != null)
+      //     treeRef.value.append(result.data, state.treeNode);
+      // });
+    };
     /**
      * 展开属性菜单 懒加载
      */
@@ -770,7 +866,57 @@ export default defineComponent({
         return getServerNode(node, resolve);
         // return resolve(node.data.children);
       } else if (node.data.type == "Server") {
-        return getDatabase(node, resolve);
+        return getDatabaseNode(node, resolve);
+      } else if (node.data.type == "Database") {
+        if (node.data.index == undefined) {
+          //显示模式、角色、表空间、管理
+          const treeData = node.data as TreeNode<Database>;
+          const schemas: any[] = [];
+          schemas.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "模式",
+            index: 0,
+          });
+          schemas.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "角色",
+            index: 1,
+          });
+          schemas.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "表空间",
+            index: 2,
+          });
+          schemas.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "管理",
+            index: 3,
+          });
+          return resolve(schemas);
+        } else {
+          if (node.data.index == 0) {
+            return getSchemaNode(node, resolve);
+          } else if (node.data.index == 1) {
+            return resolve([]);
+          }
+          return resolve([]);
+        }
       }
     };
     /**
@@ -793,7 +939,7 @@ export default defineComponent({
     /**
      * get server list
      */
-    const getDatabase = (node: Node, resolve) => {
+    const getDatabaseNode = (node: Node, resolve) => {
       const nodeData = node.data as TreeNode<Server>;
       nodeData.nodePath = getNodePath(node);
       serverConnect(nodeData).then(
@@ -826,6 +972,21 @@ export default defineComponent({
         }
       );
       resolve([]);
+    };
+    const getSchemaNode = (node: Node, resolve) => {
+      const nodeData = node.data as TreeNode<Database>;
+      nodeData.nodePath = getNodePath(node);
+
+      getSchemaList(nodeData).then(
+        (respon: ResponseData<TreeNode<any>[]>) => {
+          console.log("getSchemaList succ respon ", respon);
+          resolve(respon.data);
+        },
+        (err) => {
+          console.log("err", err);
+          handleCloseNode(node);
+        }
+      );
     };
     return {
       treeRef,

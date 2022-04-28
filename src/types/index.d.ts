@@ -32,12 +32,14 @@ export interface DropDownMenu {
 }
 
 export interface TreeNode<T> {
+  text?: string;//工具栏显示名称
   type: string;//node类型
   contextId: string,//SQL编辑器
   nodePath: string,  //node整体路径
   object: T;
   connectionId: string | null;
   children?: TreeNode[];
+  index?: number;
 }
 //create SQL预览
 export interface SQLCreatePreview<T = any, S = any> {
@@ -148,4 +150,16 @@ export interface Database {
   schema?: string;
   keyString?: string;
   connectionId?: string;//临时变量
+}
+export interface Schema {
+  '@clazz': string;
+  oid?: string,
+  name: string,//数据库名
+  describe: string;//注释
+  rolname?: string;//角色
+  displayName?: string;//显示html名称  
+  isRoleLeaf?: boolean;
+  caseModel?: string;
+  leaf?: boolean;
+  keyString?: string;
 }

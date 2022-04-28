@@ -1,7 +1,7 @@
 <template>
   <!-- :visible.sync="dialogFormVisible" -->
   <el-dialog
-    :title="`${state.isAdd ? '创建数据库' : '修改数据库'}`"
+    :title="`${state.isAdd ? '新建模式' : '编辑模式'}`"
     width="600px"
     :close-on-click-modal="false"
     :destroy-on-close="true"
@@ -21,8 +21,8 @@
           <el-form-item label="数据库名" prop="name">
             <el-input v-model="form.name" />
           </el-form-item>
-          <el-form-item label="拥有者" prop="hostAddress">
-            <el-select v-model="form.databaseowner">
+          <el-form-item label="拥有者" prop="rolname">
+            <el-select v-model="form.rolname">
               <el-option
                 v-for="role in state.roleList"
                 :key="role"
@@ -31,67 +31,10 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="范本" prop="templateName">
-            <el-select
-              v-model="form.templateName"
-              placeholder=" "
-              v-if="state.isAdd"
-            >
-              <el-option
-                v-for="temp in state.tempDBList"
-                :key="temp"
-                :label="temp"
-                :value="temp"
-              />
-            </el-select>
-            <el-select
-              v-model="form.templateName"
-              placeholder=" "
-              v-else
-              disabled
-            ></el-select>
-          </el-form-item>
-          <el-form-item label="编码" prop="encoding">
-            <el-select v-model="form.encoding" v-if="state.isAdd">
-              <el-option label="Zone one" value="EUC_CN" />
-              <el-option label="UTF8" value="UTF8" />
-            </el-select>
-            <el-select v-model="form.encoding" v-else disabled></el-select>
-          </el-form-item>
-          <el-form-item label="排序规则排序" prop="collation">
-            <el-input v-model="form.collation" v-if="state.isAdd" />
-            <el-input v-model="form.collation" v-else disabled />
-          </el-form-item>
-          <el-form-item label="字符分类" prop="characterType">
-            <el-input v-model="form.characterType" v-if="state.isAdd" />
-            <el-input v-model="form.characterType" v-else disabled />
-          </el-form-item>
-          <el-form-item label="表空间" prop="spcname">
-            <el-select v-model="form.spcname">
-              <el-option
-                v-for="space in state.tableSpaceList"
-                :key="space"
-                :label="space"
-                :value="space"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="连接限制">
-            <el-input
-              v-model="form.connectionLimit"
-              oninput="value=value.replace(/[^\d]/g,'')"
-            />
-          </el-form-item>
-          <el-form-item label="允许连接">
-            <el-switch v-model="form.datallowconn" />
-          </el-form-item>
-          <el-form-item label="是范本">
-            <el-switch v-model="form.datistemplate" />
-          </el-form-item>
         </el-tab-pane>
         <el-tab-pane label="注释" name="second">
           <el-form-item label-width="0">
-            <el-input v-model="form.description" type="textarea" :rows="20" />
+            <el-input v-model="form.describe" type="textarea" :rows="20" />
           </el-form-item>
         </el-tab-pane>
         <el-tab-pane label="SQL预览" name="third">
@@ -121,28 +64,13 @@ import {
   Database,
 } from "@/types";
 import { ElMessage } from "element-plus";
-import {
-  getDatabaseRole,
-  getDatabaseTableSpace,
-  getDatabaseTempDB,
-  showCreateSQL,
-  showAlterSQL,
-} from "@/api/treeNode";
+import { getDatabaseRole, showCreateSQL, showAlterSQL } from "@/api/treeNode";
 
 const ruleFormRef = ref<FormInstance>();
-// const form: Database = reactive({
-//   "@clazz": "com.highgo.developer.model.HgdbDatabase",
-//   name: "", //数据库名
-//   encoding: "", //编码 "UTF8"
-//   collation: "", //排序规则排序  "zh_CN.UTF-8"
-//   characterType: "", //字符分类  "zh_CN.UTF-8"
-//   connectionLimit: -1, //连接限制 -1
-//   description: "", //注释
-//   databaseowner: "", //拥有者
-//   spcname: "", //表空间  "pg_default"
-//   templateName: "", //范本
-//   datistemplate: false, //是范本
-//   datallowconn: false, //允许连接
+// '@clazz': string;
+// name: string,//数据库名
+// describe: string;//注释
+// rolname?: string;//角色
 // });
 const rules = reactive({
   name: [{ required: true, message: "请输入数据库名！", trigger: "blur" }],
@@ -150,8 +78,6 @@ const rules = reactive({
 interface stateProps {
   visible: boolean;
   roleList: string[];
-  tempDBList: string[];
-  tableSpaceList: string[];
   sqlpreview: string;
   isAdd: boolean;
 }
@@ -164,7 +90,7 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    dbForm: Object,
+    schemaForm: Object,
     parentForm: Object,
     treeNodeString: String,
   },
@@ -173,12 +99,10 @@ export default defineComponent({
   },
   emits: ["saveModal", "closeModal"],
   setup(props, { emit }) {
-    const { visible, dbForm, parentForm, treeNodeString } = toRefs(props);
+    const { visible, schemaForm, parentForm, treeNodeString } = toRefs(props);
     const state: stateProps = reactive({
       visible: visible.value,
       roleList: [], //角色
-      tempDBList: [], //范本
-      tableSpaceList: [], //表空间
       sqlpreview: "", //SQL预览
       isAdd: true, //true新增  false修改
     });
@@ -190,23 +114,13 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    const form = dbForm.value as Database;
+    const form = schemaForm.value as Database;
     if (form.name != "") {
       state.isAdd = false;
     }
     getDatabaseRole(form.connectionId!).then((resp: ResponseData<string[]>) => {
       state.roleList = resp.data;
     });
-    getDatabaseTempDB(form?.connectionId!).then(
-      (resp: ResponseData<string[]>) => {
-        state.tempDBList = resp.data;
-      }
-    );
-    getDatabaseTableSpace(form?.connectionId!).then(
-      (resp: ResponseData<string[]>) => {
-        state.tableSpaceList = resp.data;
-      }
-    );
 
     //关闭
     const onClose = (formEl: FormInstance | undefined) => {

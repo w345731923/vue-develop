@@ -1,18 +1,7 @@
 
 import Node from "element-plus/es/components/tree/src/model/node";
 import {
-    ResponseData,
-    ServerForm,
-    Server,
-    ServerGroup,
     TreeNode,
-    ServerGroupForm,
-    ServerEditForm,
-    TreeNodeDel,
-    Database,
-    TreeNodeRename,
-    DropDownMenu,
-    ServerPwdForm,
 } from "@/types";
 /**
  * 返回一个nodePath字符串
@@ -33,7 +22,9 @@ const getNodeName = (data: string[], node: Node) => {
         if (treeData.type == 'ServerGroup') {
             data.push('/serverGroupName/' + treeData.object.name);
         } else if (treeData.type == 'Server') {
-            data.push('/ServerName/' + treeData.object.name);
+            data.push('/serverName/' + treeData.object.name);
+        } else if (treeData.type == 'Database') {
+            data.push('/databaseName/' + treeData.object.name);
         }
         getNodeName(data, node.parent);
     }
