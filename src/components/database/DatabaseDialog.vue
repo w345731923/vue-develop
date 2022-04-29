@@ -89,12 +89,12 @@
             <el-switch v-model="form.datistemplate" />
           </el-form-item>
         </el-tab-pane>
-        <el-tab-pane label="注释" name="second">
+        <el-tab-pane label="注释" name="description">
           <el-form-item label-width="0">
             <el-input v-model="form.description" type="textarea" :rows="20" />
           </el-form-item>
         </el-tab-pane>
-        <el-tab-pane label="SQL预览" name="third">
+        <el-tab-pane label="SQL预览" name="sqlview">
           <el-form-item label-width="0">
             <el-input v-model="state.sqlpreview" type="textarea" :rows="20" />
           </el-form-item>
@@ -112,7 +112,7 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
-import type { FormInstance } from "element-plus";
+import type { FormInstance, TabsPaneContext } from "element-plus";
 import {
   ResponseData,
   SQLCreatePreview,
@@ -234,32 +234,33 @@ export default defineComponent({
       });
     };
     //sql预览
-    const handleClick = () => {
-      const newObject: TreeNode<Database> = {
-        connectionId: "",
-        contextId: "",
-        object: form as Database,
-        nodePath: "",
-        type: "Database",
-      };
-      const parent = parentForm.value as TreeNode<any>;
-      if (state.isAdd) {
-        const data: SQLCreatePreview = {
-          newObject: newObject,
-          parent: parentForm.value as TreeNode<any>,
+    const handleClick = (pane: TabsPaneContext, ev: Event) => {
+      if (pane.props.name == "sqlview") {
+        const newObject: TreeNode<Database> = {
+          connectionId: "",
+          contextId: "",
+          object: form as Database,
+          nodePath: "",
+          type: "Database",
         };
-        showCreateSQL(data).then((resp: ResponseData<string>) => {
-          state.sqlpreview = resp.data;
-        });
-      } else {
-        const current = treeNodeString.value as string;
-        const data: SQLAlterPreview = {
-          newObject: newObject,
-          oldObject: JSON.parse(current) as TreeNode<Database>,
-        };
-        showAlterSQL(data).then((resp: ResponseData<string>) => {
-          state.sqlpreview = resp.data;
-        });
+        if (state.isAdd) {
+          const data: SQLCreatePreview = {
+            newObject: newObject,
+            parent: parentForm.value as TreeNode<any>,
+          };
+          showCreateSQL(data).then((resp: ResponseData<string>) => {
+            state.sqlpreview = resp.data;
+          });
+        } else {
+          const current = treeNodeString.value as string;
+          const data: SQLAlterPreview = {
+            newObject: newObject,
+            oldObject: JSON.parse(current) as TreeNode<Database>,
+          };
+          showAlterSQL(data).then((resp: ResponseData<string>) => {
+            state.sqlpreview = resp.data;
+          });
+        }
       }
     };
     return {

@@ -175,7 +175,7 @@
         :visible="state.dbAddVisible"
         :defaultForm="state.defaultForm"
         :parentForm="state.parentForm"
-        @saveModal="handleSaveDB"
+        @saveModal="handleAddDB"
         @closeModal="switchDBAddVisable"
       />
     </template>
@@ -194,10 +194,19 @@
         :visible="state.schemaAddVisible"
         :defaultForm="state.defaultForm"
         :parentForm="state.parentForm"
-        @saveModal="handleSaveDB"
-        @closeModal="switchDBAddVisable"
+        @saveModal="handleAddSchemaSubmit"
+        @closeModal="switchSchemaAddVisable"
       />
-    </template>        
+    </template>
+    <template v-if="state.schemaEditVisible">
+      <SchemaFormDialog
+        :visible="state.schemaEditVisible"
+        :defaultForm="state.defaultForm"
+        :parentForm="state.parentForm"
+        @saveModal="handleUpdateSchemaSubmit"
+        @closeModal="switchSchemaEditVisable"
+      />
+    </template>
   </div>
 </template>
 
@@ -240,6 +249,8 @@ import {
   updatePassword,
   editDatabase,
   getSchemaList,
+  addSchema,
+  editSchema,
 } from "@/api/treeNode";
 import RenameNodeDialog from "./renameNode.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
@@ -263,6 +274,8 @@ import {
   DropDownMenu,
   ServerPwdForm,
   DatabaseEditForm,
+  SchemaEditForm,
+  Schema,
 } from "@/types";
 import { ElMessage } from "element-plus";
 
@@ -310,6 +323,7 @@ export default defineComponent({
     ServerDialogEdit,
     ServerPwdDialog,
     DBFormDialog,
+    SchemaFormDialog,
   },
   props: {
     treeData: Array,
@@ -566,9 +580,10 @@ export default defineComponent({
         }
         state.parentForm = state.treeNode.data as TreeNode<any>;
         state.defaultForm = {
-          "@clazz": "com.highgo.developer.model.HgdbDatabase",
+          "@clazz": "com.highgo.developer.model.HgdbSchema",
           name: "", //数据库名
           rolname: state.treeNode.data.object.databaseowner, //拥有者
+          connectionId: state.treeNode.data.connectionId as string,
         };
         switchSchemaAddVisable(true);
       }
@@ -578,10 +593,13 @@ export default defineComponent({
      */
     const openObjectEdit = (node: Node) => {
       const type = node.data.type;
+      debugger
       if (type === "Server") {
         handleServerUpdate(node);
       } else if (type === "Database") {
         handleDBUpdate(node);
+      }else if (type === "Schema" ) {
+        handleSchemaUpdate(node);
       }
     };
     /**
@@ -781,7 +799,7 @@ export default defineComponent({
     //db编辑窗口开关
     const switchDBAddVisable = (flag: boolean) => (state.dbAddVisible = flag);
     const switchDBEditVisable = (flag: boolean) => (state.dbEditVisible = flag);
-    const handleSaveDB = (form: Database) => {
+    const handleAddDB = (form: Database) => {
       const server: any = state.treeNode?.data;
       //包一层外部对象
       const newObject: TreeNode<Database> = {
@@ -830,26 +848,54 @@ export default defineComponent({
     const handleCloseDB = (node: Node) => {
       console.log("handleCloseDB node ", node);
     };
-    //---------------database---------------------
-    //db编辑窗口开关
+    //---------------schema---------------------
     const switchSchemaAddVisable = (flag: boolean) =>
       (state.schemaAddVisible = flag);
-    const handleSaveSchema = (form: Database) => {
-      // const server: any = state.treeNode?.data;
-      // //包一层外部对象
-      // const newObject: TreeNode<Database> = {
-      //   connectionId: server.connectionId,
-      //   contextId: "",
-      //   object: form,
-      //   nodePath: getNodePath(state.treeNode!),
-      //   type: "Database",
-      // };
-      // addDB(newObject).then((result: ResponseData) => {
-      //   switchDBAddVisable(false);
-      //   if (result.data != null)
-      //     treeRef.value.append(result.data, state.treeNode);
-      // });
+    const switchSchemaEditVisable = (flag: boolean) =>
+      (state.schemaEditVisible = flag);
+
+    const handleAddSchemaSubmit = (form: Schema) => {
+      const server: any = state.treeNode?.data;
+      //包一层外部对象
+      const newObject: TreeNode<Schema> = {
+        connectionId: server.connectionId,
+        contextId: "",
+        object: form,
+        nodePath: getNodePath(state.treeNode!),
+        type: "Schema",
+      };
+      addSchema(newObject).then((result: ResponseData) => {
+        switchSchemaAddVisable(false);
+        if (result.data != null)
+          treeRef.value.append(result.data, state.treeNode);
+      });
     };
+    const handleSchemaUpdate = (node: Node) => {
+      console.log("handleSchemaUpdate node ", node);
+      const row = node.data as TreeNode<Database>;
+      state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
+      state.treeNode = node; //用于请求成功后的更新
+
+      state.defaultForm = row.object; //传给子界面
+      state.defaultForm.connectionId = node.data.connectionId;
+      switchSchemaEditVisable(true);
+    };
+    const handleSchemaUpdateSubmit = (form: Schema) => {
+      console.log("handleSchemaUpdateSubmit form ", form);
+      const newObject: TreeNode<Schema> = JSON.parse(state.treeNodeString);
+      newObject.object = form;
+      const oldObject: TreeNode<Schema> = JSON.parse(state.treeNodeString);
+      oldObject.nodePath = getNodePath(state.treeNode!);
+      const data: SchemaEditForm = {
+        newObject: newObject,
+        oldObject: oldObject,
+      };
+      editSchema(data).then((result: ResponseData) => {
+        switchDBEditVisable(false);
+        state.treeNode!.data = result.data;
+      });
+    };
+
     /**
      * 展开属性菜单 懒加载
      */
@@ -1021,19 +1067,16 @@ export default defineComponent({
       handleCloseDB,
       switchDBAddVisable,
       switchDBEditVisable,
-      handleDBUpdate,
-      handleSaveDB,
+      handleAddDB,
       handleDBUpdateSubmit,
+
+      switchSchemaAddVisable,
+      handleAddSchemaSubmit,
+      switchSchemaEditVisable,
+      handleSchemaUpdateSubmit,
     };
   },
-  data() {
-    return {
-      defaultProps: {
-        children: "children",
-        label: "label",
-      },
-    };
-  },
+  data() {},
   methods: {},
 });
 </script>

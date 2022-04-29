@@ -2,7 +2,8 @@ import { http } from "@/utils/http";
 import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
-    , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview
+    , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
+    SchemaEditForm
 } from '@/types'
 
 
@@ -104,7 +105,7 @@ export async function addDB(data: TreeNode<Database>) {
     return await http.request<ResponseData>('/database/add', { method: 'POST', data });
 }
 /**
- * 新建database
+ * 修改database
  * @param {*} data  
  * @returns 
  */
@@ -170,4 +171,12 @@ export async function getSchemaList(data: TreeNode<Database>) {
  */
  export async function addSchema(data: TreeNode<Schema>) {
     return await http.request<ResponseData>('/schema/add', { method: 'POST', data });
+}
+/**
+ * 修改schema
+ * @param {*} data  
+ * @returns 
+ */
+ export async function editSchema(data: SchemaEditForm) {
+    return await http.request<ResponseData>('/schema/edit', { method: 'POST', data });
 }

@@ -18,7 +18,7 @@
     >
       <el-tabs model-value="first" type="card" @tab-click="handleClick">
         <el-tab-pane label="常规" name="first">
-          <el-form-item label="数据库名" prop="name">
+          <el-form-item label="模式名" prop="name">
             <el-input v-model="form.name" />
           </el-form-item>
           <el-form-item label="拥有者" prop="rolname">
@@ -32,12 +32,12 @@
             </el-select>
           </el-form-item>
         </el-tab-pane>
-        <el-tab-pane label="注释" name="second">
+        <el-tab-pane label="注释" name="describe">
           <el-form-item label-width="0">
             <el-input v-model="form.describe" type="textarea" :rows="20" />
           </el-form-item>
         </el-tab-pane>
-        <el-tab-pane label="SQL预览" name="third">
+        <el-tab-pane label="SQL预览" name="sqlview">
           <el-form-item label-width="0">
             <el-input v-model="state.sqlpreview" type="textarea" :rows="20" />
           </el-form-item>
@@ -55,7 +55,7 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
-import type { FormInstance } from "element-plus";
+import type { FormInstance, TabsPaneContext } from "element-plus";
 import {
   ResponseData,
   SQLCreatePreview,
@@ -90,7 +90,7 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    schemaForm: Object,
+    defaultForm: Object,
     parentForm: Object,
     treeNodeString: String,
   },
@@ -99,7 +99,7 @@ export default defineComponent({
   },
   emits: ["saveModal", "closeModal"],
   setup(props, { emit }) {
-    const { visible, schemaForm, parentForm, treeNodeString } = toRefs(props);
+    const { visible, defaultForm, parentForm, treeNodeString } = toRefs(props);
     const state: stateProps = reactive({
       visible: visible.value,
       roleList: [], //角色
@@ -114,7 +114,7 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    const form = schemaForm.value as Database;
+    const form = defaultForm.value as Database;
     if (form.name != "") {
       state.isAdd = false;
     }
@@ -148,32 +148,33 @@ export default defineComponent({
       });
     };
     //sql预览
-    const handleClick = () => {
-      const newObject: TreeNode<Database> = {
-        connectionId: "",
-        contextId: "",
-        object: form as Database,
-        nodePath: "",
-        type: "Database",
-      };
-      const parent = parentForm.value as TreeNode<any>;
-      if (state.isAdd) {
-        const data: SQLCreatePreview = {
-          newObject: newObject,
-          parent: parentForm.value as TreeNode<any>,
+    const handleClick = (pane: TabsPaneContext, ev: Event) => {
+      if (pane.props.name == "sqlview") {
+        const newObject: TreeNode<Database> = {
+          connectionId: "",
+          contextId: "",
+          object: form as Database,
+          nodePath: "",
+          type: "Schema",
         };
-        showCreateSQL(data).then((resp: ResponseData<string>) => {
-          state.sqlpreview = resp.data;
-        });
-      } else {
-        const current = treeNodeString.value as string;
-        const data: SQLAlterPreview = {
-          newObject: newObject,
-          oldObject: JSON.parse(current) as TreeNode<Database>,
-        };
-        showAlterSQL(data).then((resp: ResponseData<string>) => {
-          state.sqlpreview = resp.data;
-        });
+        if (state.isAdd) {
+          const data: SQLCreatePreview = {
+            newObject: newObject,
+            parent: parentForm.value as TreeNode<any>,
+          };
+          showCreateSQL(data).then((resp: ResponseData<string>) => {
+            state.sqlpreview = resp.data;
+          });
+        } else {
+          const current = treeNodeString.value as string;
+          const data: SQLAlterPreview = {
+            newObject: newObject,
+            oldObject: JSON.parse(current) as TreeNode<Database>,
+          };
+          showAlterSQL(data).then((resp: ResponseData<string>) => {
+            state.sqlpreview = resp.data;
+          });
+        }
       }
     };
     return {

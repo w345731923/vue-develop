@@ -163,3 +163,7 @@ export interface Schema {
   leaf?: boolean;
   keyString?: string;
 }
+export interface SchemaEditForm {
+  newObject: TreeNode<Schema>
+  oldObject: TreeNode<Schema>;
+}
