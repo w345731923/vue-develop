@@ -203,7 +203,8 @@
         :visible="state.schemaEditVisible"
         :defaultForm="state.defaultForm"
         :parentForm="state.parentForm"
-        @saveModal="handleUpdateSchemaSubmit"
+        :treeNodeString="state.treeNodeString"
+        @saveModal="handleSchemaUpdateSubmit"
         @closeModal="switchSchemaEditVisable"
       />
     </template>
@@ -593,12 +594,11 @@ export default defineComponent({
      */
     const openObjectEdit = (node: Node) => {
       const type = node.data.type;
-      debugger
       if (type === "Server") {
         handleServerUpdate(node);
       } else if (type === "Database") {
         handleDBUpdate(node);
-      }else if (type === "Schema" ) {
+      } else if (type === "Schema") {
         handleSchemaUpdate(node);
       }
     };
@@ -637,8 +637,10 @@ export default defineComponent({
      * 重命名节点提交
      */
     const handleRenameNodeSubmit = (form: { name: string }) => {
+      const dbObject = state.treeNode?.data as TreeNode<any>;
+      dbObject.nodePath = getNodePath(state.treeNode!);
       const data: TreeNodeRename = {
-        dbObject: state.treeNode?.data, //删除对象
+        dbObject: dbObject, //删除对象
         newName: form.name, //是否级联
       };
       getTreeNodeRename(data).then((result: ResponseData<TreeNode<any>>) => {
@@ -872,7 +874,7 @@ export default defineComponent({
     };
     const handleSchemaUpdate = (node: Node) => {
       console.log("handleSchemaUpdate node ", node);
-      const row = node.data as TreeNode<Database>;
+      const row = node.data as TreeNode<Schema>;
       state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
       state.treeNode = node; //用于请求成功后的更新
 
@@ -891,7 +893,7 @@ export default defineComponent({
         oldObject: oldObject,
       };
       editSchema(data).then((result: ResponseData) => {
-        switchDBEditVisable(false);
+        switchSchemaEditVisable(false);
         state.treeNode!.data = result.data;
       });
     };
@@ -1026,6 +1028,9 @@ export default defineComponent({
       getSchemaList(nodeData).then(
         (respon: ResponseData<TreeNode<any>[]>) => {
           console.log("getSchemaList succ respon ", respon);
+          respon.data.forEach((element) => {
+            element.connectionId = nodeData.connectionId;
+          });
           resolve(respon.data);
         },
         (err) => {
