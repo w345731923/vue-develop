@@ -252,6 +252,8 @@ import {
   getSchemaList,
   addSchema,
   editSchema,
+  closeDatabase,
+  openDatabase,
 } from "@/api/treeNode";
 import RenameNodeDialog from "./renameNode.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
@@ -457,9 +459,8 @@ export default defineComponent({
         menu.push(refreshMenu);
       } else if (treeNode.type == "Database") {
         if (treeNode.index == undefined) {
-          //database
-          const defDB = node.parent.data.object.databaseName as string;
-          if (treeNode.object.name == defDB) {
+          const connectionId = treeNode.connectionId;
+          if (connectionId) {
             //默认库
             menu.push({
               key: 30,
@@ -845,10 +846,21 @@ export default defineComponent({
     //打开数据库
     const handleOpenDB = (node: Node) => {
       console.log("handleOpenDB node ", node);
+      const data = node.data as TreeNode<Database>;
+      data.nodePath = getNodePath(node);
+      openDatabase(data).then((result: ResponseData<string>) => {
+        data.connectionId = result.data;
+      });
     };
     //关闭数据库
     const handleCloseDB = (node: Node) => {
       console.log("handleCloseDB node ", node);
+      const data = node.data as TreeNode<Database>;
+      data.nodePath = getNodePath(node);
+      closeDatabase(data).then((result: ResponseData) => {
+        debugger;
+        handleCloseNode(node);
+      });
     };
     //---------------schema---------------------
     const switchSchemaAddVisable = (flag: boolean) =>
@@ -956,7 +968,28 @@ export default defineComponent({
             text: "管理",
             index: 3,
           });
-          return resolve(schemas);
+
+          //a)首先判断是否有connectionId
+          if (treeData.connectionId) {
+            return resolve(schemas);
+          } else {
+            treeData.nodePath = getNodePath(node);
+            openDatabase(treeData).then(
+              (respon: ResponseData<string>) => {
+                console.log("succ respon ", respon);
+                schemas.forEach((element) => {
+                  element.connectionId = respon.data;
+                });
+                treeData.connectionId = respon.data;
+                return resolve(schemas);
+              },
+              (err) => {
+                console.log("err", err);
+                handleCloseNode(node);
+                return resolve([]);
+              }
+            );
+          }
         } else {
           if (node.data.index == 0) {
             return getSchemaNode(node, resolve);

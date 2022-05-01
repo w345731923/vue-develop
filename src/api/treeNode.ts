@@ -156,7 +156,22 @@ export async function showCreateSQL(data: SQLCreatePreview) {
 export async function showAlterSQL(data: SQLAlterPreview) {
     return await http.request<ResponseData<string>>('/showAlterSQL', { method: 'POST', data });
 }
-
+/**
+ * 关闭database
+ * @param {*} data  
+ * @returns 
+ */
+export async function closeDatabase(data: TreeNode<Database>) {
+    return await http.request<ResponseData>('/database/close', { method: 'POST', data });
+}
+/**
+ * 打开database
+ * @param {*} data  
+ * @returns 
+ */
+export async function openDatabase(data: TreeNode<Database>) {
+    return await http.request<ResponseData>('/database/connect', { method: 'POST', data });
+}
 /**
  * 查询database下的schema
  * @returns 
@@ -169,7 +184,7 @@ export async function getSchemaList(data: TreeNode<Database>) {
  * @param {*} data  
  * @returns 
  */
- export async function addSchema(data: TreeNode<Schema>) {
+export async function addSchema(data: TreeNode<Schema>) {
     return await http.request<ResponseData>('/schema/add', { method: 'POST', data });
 }
 /**
@@ -177,6 +192,6 @@ export async function getSchemaList(data: TreeNode<Database>) {
  * @param {*} data  
  * @returns 
  */
- export async function editSchema(data: SchemaEditForm) {
+export async function editSchema(data: SchemaEditForm) {
     return await http.request<ResponseData>('/schema/edit', { method: 'POST', data });
 }
