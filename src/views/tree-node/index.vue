@@ -165,7 +165,6 @@
         :serverObject="state.serverForm"
         @saveModal="isConnect"
         @closeModal="switchServerEditVisable"
-        @testModal="handleTestServer"
       />
     </template>
 
@@ -235,13 +234,12 @@ import {
   Ref,
   watchEffect,
 } from "vue";
-import { reactive, onMounted } from "vue";
+import { reactive } from "vue";
 import {
   getTreeNodeDel,
   getTreeNodeRename,
   addServer,
   editServer,
-  testServer,
   closeServer,
   getServerList,
   getDatabaseList,
@@ -265,11 +263,9 @@ import SchemaFormDialog from "@/components/schema/SchemaDialog.vue";
 
 import {
   ResponseData,
-  ServerForm,
   Server,
   ServerGroup,
   TreeNode,
-  ServerGroupForm,
   ServerEditForm,
   TreeNodeDel,
   Database,
@@ -280,8 +276,6 @@ import {
   SchemaEditForm,
   Schema,
 } from "@/types";
-import { ElMessage } from "element-plus";
-
 import { getNodePath } from "@/utils/tree";
 
 interface TreeNodeState {
@@ -687,23 +681,6 @@ export default defineComponent({
       state.serverForm = row.object; //传给子界面
       switchServerEditVisable(true);
     };
-    //测试连接
-    const handleTestServer = (form: Server) => {
-      //包一层外部对象
-      const serverObject: TreeNode<Server> = {
-        connectionId: "",
-        contextId: "",
-        object: form,
-        nodePath: "",
-        type: "Server",
-      };
-      testServer(serverObject).then(() => {
-        ElMessage({
-          message: "连接成功！",
-          type: "success",
-        });
-      });
-    };
     //save Server
     const handleSaveServer = (form: Server) => {
       //包一层外部对象
@@ -1097,7 +1074,6 @@ export default defineComponent({
       handleSaveServer,
       isConnect,
       handleEditServer,
-      handleTestServer,
       switchServerPwdVisable,
       handleServerPwdSubmit,
       handleOpenConnect,

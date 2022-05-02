@@ -111,6 +111,8 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 import type { FormInstance } from "element-plus";
+import { Server, TreeNode } from "@/types";
+import { testServer } from "@/api/treeNode";
 import { ElMessage } from "element-plus";
 const ruleFormRef = ref<FormInstance>();
 const rules = reactive({
@@ -130,7 +132,6 @@ export default defineComponent({
   props: {
     saveModal: Function,
     closeModal: Function,
-    testModal: Function,
     visible: {
       type: Boolean,
       default: false,
@@ -140,7 +141,7 @@ export default defineComponent({
   data() {
     return {};
   },
-  emits: ["saveModal", "closeModal", "testModal"],
+  emits: ["saveModal", "closeModal"],
   setup(props, { emit }) {
     const { visible, serverObject } = toRefs(props);
     const state = reactive({
@@ -160,7 +161,20 @@ export default defineComponent({
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
-          emit("testModal", state.ruleForm);
+          //包一层外部对象
+          const serverObject: TreeNode<Server> = {
+            connectionId: "",
+            contextId: "",
+            object: state.ruleForm as Server,
+            nodePath: "",
+            type: "Server",
+          };
+          testServer(serverObject).then(() => {
+            ElMessage({
+              message: "连接成功！",
+              type: "success",
+            });
+          });
         } else {
           ElMessage({
             message: "请输入'修改连接'必填项！",

@@ -1,10 +1,9 @@
 
-import { createRouter, createWebHistory, createWebHashHistory,RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHistory, createWebHashHistory, RouteRecordRaw } from 'vue-router';
 
 import Home from '../layout/index.vue'
 import Login from '../views/login/index.vue'
-
-// import home from './home.vue'
+import Register from '../views/register/index.vue'
 
 const routes: Array<RouteRecordRaw> = [
   { path: "/", redirect: "/home" },
@@ -18,23 +17,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "login",
     component: Login
   },
-  // { path: "/", redirect: "/login" },
-  // {
-  //   path: "/home",
-  //   name: "home",
-  //   component: Index
-  // },
-  // {
-  //   path: "/login",
-  //   name: "login",
-  //   component: Login
-  // },
-  // {
-  //   path: '/about/:item',
-  //   alias: '/about',
-  //   name: 'About',
-  //   component: () => import(/* webpackChunkName: "about" */ '../views/About/index.vue'),
-  // },
+  {
+    path: "/register",
+    name: "register",
+    component: Register
+  },
 ]
 export const router = createRouter({
   history: createWebHistory(),//createWebHashHistory

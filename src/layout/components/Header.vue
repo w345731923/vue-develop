@@ -33,16 +33,15 @@
     :visible="state.serverVisible"
     @saveModal="saveServer"
     @closeModal="switchServerVisable"
-    @testModal="handleTestServer"
   />
 </template>
 
 <script lang="ts">
-import { reactive, onMounted } from "vue";
+import { reactive } from "vue";
 import GroupDialogAdd from "@/components/server-group/ServerGroupDialogAdd.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 
-import { addServerGroup, addServer, testServer } from "@/api/treeNode";
+import { addServerGroup, addServer } from "@/api/treeNode";
 import {
   ServerGroupForm,
   Server,
@@ -50,7 +49,6 @@ import {
   ServerGroup,
   ResponseData,
 } from "@/types";
-import { ElMessage } from "element-plus";
 
 export default {
   name: "Header",
@@ -83,7 +81,7 @@ export default {
       default: null,
     },
   },
-  emits: ["addTreeNode","toolsEvent"],
+  emits: ["addTreeNode", "toolsEvent"],
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,
@@ -134,24 +132,8 @@ export default {
         emit("addTreeNode", "Server", null, result.data);
       });
     };
-    //test Server
-    const handleTestServer = (form: Server) => {
-      const ServerObject: TreeNode<Server> = {
-        connectionId: "",
-        contextId: "",
-        object: form,
-        nodePath: "",
-        type: "Server",
-      };
-      testServer(ServerObject).then(() => {
-        ElMessage({
-          message: "连接成功！",
-          type: "success",
-        });
-      });
-    };
     const handleSelect = (key, keyPath) => {
-      console.log('header key ',key);
+      console.log("header key ", key);
       if (key != "group" && key != "server") {
         emit("toolsEvent", key);
       }
@@ -162,7 +144,6 @@ export default {
       saveGroup,
       switchServerVisable,
       saveServer,
-      handleTestServer,
       handleSelect,
     };
   },

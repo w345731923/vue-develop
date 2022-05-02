@@ -9,6 +9,12 @@ export interface Login {
   username: string;
   password: string;
 }
+export interface Register {
+  username: string;
+  password: string;
+  password1?: string;
+  email: string;
+}
 
 export interface LoginResp {
   tokenHead: string;
