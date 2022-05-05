@@ -211,13 +211,7 @@
 </template>
 
 <script lang="ts">
-import {
-  // DocumentAdd,
-  Edit,
-  Delete,
-  Money,
-  MessageBox,
-} from "@element-plus/icons-vue";
+import { MessageBox } from "@element-plus/icons-vue";
 import type Node from "element-plus/es/components/tree/src/model/node";
 interface Tree {
   name: string;
@@ -835,7 +829,6 @@ export default defineComponent({
       const data = node.data as TreeNode<Database>;
       data.nodePath = getNodePath(node);
       closeDatabase(data).then((result: ResponseData) => {
-        debugger;
         handleCloseNode(node);
       });
     };
@@ -857,8 +850,8 @@ export default defineComponent({
       };
       addSchema(newObject).then((result: ResponseData) => {
         switchSchemaAddVisable(false);
-        if (result.data != null)
-          treeRef.value.append(result.data, state.treeNode);
+        if (result.data != null) result.data.connectionId = server.connectionId;
+        treeRef.value.append(result.data, state.treeNode);
       });
     };
     const handleSchemaUpdate = (node: Node) => {
