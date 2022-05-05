@@ -24,8 +24,12 @@
             <img src="../../assets/hgdb16.png" v-if="data.type === 'Server'" />
             <img
               src="../../assets/database.png"
-              v-if="data.type === 'Database' && data.index == null"
+              v-if="data.type === 'Database' && data.connectionId != null && data.index == null"
             />
+            <img
+              src="../../assets/database_icon.png"
+              v-if="data.type === 'Database' && data.connectionId == null && data.index == null "
+            />            
             <img
               src="../../assets/folder_schema.png"
               v-if="data.type === 'Database' && data.index == 0"
@@ -35,11 +39,11 @@
               v-if="data.type === 'Database' && data.index == 1"
             />
             <img
-              src="../../assets/folder_schema.png"
+              src="../../assets/folder_database.png"
               v-if="data.type === 'Database' && data.index == 2"
             />
             <img
-              src="../../assets/folder_schema.png"
+              src="../../assets/folder_admin.png"
               v-if="data.type === 'Database' && data.index == 3"
             />
             <img src="../../assets/schema.png" v-if="data.type === 'Schema'" />
@@ -118,24 +122,12 @@
 
     <!-- ===============================删除节点======================================= -->
     <template v-if="state.removeDialogVisible">
-      <el-dialog
-        v-model="state.removeDialogVisible"
-        title="删除对象"
-        width="30%"
-        center
-      >
-        <span>确定要删除'{{ state.treeNode.data.object.name }}'吗？</span>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="state.removeDialogVisible = false"
-              >取消</el-button
-            >
-            <el-button type="primary" @click="handleRemoveNodeSubmit"
-              >确认</el-button
-            >
-          </span>
-        </template>
-      </el-dialog>
+      <RemoveNodeDialog
+        :visible="state.removeDialogVisible"
+        :data="state.treeNode.data"
+        @saveModal="handleRemoveNodeSubmit"
+        @closeModal="state.removeDialogVisible = false"
+      />
     </template>
     <!-- ===============================重命名节点======================================= -->
     <template v-if="state.renameDialogVisible">
@@ -247,6 +239,7 @@ import {
   closeDatabase,
   openDatabase,
 } from "@/api/treeNode";
+import RemoveNodeDialog from "./removeNode.vue";
 import RenameNodeDialog from "./renameNode.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
@@ -310,6 +303,7 @@ export default defineComponent({
   components: {
     MessageBox,
     RenameNodeDialog,
+    RemoveNodeDialog,
     ServerDialogAdd,
     ServerDialogEdit,
     ServerPwdDialog,
@@ -601,15 +595,17 @@ export default defineComponent({
     /**
      * 删除节点提交
      */
-    const handleRemoveNodeSubmit = () => {
+    const handleRemoveNodeSubmit = (form: { isCascadeDelete: boolean }) => {
       const nodePath = getNodePath(state.treeNode!);
       const delObject = state.treeNode?.data as TreeNode<any>;
       delObject.nodePath = nodePath;
 
       const data: TreeNodeDel = {
         delObject: delObject, //删除对象
-        deleteOptions: { isCascadeDelete: true }, //是否级联
+        deleteOptions: { isCascadeDelete: form.isCascadeDelete }, //是否级联
       };
+      debugger;
+
       getTreeNodeDel(data).then(() => {
         state.removeDialogVisible = false;
         treeRef.value.remove(state.treeNode);

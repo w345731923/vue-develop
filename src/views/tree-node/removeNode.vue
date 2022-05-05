@@ -1,44 +1,53 @@
 <template>
   <el-dialog
-    title="重命名对象"
-    width="400px"
+    title="删除对象"
+    width="550px"
     :close-on-click-modal="false"
     :destroy-on-close="true"
     v-model="state.visible"
     @closed="onClose"
   >
-    <el-form
-      :rules="rules"
-      ref="ruleFormRef"
-      :model="ruleForm"
-      status-icon
-      label-position="top"
-    >
-      <el-form-item label="请输入新名称" prop="name">
-        <el-input v-model="ruleForm.name" />
-      </el-form-item>
+    <el-form :model="ruleForm" style="margin:0 10px">
+      <h3>确定要删除'{{ data.object.name }}'吗？</h3>
+      <div v-if="data.type != 'ServerGroup' && data.type != 'Server'">
+        <el-form-item label="级联删除">
+          <el-switch v-model="ruleForm.isCascadeDelete" />
+        </el-form-item>
+      </div>
     </el-form>
     <template #footer>
-      <el-button @click="onClose"> 取消 </el-button>
-      <el-button type="primary" @click="submitForm(ruleFormRef)">
-        保存
+      <el-button
+        type="primary"
+        @click="submitForm()"
+        style="width: 80px; margin-right: 10px"
+      >
+        是
+      </el-button>
+      <el-button
+        type="primary"
+        @click="onClose"
+        style="width: 80px; margin-right: 10px"
+      >
+        否
+      </el-button>
+
+      <el-button
+        type="primary"
+        @click="onClose"
+        v-if="data.type != 'ServerGroup' && data.type != 'Server'"
+      >
+        查看SQL
       </el-button>
     </template>
   </el-dialog>
 </template>
 
+    
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch, ref, Ref } from "vue";
-import type { FormInstance } from "element-plus";
-
-const ruleFormRef = ref<FormInstance>();
-
-const rules = reactive({
-  name: [{ required: true, message: "请输入新名称", trigger: "blur" }],
-});
 
 export default defineComponent({
-  name: "RenameDialog",
+  name: "RemoveDialog",
   props: {
     saveModal: Function,
     closeModal: Function,
@@ -54,6 +63,7 @@ export default defineComponent({
     const { visible, data } = toRefs(props);
     const state = reactive({
       visible: visible.value,
+      data: data.value,
     });
     watch(
       visible,
@@ -63,29 +73,20 @@ export default defineComponent({
       { immediate: true }
     );
     const ruleForm = reactive({
-      name: data.value!.object.name,
+      isCascadeDelete: false,
     });
     /**
      * 取消按钮事件
      */
     const onClose = () => {
-      ruleForm.name = "";
       emit("closeModal", false);
+      ruleForm.isCascadeDelete = false;
     };
     /**
      * 保存按钮事件
      */
-    const submitForm = (formEl: FormInstance | undefined) => {
-      if (!formEl) return;
-      console.log("submitForm", formEl);
-
-      formEl.validate((valid) => {
-        if (valid) {
-          emit("saveModal", ruleForm);
-        } else {
-          return false;
-        }
-      });
+    const submitForm = () => {
+      emit("saveModal", ruleForm);
     };
 
     return {
@@ -93,8 +94,6 @@ export default defineComponent({
       onClose,
       submitForm,
       ruleForm,
-      rules,
-      ruleFormRef,
     };
   },
   methods: {},
