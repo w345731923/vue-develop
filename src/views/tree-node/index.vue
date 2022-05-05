@@ -27,6 +27,7 @@
               v-if="
                 data.type === 'Database' &&
                 data.connectionId != null &&
+                data.connectionId != '' &&
                 data.index == null
               "
             />
@@ -34,7 +35,7 @@
               src="../../assets/database_icon.png"
               v-if="
                 data.type === 'Database' &&
-                data.connectionId == null &&
+                (data.connectionId == null || data.connectionId == '') &&
                 data.index == null
               "
             />
@@ -54,9 +55,18 @@
               src="../../assets/folder_admin.png"
               v-if="data.type === 'Database' && data.index == 3"
             />
-            <img src="../../assets/schema.png" v-if="data.type === 'Schema' && data.index == null" />
-            <img src="../../assets/folder_table.png" v-if="data.type === 'Schema' && data.index == 0" />
-            <img src="../../assets/folder_view.png" v-if="data.type === 'Schema' && data.index == 1" />
+            <img
+              src="../../assets/schema.png"
+              v-if="data.type === 'Schema' && data.index == null"
+            />
+            <img
+              src="../../assets/folder_table.png"
+              v-if="data.type === 'Schema' && data.index == 0"
+            />
+            <img
+              src="../../assets/folder_view.png"
+              v-if="data.type === 'Schema' && data.index == 1"
+            />
 
             <img
               src="../../assets/folder_table.png"
@@ -73,7 +83,12 @@
             class="tree-node-name tree-node-name-gt"
             style="padding-right: 16px"
           >
-            <span v-if="(data.type == 'Database' || data.type == 'Schema') && data.index >= 0">
+            <span
+              v-if="
+                (data.type == 'Database' || data.type == 'Schema') &&
+                data.index >= 0
+              "
+            >
               <span>{{ data.text }}</span>
             </span>
             <span v-else-if="data.type == 'Server' || data.type == 'Database'">
@@ -564,10 +579,11 @@ export default defineComponent({
           templateName: "", //范本
           datistemplate: false, //是范本
           datallowconn: true, //允许连接
-          connectionId: node.data.connectionId as string,
+          connectionId: state.treeNode.data.connectionId as string,
         };
         switchDBAddVisable(true);
       } else if (type === "Database" || type === "Schema") {
+        debugger
         //新建schema
         if (type === "Database") {
           state.treeNode = node;
