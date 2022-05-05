@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm
+    SchemaEditForm,SQLDropPreview
 } from '@/types'
 
 
@@ -157,6 +157,13 @@ export async function showAlterSQL(data: SQLAlterPreview) {
     return await http.request<ResponseData<string>>('/showAlterSQL', { method: 'POST', data });
 }
 /**
+ * drop sql预览
+ * @returns 
+ */
+export async function showDropSQL(data: SQLDropPreview) {
+    return await http.request<ResponseData<string>>('/showDropSQL', { method: 'POST', data });
+}
+/**
  * 关闭database
  * @param {*} data  
  * @returns 
@@ -194,4 +201,11 @@ export async function addSchema(data: TreeNode<Schema>) {
  */
 export async function editSchema(data: SchemaEditForm) {
     return await http.request<ResponseData>('/schema/edit', { method: 'POST', data });
+}
+/**
+ * 查询schema下的table
+ * @returns 
+ */
+ export async function getTableList(data: TreeNode<Schema>) {
+    return await http.request<ResponseData<TreeNode<any>[]>>('/table/list/', { method: 'POST', data });
 }

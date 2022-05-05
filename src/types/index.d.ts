@@ -57,7 +57,13 @@ export interface SQLAlterPreview<T = any> {
   newObject: T;
   oldObject: T;
 }
-
+//drop SQL预览
+export interface SQLDropPreview<T = any> {
+  delObject: T;
+  deleteOptions: {
+    isCascadeDelete: boolean;
+  }
+}
 export interface ServerGroup {
   '@clazz': string;
   oid?: number;

@@ -24,12 +24,20 @@
             <img src="../../assets/hgdb16.png" v-if="data.type === 'Server'" />
             <img
               src="../../assets/database.png"
-              v-if="data.type === 'Database' && data.connectionId != null && data.index == null"
+              v-if="
+                data.type === 'Database' &&
+                data.connectionId != null &&
+                data.index == null
+              "
             />
             <img
               src="../../assets/database_icon.png"
-              v-if="data.type === 'Database' && data.connectionId == null && data.index == null "
-            />            
+              v-if="
+                data.type === 'Database' &&
+                data.connectionId == null &&
+                data.index == null
+              "
+            />
             <img
               src="../../assets/folder_schema.png"
               v-if="data.type === 'Database' && data.index == 0"
@@ -46,7 +54,10 @@
               src="../../assets/folder_admin.png"
               v-if="data.type === 'Database' && data.index == 3"
             />
-            <img src="../../assets/schema.png" v-if="data.type === 'Schema'" />
+            <img src="../../assets/schema.png" v-if="data.type === 'Schema' && data.index == null" />
+            <img src="../../assets/folder_table.png" v-if="data.type === 'Schema' && data.index == 0" />
+            <img src="../../assets/folder_view.png" v-if="data.type === 'Schema' && data.index == 1" />
+
             <img
               src="../../assets/folder_table.png"
               v-if="data.type === 'table-group'"
@@ -62,7 +73,7 @@
             class="tree-node-name tree-node-name-gt"
             style="padding-right: 16px"
           >
-            <span v-if="data.type == 'Database' && data.index >= 0">
+            <span v-if="(data.type == 'Database' || data.type == 'Schema') && data.index >= 0">
               <span>{{ data.text }}</span>
             </span>
             <span v-else-if="data.type == 'Server' || data.type == 'Database'">
@@ -238,6 +249,7 @@ import {
   editSchema,
   closeDatabase,
   openDatabase,
+  getTableList,
 } from "@/api/treeNode";
 import RemoveNodeDialog from "./removeNode.vue";
 import RenameNodeDialog from "./renameNode.vue";
@@ -604,8 +616,6 @@ export default defineComponent({
         delObject: delObject, //删除对象
         deleteOptions: { isCascadeDelete: form.isCascadeDelete }, //是否级联
       };
-      debugger;
-
       getTreeNodeDel(data).then(() => {
         state.removeDialogVisible = false;
         treeRef.value.remove(state.treeNode);
@@ -897,8 +907,8 @@ export default defineComponent({
         if (node.data.index == undefined) {
           //显示模式、角色、表空间、管理
           const treeData = node.data as TreeNode<Database>;
-          const schemas: any[] = [];
-          schemas.push({
+          const dbs: any[] = [];
+          dbs.push({
             type: "Database",
             contextId: "",
             nodePath: "",
@@ -907,7 +917,7 @@ export default defineComponent({
             text: "模式",
             index: 0,
           });
-          schemas.push({
+          dbs.push({
             type: "Database",
             contextId: "",
             nodePath: "",
@@ -916,7 +926,7 @@ export default defineComponent({
             text: "角色",
             index: 1,
           });
-          schemas.push({
+          dbs.push({
             type: "Database",
             contextId: "",
             nodePath: "",
@@ -925,7 +935,7 @@ export default defineComponent({
             text: "表空间",
             index: 2,
           });
-          schemas.push({
+          dbs.push({
             type: "Database",
             contextId: "",
             nodePath: "",
@@ -937,17 +947,17 @@ export default defineComponent({
 
           //a)首先判断是否有connectionId
           if (treeData.connectionId) {
-            return resolve(schemas);
+            return resolve(dbs);
           } else {
             treeData.nodePath = getNodePath(node);
             openDatabase(treeData).then(
               (respon: ResponseData<string>) => {
                 console.log("succ respon ", respon);
-                schemas.forEach((element) => {
+                dbs.forEach((element) => {
                   element.connectionId = respon.data;
                 });
                 treeData.connectionId = respon.data;
-                return resolve(schemas);
+                return resolve(dbs);
               },
               (err) => {
                 console.log("err", err);
@@ -959,6 +969,38 @@ export default defineComponent({
         } else {
           if (node.data.index == 0) {
             return getSchemaNode(node, resolve);
+          } else if (node.data.index == 1) {
+            return resolve([]);
+          }
+          return resolve([]);
+        }
+      } else if (node.data.type == "Schema") {
+        if (node.data.index == undefined) {
+          //显示表、视图、物化视图
+          const treeData = node.data as TreeNode<Schema>;
+          const schemas: any[] = [];
+          schemas.push({
+            type: "Schema",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "表",
+            index: 0,
+          });
+          schemas.push({
+            type: "Schema",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "视图",
+            index: 1,
+          });
+          return resolve(schemas);
+        } else {
+          if (node.data.index == 0) {
+            return getTableNode(node, resolve);
           } else if (node.data.index == 1) {
             return resolve([]);
           }
@@ -1027,6 +1069,24 @@ export default defineComponent({
       getSchemaList(nodeData).then(
         (respon: ResponseData<TreeNode<any>[]>) => {
           console.log("getSchemaList succ respon ", respon);
+          respon.data.forEach((element) => {
+            element.connectionId = nodeData.connectionId;
+          });
+          resolve(respon.data);
+        },
+        (err) => {
+          console.log("err", err);
+          handleCloseNode(node);
+        }
+      );
+    };
+    const getTableNode = (node: Node, resolve) => {
+      const nodeData = node.data as TreeNode<Schema>;
+      nodeData.nodePath = getNodePath(node);
+
+      getTableList(nodeData).then(
+        (respon: ResponseData<TreeNode<any>[]>) => {
+          console.log("getTableList succ respon ", respon);
           respon.data.forEach((element) => {
             element.connectionId = nodeData.connectionId;
           });
