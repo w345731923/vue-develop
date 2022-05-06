@@ -40,7 +40,7 @@
           <el-form-item label="密码" prop="password">
             <el-input v-model="state.ruleForm.password" type="password" />
           </el-form-item>
-          <el-form-item label="记住密码">
+          <el-form-item label="保存密码">
             <el-switch v-model="state.ruleForm.isSavePassword" />
           </el-form-item>
           <el-form-item label="安全版数据库">
@@ -114,6 +114,7 @@ import type { FormInstance } from "element-plus";
 import { Server, TreeNode } from "@/types";
 import { testServer } from "@/api/treeNode";
 import { ElMessage } from "element-plus";
+
 const ruleFormRef = ref<FormInstance>();
 const rules = reactive({
   name: [{ required: true, message: "请输入连接名！", trigger: "blur" }],
@@ -146,7 +147,7 @@ export default defineComponent({
     const { visible, serverObject } = toRefs(props);
     const state = reactive({
       visible: visible.value,
-      ruleForm: serverObject.value,
+      ruleForm: serverObject.value as Server,
     });
     //visible
     watch(
@@ -196,6 +197,10 @@ export default defineComponent({
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
+          if (!state.ruleForm.isSavePassword) {
+            //没有记住密码，把密码清空
+            state.ruleForm.password = "";
+          }
           emit("saveModal", state.ruleForm);
         } else {
           ElMessage({

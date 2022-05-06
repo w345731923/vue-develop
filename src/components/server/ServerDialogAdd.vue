@@ -40,7 +40,7 @@
           <el-form-item label="密码" prop="password">
             <el-input v-model="ruleForm.password" type="password" />
           </el-form-item>
-          <el-form-item label="记住密码">
+          <el-form-item label="保存密码">
             <el-switch v-model="ruleForm.isSavePassword" />
           </el-form-item>
           <el-form-item label="安全版数据库">
@@ -212,6 +212,10 @@ export default defineComponent({
 
       formEl.validate((valid) => {
         if (valid) {
+          if(!ruleForm.isSavePassword){
+            //没有记住密码，把密码清空
+            ruleForm.password = "";
+          }
           emit("saveModal", ruleForm);
         } else {
           ElMessage({
