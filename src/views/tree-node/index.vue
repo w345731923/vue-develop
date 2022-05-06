@@ -185,6 +185,13 @@
         @closeModal="switchServerEditVisable"
       />
     </template>
+    <template v-if="state.enterPwdDialogVisible">
+      <EnterPassword
+        :visible="state.enterPwdDialogVisible"
+        @saveModal="handleEnterPwdSubmit"
+        @closeModal="handleEnterPwdCancel"
+      />
+    </template>
 
     <!-- ===============================database======================================= -->
     <template v-if="state.dbAddVisible">
@@ -270,6 +277,8 @@ import RemoveNodeDialog from "./removeNode.vue";
 import RenameNodeDialog from "./renameNode.vue";
 import ServerDialogAdd from "@/components/server/ServerDialogAdd.vue";
 import ServerDialogEdit from "@/components/server/ServerDialogEdit.vue";
+import EnterPassword from "@/components/server/EnterPassword.vue";
+
 import ServerPwdDialog from "@/components/server-password/index.vue";
 
 import DBFormDialog from "@/components/database/DatabaseDialog.vue";
@@ -295,6 +304,7 @@ import { getNodePath } from "@/utils/tree";
 interface TreeNodeState {
   dropdownMenu: DropDownMenu[];
   treeNode: Node | null;
+  treeResolve: Function | undefined;
   removeDialogVisible: Boolean;
   renameDialogVisible: Boolean;
   closeConnectDialogVisible: Boolean;
@@ -315,6 +325,7 @@ interface TreeNodeState {
   serverForm: Server | null;
   serverObject: TreeNode<Server> | null;
   serverPwdVisible: Boolean;
+  enterPwdDialogVisible: Boolean;
 
   //database
   dbAddVisible: Boolean;
@@ -334,6 +345,7 @@ export default defineComponent({
     ServerDialogAdd,
     ServerDialogEdit,
     ServerPwdDialog,
+    EnterPassword,
     DBFormDialog,
     SchemaFormDialog,
   },
@@ -353,6 +365,7 @@ export default defineComponent({
     const state = reactive<TreeNodeState>({
       dropdownMenu: [],
       treeNode: null,
+      treeResolve: undefined,
       removeDialogVisible: false, //移除节点
       renameDialogVisible: false, //重命名节点
       closeConnectDialogVisible: false, //关闭连接
@@ -373,7 +386,7 @@ export default defineComponent({
       serverForm: null,
       serverObject: null,
       serverPwdVisible: false,
-
+      enterPwdDialogVisible: false,
       //db
       dbAddVisible: false,
       dbEditVisible: false,
@@ -583,7 +596,7 @@ export default defineComponent({
         };
         switchDBAddVisable(true);
       } else if (type === "Database" || type === "Schema") {
-        debugger
+        debugger;
         //新建schema
         if (type === "Database") {
           state.treeNode = node;
@@ -737,6 +750,7 @@ export default defineComponent({
         //关闭连接
         closeServer(oldObject).then(() => {
           state.closeConnectDialogVisible = false;
+          newObject.connectionId = ""; //关闭连接
           handleCloseNode(state.treeNode!);
           editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
             switchServerEditVisable(false);
@@ -789,6 +803,46 @@ export default defineComponent({
       closeServer(oldObject).then(() => {
         handleCloseNode(node);
       });
+    };
+    /**
+     * 输入密码-确定按钮
+     */
+    const handleEnterPwdSubmit = (form: { password: string }) => {
+      const nodeData = state.treeNode?.data as TreeNode<Server>;
+      nodeData.nodePath = getNodePath(state.treeNode!);
+      nodeData.object.password = form.password;
+      state.enterPwdDialogVisible = false;
+
+      serverConnect(nodeData).then(
+        (resp: ResponseData<any>) => {
+          console.log("serverConnect succ respon ", resp);
+          const connectionId = resp.data;
+          nodeData.connectionId = connectionId;
+          getDatabaseList(nodeData).then(
+            (resp2: ResponseData<any>) => {
+              resp2.data.forEach((element: TreeNode<Database>) => {
+                //赋值connectionId
+                if (element.object.name == nodeData.object.databaseName) {
+                  element.connectionId = connectionId;
+                }
+              });
+              nodeData.connectionId = connectionId;
+              state.treeResolve!(resp2.data);
+            },
+            (err) => {
+              handleCloseNode(state.treeNode!);
+            }
+          );
+        },
+        (err) => {
+          console.log("err", err);
+          handleCloseNode(state.treeNode!);
+        }
+      );
+    };
+    const handleEnterPwdCancel = () => {
+      state.enterPwdDialogVisible = false;
+      handleCloseNode(state.treeNode!);
     };
 
     //---------------database---------------------
@@ -1046,6 +1100,13 @@ export default defineComponent({
      */
     const getDatabaseNode = (node: Node, resolve) => {
       const nodeData = node.data as TreeNode<Server>;
+      if (!nodeData.object.isSavePassword) {
+        //没有记住密码，输入密码
+        state.treeNode = node;
+        state.enterPwdDialogVisible = true;
+        state.treeResolve = resolve;
+        return;
+      }
       nodeData.nodePath = getNodePath(node);
       serverConnect(nodeData).then(
         (resp: ResponseData<any>) => {
@@ -1064,19 +1125,11 @@ export default defineComponent({
               nodeData.connectionId = connectionId;
               resolve(resp2.data);
             },
-            (err) => {
-              console.log("err", err);
-              handleCloseNode(node);
-            }
+            (err) => handleCloseNode(node)
           );
-          resolve([]);
         },
-        (err) => {
-          console.log("err", err);
-          handleCloseNode(node);
-        }
+        (err) => handleCloseNode(node)
       );
-      resolve([]);
     };
     const getSchemaNode = (node: Node, resolve) => {
       const nodeData = node.data as TreeNode<Database>;
@@ -1142,6 +1195,8 @@ export default defineComponent({
       switchServerPwdVisable,
       handleServerPwdSubmit,
       handleOpenConnect,
+      handleEnterPwdSubmit,
+      handleEnterPwdCancel,
 
       handleCloseDB,
       switchDBAddVisable,
@@ -1155,7 +1210,6 @@ export default defineComponent({
       handleSchemaUpdateSubmit,
     };
   },
-  data() {},
   methods: {},
 });
 </script>
