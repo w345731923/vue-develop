@@ -149,6 +149,10 @@ export default defineComponent({
       visible: visible.value,
       ruleForm: serverObject.value as Server,
     });
+    //如果没有保存密码，清空密码
+    if (!state.ruleForm.isSavePassword) {
+      state.ruleForm.password = "";
+    }
     //visible
     watch(
       visible,

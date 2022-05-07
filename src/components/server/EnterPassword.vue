@@ -56,7 +56,7 @@ export default defineComponent({
       { immediate: true }
     );
     const ruleForm = reactive({
-      password: "postgres",
+      password: "",
     });
     /**
      * 取消按钮事件
