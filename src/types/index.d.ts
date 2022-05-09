@@ -179,3 +179,11 @@ export interface SchemaEditForm {
   newObject: TreeNode<Schema>
   oldObject: TreeNode<Schema>;
 }
+export interface TableSimple {
+  '@modelClass': string;
+  oid: string,
+  name: string,
+  acl: string;
+  tableOwner: string;//拥有者
+  tableSpace: string;//表空间
+}

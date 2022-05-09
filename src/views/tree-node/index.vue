@@ -94,6 +94,9 @@
             <span v-else-if="data.type == 'Server' || data.type == 'Database'">
               <span v-html="data.object.displayName"></span>
             </span>
+            <span v-else-if="data.type == 'Table' || data.type == 'Database'">
+              <span>{{ data.object.name }}</span>
+            </span>
             <span v-else> {{ data.object.displayName }}</span>
           </div>
           <div class="tree-node-button">
@@ -272,6 +275,7 @@ import {
   closeDatabase,
   openDatabase,
   getTableList,
+  getTableDesign,
 } from "@/api/treeNode";
 import RemoveNodeDialog from "./removeNode.vue";
 import RenameNodeDialog from "./renameNode.vue";
@@ -522,20 +526,58 @@ export default defineComponent({
         }
         menu.push(refreshMenu);
       } else if (treeNode.type == "Schema") {
+        if (treeNode.index == undefined) {
+          menu.push({
+            key: 50,
+            text: "新建模式",
+            disabled: false,
+            onClick: openObjectAdd,
+          });
+          menu.push({
+            key: 51,
+            text: "编辑模式",
+            disabled: false,
+            onClick: openObjectEdit,
+          });
+          menu.push(removeMenu);
+          menu.push(renameMenu);
+        } else {
+          menu.push({
+            key: 60,
+            text: "新建表",
+            disabled: false,
+            onClick: openObjectAdd,
+          });
+        }
+        menu.push(refreshMenu);
+      } else if (treeNode.type == "Table") {
         menu.push({
-          key: 50,
-          text: "新建模式",
+          key: 61,
+          text: "打开表",
           disabled: false,
           onClick: openObjectAdd,
         });
         menu.push({
-          key: 51,
-          text: "编辑模式",
+          key: 62,
+          text: "设计表",
           disabled: false,
-          onClick: openObjectEdit,
+          onClick: aaa,
+        });
+        menu.push({
+          key: 60,
+          text: "新建表",
+          disabled: false,
+          onClick: openObjectAdd,
         });
         menu.push(removeMenu);
+        menu.push({
+          key: 63,
+          text: "清空表",
+          disabled: false,
+          onClick: openObjectAdd,
+        });
         menu.push(renameMenu);
+
         menu.push(refreshMenu);
       }
       state.dropdownMenu = menu;
@@ -555,6 +597,7 @@ export default defineComponent({
       const type = node.data.type;
       const index = node.data.index;
 
+      debugger;
       if (type === "ServerGroup") {
         //新建Server
         state.treeNode = node;
@@ -595,8 +638,7 @@ export default defineComponent({
           connectionId: state.treeNode.data.connectionId as string,
         };
         switchDBAddVisable(true);
-      } else if (type === "Database" || type === "Schema") {
-        debugger;
+      } else if (type === "Schema" || (type === "Database" && index > -1)) {
         //新建schema
         if (type === "Database") {
           state.treeNode = node;
@@ -610,6 +652,21 @@ export default defineComponent({
           rolname: state.treeNode.data.object.databaseowner, //拥有者
           connectionId: state.treeNode.data.connectionId as string,
         };
+        switchSchemaAddVisable(true);
+      } else if (type === "Table" || (type === "Schema" && index > -1)) {
+        //新建schema
+        if (type === "Schema") {
+          state.treeNode = node;
+        } else {
+          state.treeNode = node.parent;
+        }
+        // state.parentForm = state.treeNode.data as TreeNode<any>;
+        // state.defaultForm = {
+        //   "@clazz": "com.highgo.developer.model.HgdbSchema",
+        //   name: "", //数据库名
+        //   rolname: state.treeNode.data.object.databaseowner, //拥有者
+        //   connectionId: state.treeNode.data.connectionId as string,
+        // };
         switchSchemaAddVisable(true);
       }
     };
@@ -1166,6 +1223,14 @@ export default defineComponent({
           handleCloseNode(node);
         }
       );
+    };
+    const aaa = (node: Node) => {
+      console.log("node ", node);
+      const data = node.data as TreeNode<any>;
+      data.nodePath = getNodePath(node);
+      getTableDesign(data).then((respon: ResponseData<TreeNode<any>[]>) => {
+        console.log("getTableDesign succ respon ", respon);
+      });
     };
     return {
       treeRef,
