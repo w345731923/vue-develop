@@ -597,16 +597,15 @@ export default defineComponent({
       const type = node.data.type;
       const index = node.data.index;
 
-      debugger;
       if (type === "ServerGroup") {
-        //新建Server
+        //右键group、点击工具栏创建server
         state.treeNode = node;
         switchServerAddVisable(true);
       } else if (
         type === "Server" ||
         (type === "Database" && index == undefined)
       ) {
-        //新建数据库
+        //在server节点、database节点，新建database
         if (type === "Server") {
           state.treeNode = node;
         } else {
@@ -638,8 +637,12 @@ export default defineComponent({
           connectionId: state.treeNode.data.connectionId as string,
         };
         switchDBAddVisable(true);
-      } else if (type === "Schema" || (type === "Database" && index > -1)) {
-        //新建schema
+      } else if (
+        (type === "Schema" && index == undefined) ||
+        (type === "Database" && index > -1)
+      ) {
+        //在模式、schema节点，新建schema
+
         if (type === "Database") {
           state.treeNode = node;
         } else {
@@ -653,7 +656,10 @@ export default defineComponent({
           connectionId: state.treeNode.data.connectionId as string,
         };
         switchSchemaAddVisable(true);
-      } else if (type === "Table" || (type === "Schema" && index > -1)) {
+      } else if (
+        (type === "Table" && index == undefined) ||
+        (type === "Schema" && index > -1)
+      ) {
         //新建schema
         if (type === "Schema") {
           state.treeNode = node;
@@ -667,7 +673,7 @@ export default defineComponent({
         //   rolname: state.treeNode.data.object.databaseowner, //拥有者
         //   connectionId: state.treeNode.data.connectionId as string,
         // };
-        switchSchemaAddVisable(true);
+        // switchSchemaAddVisable(true);
       }
     };
     /**
@@ -1224,6 +1230,9 @@ export default defineComponent({
         }
       );
     };
+    /**
+     * 设计表
+     */
     const aaa = (node: Node) => {
       console.log("node ", node);
       const data = node.data as TreeNode<any>;

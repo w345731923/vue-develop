@@ -23,7 +23,7 @@ const getNodeName = (data: string[], node: Node) => {
             data.push('/serverGroupName/' + treeData.object.name);
         } else if (treeData.type == 'Server') {
             data.push('/serverName/' + treeData.object.name);
-        } else if (treeData.type == 'Database') {
+        } else if (treeData.type == 'Database' && treeData.index == undefined) {
             data.push('/databaseName/' + treeData.object.name);
         } else if (treeData.type == 'Schema' && treeData.index == undefined) {
             data.push('/schemaName/' + treeData.object.name);
