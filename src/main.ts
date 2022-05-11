@@ -7,6 +7,7 @@ import './main.css'
 import { router } from './router/index'
 import { getToken } from "@/utils/auth";
 import { ElMessage } from 'element-plus'
+import TableCreate from './components/table/index.vue'
 
 
 //  判断是否需要登录权限 以及是否登录
@@ -30,7 +31,13 @@ router.beforeEach((to, from, next) => {
 
     }
 })
-createApp(App).use(router).use(ElementPlus).mount('#app')
+
+const app = createApp(App);
+app.component('table-create', TableCreate);
+app.use(router).use(ElementPlus).mount('#app');
+
+
+
 
 
 

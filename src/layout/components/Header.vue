@@ -2,26 +2,10 @@
   <div class="header">
     <div class="logo">瀚高管理工具</div>
     <div class="menu">
-      <!-- :default-active="activeIndex2" -->
-
-      <el-menu
-        mode="horizontal"
-        background-color="#338ecc"
-        text-color="#fff"
-        active-text-color="none"
-        @select="handleSelect"
-      >
-        <!-- @select="handleSelect" -->
-        <el-menu-item index="group" @click="switchGroupVisable(true)"
-          >新建组</el-menu-item
-        >
-        <el-menu-item index="server" @click="switchServerVisable(true)"
-          >新建连接</el-menu-item
-        >
-        <el-menu-item index="1">SQL编辑器</el-menu-item>
-        <el-menu-item index="2">新建表</el-menu-item>
-        <el-menu-item index="4">Tool</el-menu-item>
-      </el-menu>
+      <el-button @click="switchGroupVisable(true)">新建组</el-button>
+      <el-button @click="switchServerVisable(true)">新建连接</el-button>
+      <!-- <el-button>SQL编辑器</el-button> -->
+      <el-button @click="addTable">新建表</el-button>
     </div>
   </div>
   <GroupDialogAdd
@@ -64,24 +48,8 @@ export default {
       type: Function,
       default: null,
     },
-    fatherMethod: {
-      type: Function,
-      default: null,
-    },
-    toolsEvent: {
-      type: Function,
-      default: null,
-    },
-    addGroup: {
-      type: Function,
-      default: null,
-    },
-    addServer: {
-      type: Function,
-      default: null,
-    },
   },
-  emits: ["addTreeNode", "toolsEvent"],
+  emits: ["addTreeNode", "addTable"],
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,
@@ -132,11 +100,8 @@ export default {
         emit("addTreeNode", "Server", null, result.data);
       });
     };
-    const handleSelect = (key, keyPath) => {
-      console.log("header key ", key);
-      if (key != "group" && key != "server") {
-        emit("toolsEvent", key);
-      }
+    const addTable = () => {
+      emit("addTable");
     };
     return {
       state,
@@ -144,7 +109,7 @@ export default {
       saveGroup,
       switchServerVisable,
       saveServer,
-      handleSelect,
+      addTable
     };
   },
   methods: {},
@@ -166,8 +131,8 @@ export default {
   margin-right: 16px;
   flex: 0 1 auto;
 }
-.menu {
+/* .menu {
   height: 100%;
   flex: 1 1;
-}
+} */
 </style>

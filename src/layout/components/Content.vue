@@ -13,7 +13,8 @@
         :label="item.title"
         :name="item.name"
       >
-        <component :is="item.content"></component>
+                <component v-bind:is="item.currentView"></component>
+        <!-- <component :is="item.currentView"></component> -->
       </el-tab-pane>
       <!-- <el-tab-pane
         v-for="item in editableTabs"
@@ -21,7 +22,7 @@
         :label="item.title"
         :name="item.name"
       >
-        {{ item.content }}
+        {{ item.currentView }}
       </el-tab-pane> -->
     </el-tabs>
   </div>
@@ -45,8 +46,7 @@ export default {
     },
   },
   components: {
-    // SQLEditor,
-    // TableEditor,
+
   },
   mounted() {},
   methods: {

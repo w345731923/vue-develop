@@ -1,7 +1,7 @@
 <template>
   <div class="theme_flex_column">
     <el-header>
-      <v-header @addTreeNode="addTreeNode" @toolsEvent="toolsEvent" />
+      <v-header @addTreeNode="addTreeNode" @addTable="addTable" />
     </el-header>
     <div class="split_flex_row">
       <vSidebar
@@ -22,38 +22,24 @@
 </template>
 
 <script lang="ts">
-import { DocumentAdd, Edit } from "@element-plus/icons-vue";
-
 import { defineComponent, computed, ref, watch, unref, watchEffect } from "vue";
 import { reactive, onMounted } from "vue";
-import {
-  getRoot,
-  addServerGroup,
-  getTreeNodeRename,
-  // getTreeNodeDel,
-} from "@/api/treeNode";
-import ServerGroupDialog from "@/components/tree-node/ServerGroupDialogAdd.vue";
-import {
-  ResponseData,
-  TreeNode,
-  ServerGroupForm,
-  ServerGroup,
-  Server,
-} from "@/types";
+import { getRoot } from "@/api/treeNode";
+import { ResponseData, TreeNode, ServerGroupForm } from "@/types";
 
 interface TreeNodeState {
   treeData: TreeNode<any>[]; //tree data
   dialogGroupVisible: boolean; //group dialog
   dialogGroupStatus: string; //group create or edit
   dialogGroupObj: ServerGroupForm;
-  editableTabs: { title: string; name: string; content: any }[];
+  editableTabs: { title: string; name: string; currentView: any }[];
   tabActiveName: string;
 }
 import vHeader from "@/layout/components/Header.vue";
 import vSidebar from "./components/Sidebar.vue";
 import vContent from "./components/Content.vue";
-import sqleditor from "../components/SQLEditor.vue";
-import CreateTable from "../views/create-table/index.vue";
+// import sqleditor from "../components/SQLEditor.vue";
+// import CreateTable from "../components/table/index.vue";
 const ruleFormRef = ref<any>();
 
 /**
@@ -66,6 +52,7 @@ export default defineComponent({
     vHeader,
     vSidebar,
     vContent,
+    // CreateTable,
   },
   setup() {
     //TreeNodeState
@@ -100,6 +87,18 @@ export default defineComponent({
       }
       console.log(state.treeData);
     };
+    const addTable = () => {
+      const currentTime = new Date().getTime();
+      let tabId = "";
+      const newTitle = `newTable@postgres.public(localhost)`;
+      tabId = "create-table" + currentTime;
+      state.editableTabs.push({
+        title: newTitle,
+        name: tabId,
+        currentView: "table-create",
+      });
+      state.tabActiveName = tabId;
+    };
     onMounted(() => {
       queryRoot();
     });
@@ -126,31 +125,28 @@ export default defineComponent({
      *
      */
     const toolsEvent = (key: string) => {
-      const currentTime = new Date().getTime();
-      let tabId = "";
-      console.log("toolsEvent key=", key);
-      if (key === "1") {
-        /**
-         * event.index=1 新建SQL编辑器
-         */
-        const newTitle = `*<localhost>无标题`;
-        tabId = "sql" + currentTime;
-        state.editableTabs.push({
-          title: newTitle,
-          name: tabId,
-          content: sqleditor,
-        });
-        // setTimeout(() => {
-        //   dragControllerSQLEditor();
-        // }, 500);
-        // state.editableTabs.push({
-        //   title: "New Tab",
-        //   name: "aaaa",
-        //   content: "New Tab content",
-        // });
-        state.tabActiveName = tabId;
-      }
-      //  else if (event.index === "2") {
+      // const currentTime = new Date().getTime();
+      // let tabId = "";
+      // console.log("toolsEvent key=", key);
+      // if (key === "1") {
+      //   //event.index=1 新建SQL编辑器
+      //   const newTitle = `*<localhost>无标题`;
+      //   tabId = "sql" + currentTime;
+      //   state.editableTabs.push({
+      //     title: newTitle,
+      //     name: tabId,
+      //     content: sqleditor,
+      //   });
+      //   // setTimeout(() => {
+      //   //   dragControllerSQLEditor();
+      //   // }, 500);
+      //   // state.editableTabs.push({
+      //   //   title: "New Tab",
+      //   //   name: "aaaa",
+      //   //   content: "New Tab content",
+      //   // });
+      //   state.tabActiveName = tabId;
+      // }else if (event.index === "2") {
       //   /**
       //    * event.index=2 新建表
       //    */
@@ -162,62 +158,56 @@ export default defineComponent({
       //     content: <CreateTable />,
       //   });
       //   this.tabActiveName = tabId;
-      // } else if (event.index === "3") {
-      //   /**
-      //    * event.index=3 新建组
-      //    */
       // }
-      const dragControllerSQLEditor = () => {
-        // console.log("editableTabs.length = ", this.editableTabs.length);
-        // //页面header
-        const elHeader = document.getElementsByClassName("el-header")[0];
-        //tab页height不知为何获取为0，暂时写固定值40
-        // const elTabsHeader = document.getElementsByClassName("el-tabs__header")[0]; //header
-        const tabsHeader = { clientHeight: 40 };
-        //工具栏高度
-        // let toolHeight = 0;
-        // this.editableTabs.forEach((element) => {
-        //   if (element.name.startsWith("sql")) {
-        //     toolHeight = document.getElementById(element.name).clientHeight;
-        //   }
-        // });
-        let toolHeight = 400;
+    };
+    const dragControllerSQLEditor = () => {
+      // console.log("editableTabs.length = ", this.editableTabs.length);
+      // //页面header
+      const elHeader = document.getElementsByClassName("el-header")[0];
+      //tab页height不知为何获取为0，暂时写固定值40
+      // const elTabsHeader = document.getElementsByClassName("el-tabs__header")[0]; //header
+      const tabsHeader = { clientHeight: 40 };
+      //工具栏高度
+      // let toolHeight = 0;
+      // this.editableTabs.forEach((element) => {
+      //   if (element.name.startsWith("sql")) {
+      //     toolHeight = document.getElementById(element.name).clientHeight;
+      //   }
+      // });
+      let toolHeight = 400;
 
-        const topHeight =
-          elHeader.clientHeight + tabsHeader.clientHeight + toolHeight; //60+40+76
-        //获取拖动层div，绑定事件
-        const resize = document.getElementsByClassName(
-          "resizer_controls_column"
-        );
-        // for (var i = 0; i < resize.length; i++) {
-        //   const codemirrorObj =
-        //     document.getElementsByClassName("codemirror")[i]; //code区域
-        //   // 鼠标按下事件
-        //   resize[i].onmousedown = function () {
-        //     // 鼠标拖动事件
-        //     document.onmousemove = function (e) {
-        //       const moveY = e.clientY - topHeight; //移动位置-上方距离=sql编辑器高度
-        //       // console.log("moveY", topHeight, e.clientY, moveY);
-        //       codemirrorObj.style.minHeight = moveY + "px";
-        //       codemirrorObj.style.maxHeight = "0px";
-        //     };
-        //     // 鼠标松开事件
-        //     document.onmouseup = function () {
-        //       document.onmousemove = null;
-        //       document.onmouseup = null;
-        //     };
-        //     return false;
-        //   };
-        // }
-      };
+      const topHeight =
+        elHeader.clientHeight + tabsHeader.clientHeight + toolHeight; //60+40+76
+      //获取拖动层div，绑定事件
+      const resize = document.getElementsByClassName("resizer_controls_column");
+      // for (var i = 0; i < resize.length; i++) {
+      //   const codemirrorObj =
+      //     document.getElementsByClassName("codemirror")[i]; //code区域
+      //   // 鼠标按下事件
+      //   resize[i].onmousedown = function () {
+      //     // 鼠标拖动事件
+      //     document.onmousemove = function (e) {
+      //       const moveY = e.clientY - topHeight; //移动位置-上方距离=sql编辑器高度
+      //       // console.log("moveY", topHeight, e.clientY, moveY);
+      //       codemirrorObj.style.minHeight = moveY + "px";
+      //       codemirrorObj.style.maxHeight = "0px";
+      //     };
+      //     // 鼠标松开事件
+      //     document.onmouseup = function () {
+      //       document.onmousemove = null;
+      //       document.onmouseup = null;
+      //     };
+      //     return false;
+      //   };
+      // }
     };
     return {
       state,
       queryRoot,
       addTreeNode,
+      addTable,
       drag,
       ruleFormRef,
-      toolsEvent,
     };
   },
 
