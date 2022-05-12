@@ -8,24 +8,13 @@ import {
   PureHttpResoponse,
   PureHttpRequestConfig
 } from "./types.d";
-// import qs from "qs";
-// import NProgress from "../progress";
-// import { loadEnv } from "@build/index";
 import { getToken } from "@/utils/auth";
 
-// import { useUserStoreHook } from "/@/store/modules/user";
-
-// 加载环境变量 VITE_PROXY_DOMAIN（开发环境）  VITE_PROXY_DOMAIN_REAL（打包后的线上环境）
-// const { VITE_PROXY_DOMAIN, VITE_PROXY_DOMAIN_REAL } = loadEnv();
 
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
-  // baseURL:
-  //   process.env.NODE_ENV === "production"
-  //     ? VITE_PROXY_DOMAIN_REAL
-  //     : VITE_PROXY_DOMAIN,
-  // 当前使用mock模拟请求，将baseURL制空，如果你的环境用到了http请求，请删除下面的baseURL启用上面的baseURL，并将11行、16行代码注释取消
-  baseURL: "http://192.168.110.117:8088",
+  baseURL:'/api/v2',
+  // baseURL: "http://192.168.110.117:8088",
   // baseURL: "http://192.168.8.75:8088",
   timeout: 1000,
   headers: {
@@ -33,6 +22,7 @@ const defaultConfig: AxiosRequestConfig = {
     "Content-Type": "application/json",
     "X-Requested-With": "XMLHttpRequest"
   },
+  withCredentials:true,
   // 数组格式参数序列化
   // paramsSerializer: params => qs.stringify(params, { indices: false })
 };

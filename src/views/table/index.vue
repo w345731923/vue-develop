@@ -7,11 +7,18 @@
           保存
         </el-button>
         <el-button-group v-if="state.tabsActive == 'columns'">
-          <el-button size="small" color="#f2f2f2" @click="appendColumn">
+          <el-button
+            size="small"
+            color="#f2f2f2"
+            @click="appendColumnVis(true)"
+          >
             <el-icon><Avatar /></el-icon>
             添加字段
           </el-button>
-          <el-button size="small" color="#f2f2f2"
+          <el-button
+            size="small"
+            color="#f2f2f2"
+            @click="removeColumnSubmit(true)"
             ><el-icon><Avatar /></el-icon>删除字段</el-button
           >
         </el-button-group>
@@ -34,7 +41,12 @@
         @tab-click="handleTabClick"
       >
         <el-tab-pane label="字段" name="columns" style="margin: 0.5rem">
-          <ColumnTab :tableData="state.tableData" />
+          <ColumnTab
+            :tableData="state.tableData"
+            :columnVisible="state.columnVisible"
+            @saveModal="appendColumnSubmit"
+            @closeModal="appendColumnVis"
+          />
         </el-tab-pane>
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
           <div>索引</div>
@@ -70,44 +82,6 @@
         </el-tab-pane>
       </el-tabs>
     </div>
-
-    <!-- <el-dialog :close-on-click-modal=false v-model="dialogFormVisible" title="添加字段" :destroy-on-close=true>
-      <el-form v-model="form" size="mini">
-        <el-form-item label="字段" :label-width="formLabelWidth">
-          <el-input v-model="form.column" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="类型" :label-width="formLabelWidth">
-          <el-select v-model="form.type" filterable placeholder="Select">
-            <el-option
-                v-for="item in dataTypeList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="长度" :label-width="formLabelWidth">
-          <el-input-number v-model="form.length" :min="0" />
-        </el-form-item>
-        <el-form-item label="小数点" :label-width="formLabelWidth">
-          <el-input-number v-model="form.point" :min="0" />
-        </el-form-item>
-        <el-form-item label="不是null" :label-width="formLabelWidth">
-          <el-switch v-model="form.notnull" />
-        </el-form-item>
-        <el-form-item label="主键" :label-width="formLabelWidth">
-          <el-switch v-model="form.primary" />
-        </el-form-item>
-        <el-form-item label="注释" :label-width="formLabelWidth">
-          <el-input v-model="form.comment" autocomplete="off"></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button size="small" @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" size="small" @click="addColumnForm">保存</el-button>
-      </template>
-    </el-dialog> -->
   </div>
 </template>
 
@@ -115,44 +89,50 @@
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 
 import { Avatar } from "@element-plus/icons-vue";
-import ColumnTab from "./columnTab.vue";
+import ColumnTab from "@/components/table/columnTab.vue";
 import { TabsPaneContext } from "element-plus";
+import { ResponseData, TableRow } from "@/types";
 
-interface rowTemp {
-  length: number;
-  point: number;
-  notnull: boolean;
-  primary: boolean;
-}
 interface Iprops {
   tabsActive: string | number;
-  rowTemp: rowTemp;
-  tableData: rowTemp[];
+  tableData: TableRow[];
+  columnVisible: boolean;
 }
 export default defineComponent({
-  name: "table",
+  name: "table-design",
   components: {
     Avatar,
     ColumnTab,
   },
-  emits: ["saveModal", "closeModal"],
+  emits: [],
   setup(props, { emit }) {
     const state: Iprops = reactive({
       tabsActive: "columns",
-      rowTemp: { length: 0, point: 0, notnull: false, primary: false },
-      tableData: [{ length: 0, point: 0, notnull: false, primary: false }],
+      tableData: [],
+      columnVisible: false,
     });
 
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
       state.tabsActive = pane.props.name;
     };
-    const appendColumn = () => {
-      state.tableData.push(state.rowTemp);
+    //
+    const appendColumnVis = (flag: boolean) => {
+      state.columnVisible = flag;
+    };
+    const appendColumnSubmit = (form: TableRow) => {
+      console.log("appendColumnSubmit form", form);
+      state.tableData.push(form);
+      appendColumnVis(false);
+    };
+    const removeColumnSubmit = () => {
+
     };
     return {
       state,
       handleTabClick,
-      appendColumn,
+      appendColumnVis,
+      appendColumnSubmit,
+      removeColumnSubmit,
     };
   },
   data() {

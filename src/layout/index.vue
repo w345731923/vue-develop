@@ -36,8 +36,8 @@ interface TreeNodeState {
   tabActiveName: string;
 }
 import vHeader from "@/layout/components/Header.vue";
-import vSidebar from "./components/Sidebar.vue";
-import vContent from "./components/Content.vue";
+import vSidebar from "@/layout/components/Sidebar.vue";
+import vContent from "@/layout/components/Content.vue";
 // import sqleditor from "../components/SQLEditor.vue";
 // import CreateTable from "../components/table/index.vue";
 const ruleFormRef = ref<any>();
@@ -95,7 +95,7 @@ export default defineComponent({
       state.editableTabs.push({
         title: newTitle,
         name: tabId,
-        currentView: "table-create",
+        currentView: 'table-create',
       });
       state.tabActiveName = tabId;
     };

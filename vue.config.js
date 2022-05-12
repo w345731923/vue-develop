@@ -19,11 +19,10 @@ module.exports = {
     // hotOnly: false,
     proxy: {	// 代理转发(服务器与服务器之间是不存在跨域的)
       "/api": {
-        target: "http://192.168.8.193:8088/springboot-demo",
+        target: "http://192.168.110.117:8088/springboot-demo",
         // target: "http://192.168.90.106:58660/hgmonitor",        
         changOrigin: true,
         // pathRewrite: { '^': '' },
-
       }
     }
   }

@@ -6,7 +6,7 @@ axios.defaults.baseURL = '/api';
 // axios.defaults.baseURL = 'http://192.168.8.91:8088/springboot-demo/api/v2';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 // axios.defaults.headers["Authorization"] = 
-// axios.defaults.headers.common['Authorization'] = "Bearer " + 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ3YW5nZGFwZW5nIiwiY3JlYXRlZCI6MTY1MjI1ODI1NTc1NiwiZXhwIjoxNjUyODYzMDU1fQ.yh6AW03xMojRGqvQ0gNnnDadsH6v6caZeIlu19bD6DfctJsrzUWc4gLQlYjdQyxqUK2d3OHqXw-LSLnSzGmxGA';
+axios.defaults.headers.common['Authorization'] = "Bearer " + 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ3YW5nZGFwZW5nIiwiY3JlYXRlZCI6MTY1MjI1ODI1NTc1NiwiZXhwIjoxNjUyODYzMDU1fQ.yh6AW03xMojRGqvQ0gNnnDadsH6v6caZeIlu19bD6DfctJsrzUWc4gLQlYjdQyxqUK2d3OHqXw-LSLnSzGmxGA';
 axios.defaults.withCredentials = true;
 
 

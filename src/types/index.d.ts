@@ -187,3 +187,13 @@ export interface TableSimple {
   tableOwner: string;//拥有者
   tableSpace: string;//表空间
 }
+
+export interface TableRow {
+  column: string;
+  type: string,
+  length: numnber,
+  point: numnber;
+  notnull: boolean;
+  primary: boolean;
+  comment:string;
+}

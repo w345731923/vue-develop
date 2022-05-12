@@ -7,7 +7,7 @@ import './main.css'
 import { router } from './router/index'
 import { getToken } from "@/utils/auth";
 import { ElMessage } from 'element-plus'
-import TableCreate from './components/table/index.vue'
+import TableCreate from '@/views/table/index.vue'
 
 
 //  判断是否需要登录权限 以及是否登录
