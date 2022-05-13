@@ -189,6 +189,7 @@ export interface TableSimple {
 }
 
 export interface TableRow {
+  id:number,
   column: string;
   type: string,
   length: numnber,

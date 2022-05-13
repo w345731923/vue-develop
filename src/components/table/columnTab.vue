@@ -20,10 +20,12 @@
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">
-          <el-button size="small" @click="columnUpdateButtonClick(scope.row)"
+          <el-button size="small" @click="columnUpdateClick(scope.row)"
             >修改</el-button
           >
-          <el-button size="small">删除</el-button>
+          <el-button size="small" @click="removeColumnClick(scope.row)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -32,7 +34,8 @@
       :close-on-click-modal="false"
       v-model="state.columnVisible"
       title="添加字段"
-      :destroy-on-close="true"
+      :destroy-on-close="false"
+      @closed="onClose(formRef)"
     >
       <el-form
         :model="state.form"
@@ -55,24 +58,24 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="长度">
+        <el-form-item label="长度" prop="length">
           <el-input-number v-model="state.form.length" :min="0" />
         </el-form-item>
-        <el-form-item label="小数点">
+        <el-form-item label="小数点" prop="point">
           <el-input-number v-model="state.form.point" :min="0" />
         </el-form-item>
-        <el-form-item label="不是null">
+        <el-form-item label="不是null" prop="notnull">
           <el-switch v-model="state.form.notnull" />
         </el-form-item>
-        <el-form-item label="主键">
+        <el-form-item label="主键" prop="primary">
           <el-switch v-model="state.form.primary" />
         </el-form-item>
-        <el-form-item label="注释">
+        <el-form-item label="注释" prop="comment">
           <el-input v-model="state.form.comment" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="onClose(ruleFormRef)">取消</el-button>
+        <el-button @click="onClose(formRef)">取消</el-button>
         <el-button type="primary" @click="submitForm(formRef)">保存</el-button>
       </template>
     </el-dialog>
@@ -82,12 +85,23 @@
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
 import type { FormInstance, TabsPaneContext } from "element-plus";
+import { ResponseData, TableRow } from "@/types";
+
 const formRef = ref<FormInstance>();
 const rules = reactive({
   column: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
   // type: [{ required: true, message: "请选择数据类型！", trigger: "blur" }],
 });
-
+const demo = {
+  id: -new Date().getTime(),
+  column: "",
+  type: "",
+  length: 0,
+  point: 0,
+  notnull: false,
+  primary: false,
+  comment: "",
+};
 export default defineComponent({
   name: "columntab",
   props: {
@@ -97,23 +111,16 @@ export default defineComponent({
     },
     tableData: Array,
     saveModal: Function,
-    closeModal: Function,
+    removeColumn: Function,
+    visableFlag: Function,
   },
-  emits: ["saveModal", "closeModal", "aa"],
+  emits: ["visableFlag", "saveModal", "removeColumn"],
   setup(props, { emit }) {
     const { columnVisible, tableData } = toRefs(props);
     const state = reactive({
       columnVisible: columnVisible.value,
       tableData: tableData.value,
-      form: {
-        column: "",
-        type: "",
-        length: 0,
-        point: 0,
-        notnull: false,
-        primary: false,
-        comment: "",
-      },
+      form: {} as TableRow,
       dataTypeList: [
         {
           value: "char",
@@ -133,25 +140,46 @@ export default defineComponent({
       columnVisible,
       (newValue) => {
         state.columnVisible = newValue;
+        if (newValue) {
+          demo.id = -new Date().getTime();
+          //如果是新建，清空上一次页面缓存值
+          resetFields(demo);
+        }
       },
       { immediate: true }
     );
-    const columnUpdateButtonClick = (row: any) => {
+
+    //重置row初始值
+    const resetFields = (resetVal: TableRow) => {
+      const target = {} as TableRow;
+      Object.assign(target, resetVal);
+      state.form = target;
+    };
+    //修改按钮
+    const columnUpdateClick = (row: TableRow) => {
+      console.log("columnUpdateButtonClick row ", row);
+      //使用target，为了避免弹窗后修改内容，后面表格有变化，所以复制了一个对象
+      resetFields(row);
+      //修改不在调用父类方法，内部处理
       state.columnVisible = true;
-      console.log(row);
+    };
+    //删除按钮
+    const removeColumnClick = (row: TableRow) => {
+      emit("removeColumn", row);
     };
     //关闭
     const onClose = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
-      formEl.resetFields();
-      emit("closeModal", false);
+      state.columnVisible = false;
+      emit("visableFlag", false);
+      // formEl.resetFields();
     };
     //保存
     const submitForm = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
-          console.log("validate state.form", state.form);
+          state.columnVisible = false;
           emit("saveModal", state.form);
         }
       });
@@ -160,7 +188,9 @@ export default defineComponent({
       state,
       formRef,
       rules,
-      columnUpdateButtonClick,
+      columnUpdateClick,
+      removeColumnClick,
+
       submitForm,
       onClose,
     };

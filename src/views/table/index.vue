@@ -15,10 +15,7 @@
             <el-icon><Avatar /></el-icon>
             添加字段
           </el-button>
-          <el-button
-            size="small"
-            color="#f2f2f2"
-            @click="removeColumnSubmit(true)"
+          <el-button size="small" color="#f2f2f2" @click="removeColumn(true)"
             ><el-icon><Avatar /></el-icon>删除字段</el-button
           >
         </el-button-group>
@@ -44,8 +41,9 @@
           <ColumnTab
             :tableData="state.tableData"
             :columnVisible="state.columnVisible"
-            @saveModal="appendColumnSubmit"
-            @closeModal="appendColumnVis"
+            @saveModal="appendColumn"
+            @removeColumn="removeColumn"
+            @visableFlag="appendColumnVis"
           />
         </el-tab-pane>
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
@@ -115,24 +113,39 @@ export default defineComponent({
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
       state.tabsActive = pane.props.name;
     };
-    //
+    //===============字段========================
     const appendColumnVis = (flag: boolean) => {
       state.columnVisible = flag;
     };
-    const appendColumnSubmit = (form: TableRow) => {
+    const appendColumn = (form: TableRow) => {
       console.log("appendColumnSubmit form", form);
-      state.tableData.push(form);
+      //判断新增还是修改
+      const index = state.tableData.findIndex((item) => item.id === form.id);
+      if (index > -1) {
+        const item = state.tableData[index];
+        state.tableData.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.tableData.push(form);
+      }
       appendColumnVis(false);
     };
-    const removeColumnSubmit = () => {
-
+    const removeColumn = (form: TableRow) => {
+      const index = state.tableData.findIndex((item) => item.id === form.id);
+      if (index > -1) {
+        state.tableData.splice(index, 1);
+      }
+      console.log('removeColumn state.tableData',state.tableData)
     };
+
     return {
       state,
       handleTabClick,
       appendColumnVis,
-      appendColumnSubmit,
-      removeColumnSubmit,
+      appendColumn,
+      removeColumn,
     };
   },
   data() {
