@@ -1,5 +1,9 @@
 <template>
-  <TreeNode :treeData="treeData" @addTreeNode="addTreeNode" />
+  <TreeNode
+    :treeData="treeData"
+    @addTreeNode="addTreeNode"
+    @addTable="addTable"
+  />
 </template>
 
 <script lang="ts">
@@ -14,6 +18,7 @@ export default defineComponent({
   props: {
     treeData: Array,
     addTreeNode: Function,
+    addTable: Function,
   },
 });
 </script>

@@ -83,10 +83,10 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, reactive, toRefs, watch, ref } from "vue";
+import { defineComponent, reactive, toRefs, watch, ref, onMounted } from "vue";
 import type { FormInstance, TabsPaneContext } from "element-plus";
-import { ResponseData, TableRow } from "@/types";
-
+import { ResponseData, TreeNode, TableRow, DataType } from "@/types";
+import { getDataType } from "@/api/treeNode";
 const formRef = ref<FormInstance>();
 const rules = reactive({
   column: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
@@ -114,8 +114,25 @@ export default defineComponent({
     removeColumn: Function,
     visableFlag: Function,
   },
+  // const data = state.treeNode.data as TreeNode<TableSimple>;
+  // getDataType(data).then((ResponseData:any) => {
+  //   console.log('getDataType ResponseData',ResponseData)
+  // });
   emits: ["visableFlag", "saveModal", "removeColumn"],
   setup(props, { emit }) {
+    onMounted(() => {
+      console.log("onMounted");
+      const sessionVal = sessionStorage.getItem("aaa");
+      if (sessionVal != null) {
+        console.log("session get sessionVal  ", sessionVal);
+        const treeData = JSON.parse(sessionVal!) as TreeNode<any>;
+        console.log("sessionVal convert treeData = ", treeData);
+
+        getDataType(treeData).then((ResponseData: ResponseData<DataType[]>) => {
+          console.log("getDataType ResponseData", ResponseData);
+        });
+      }
+    });
     const { columnVisible, tableData } = toRefs(props);
     const state = reactive({
       columnVisible: columnVisible.value,

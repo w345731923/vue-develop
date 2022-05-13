@@ -276,6 +276,7 @@ import {
   openDatabase,
   getTableList,
   getTableDesign,
+  getDataType,
 } from "@/api/treeNode";
 import RemoveNodeDialog from "./removeNode.vue";
 import RenameNodeDialog from "./renameNode.vue";
@@ -302,6 +303,7 @@ import {
   DatabaseEditForm,
   SchemaEditForm,
   Schema,
+  TableSimple,
 } from "@/types";
 import { getNodePath } from "@/utils/tree";
 
@@ -357,7 +359,7 @@ export default defineComponent({
     treeData: Array,
     addTreeNode: Function,
   },
-
+  emits: ["addTable"],
   setup(props, { emit }) {
     const treeRef: Ref = ref(null); //树形结果对象
     const buttonDropdown = ref(); //节点扩展按钮下拉对象
@@ -666,6 +668,10 @@ export default defineComponent({
         } else {
           state.treeNode = node.parent;
         }
+        emit("addTable");
+        const val = JSON.stringify(state.treeNode);
+        console.log("session set before ", val);
+        sessionStorage.setItem("aaa", val);
         // state.parentForm = state.treeNode.data as TreeNode<any>;
         // state.defaultForm = {
         //   "@clazz": "com.highgo.developer.model.HgdbSchema",

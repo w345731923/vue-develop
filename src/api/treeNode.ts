@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm,SQLDropPreview,TableSimple
+    SchemaEditForm,SQLDropPreview,TableSimple,DataType
 } from '@/types'
 
 
@@ -215,4 +215,11 @@ export async function editSchema(data: SchemaEditForm) {
  */
  export async function getTableDesign(data: TreeNode<TableSimple>) {
     return await http.request<ResponseData<TreeNode<any>[]>>('/table/designTable/', { method: 'POST', data });
+}
+/**
+ * 查询数据类型
+ * @returns 
+ */
+ export async function getDataType(data: TreeNode<any>) {
+    return await http.request<ResponseData<DataType[]>>('/dbinfo/findDataType', { method: 'POST', data });
 }

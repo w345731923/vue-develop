@@ -8,6 +8,7 @@
         class="pane_flex left home"
         :treeData="state.treeData"
         @addTreeNode="addTreeNode"
+        @addTable="addTable"
         ref="ruleFormRef"
       />
       <div class="resizer_controls" @mousedown="drag($event)"></div>

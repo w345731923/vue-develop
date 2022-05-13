@@ -189,12 +189,19 @@ export interface TableSimple {
 }
 
 export interface TableRow {
-  id:number,
+  id: number,
   column: string;
   type: string,
   length: numnber,
   point: numnber;
   notnull: boolean;
   primary: boolean;
-  comment:string;
+  comment: string;
+}
+export interface DataType {
+  oid: number,//1042
+  name: string, "bpchar"
+  formatName: string, "character"
+  nspname: string, "pg_catalog"
+  isCollatable: boolean  //true,可展开
 }
