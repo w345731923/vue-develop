@@ -188,20 +188,84 @@ export interface TableSimple {
   tableSpace: string;//表空间
 }
 
-export interface TableRow {
-  id: number,
-  column: string;
-  type: string,
-  length: numnber,
-  point: numnber;
-  notnull: boolean;
-  primary: boolean;
-  comment: string;
-}
+//全部的数据类型
 export interface DataType {
   oid: number,//1042
   name: string, "bpchar"
   formatName: string, "character"
   nspname: string, "pg_catalog"
   isCollatable: boolean  //true,可展开
+}
+
+export interface FieldList {
+  id?:number,//前端使用的row key
+  oid?: number,
+  name: string,//"id"  字段名
+  dataType: FieldDataType,
+  isNotNull: boolean,//是否不为NULL
+  isPrimaryKey: boolean,//是否主键
+  pkEnabled?: boolean,
+  comment: string,//注释
+  collationSpaceName: string,//排序规则1-1
+  collationName: string,//排序规则1-2
+  defaultValue: string,//默认
+  dimension?: number,//0
+  foreignColumn?: undefined,
+  ordinalPosition?: number,//1，字段排序下标
+  completionShowValue?: string,//"public.c1.id"
+  keyString?: string,//"HgdbField{ordinalPosition=1}"
+  displayName?: string //"id"
+}
+//FieldList对象中的数据类型
+export interface FieldDataType {
+  name: string,//"integer"
+  length: number,//32
+  decimalNumber: number// 0  
+}
+
+export interface TableDesignModel {
+  cluster?: number,
+  parent?: undefined;//{oid: 0, name: "public", isRoleLeaf: false, describe: null, rolname: null, displayName: "public",…}
+  '@clazz': string;//"com.highgo.developer.model.HgdbTable"
+  hastriggers?: boolean,//false
+  foreignTableOptions?: [];
+  primaryConstraintName?: string;//c1_pkey
+  ruleList?: [];//[]
+  indexList?: [];//[]
+  acl?: string,
+  hasPartition?: boolean,
+  oid?: number,
+  reltuples?: number,//0
+  partitionList?: [],//[]
+  foreignServerType?: [],//null
+  isLeaf?: boolean,//false
+  triggerList?: [],//触发器
+  custerList?: string,
+  hasindexes?: boolean,
+  inheritNames?: string,
+  fieldList: FieldList[],//字段列表
+  isForeignTable?: number,//是否外部表
+  foreignTableOptionsShow?: string,
+  roleChildrenModel?: [],
+  partitionKeyList?: [],
+  excludeConstraintList?: [],
+  hasOids?: boolean,
+  fillParam?: number,
+  roleList?: [],
+  hasrules?: boolean,
+  partitionType?: string,
+  foreignKeyList?: [],
+  uniqueConstraintList?: [],
+  isRoleLeaf?: boolean,
+  tableSpace?: string,
+  foreignServerOption?: string,
+  unlogged?: boolean,
+  tableOwner?: string,//"postgres"
+  childrenModel?: [],
+  tableSpaceList?: string,
+  checkList?: [],
+  name: string,//表名
+  comment: string,//表注释
+  partitionDef?: string,
+  foreignServerName?: string,
 }

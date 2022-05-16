@@ -11,12 +11,57 @@
       :highlight-current-row="true"
       size="small"
     >
-      <el-table-column prop="column" label="字段名" align="center" />
-      <el-table-column prop="type" label="类型" align="center" />
-      <el-table-column prop="length" label="长度" align="center" />
-      <el-table-column prop="point" label="小数点" align="center" />
-      <el-table-column prop="notnull" label="不是null" align="center" />
-      <el-table-column prop="primary" label="主键" align="center" />
+      <el-table-column prop="name" label="字段名" align="center" />
+      <el-table-column
+        prop="type"
+        label="类型"
+        align="center"
+        :formatter="
+          function (row, column, cellValue, index) {
+            return row.dataType.name;
+          }
+        "
+      />
+      <el-table-column
+        prop="length"
+        label="长度"
+        align="center"
+        :formatter="
+          function (row) {
+            return row.dataType.length;
+          }
+        "
+      />
+      <el-table-column
+        prop="point"
+        label="小数点"
+        align="center"
+        :formatter="
+          function (row) {
+            return row.dataType.decimalNumber;
+          }
+        "
+      />
+      <el-table-column prop="isNotNull_1" label="不是null" align="center">
+        <template #default="scope">
+          <el-checkbox
+            disabled
+            v-if="scope.row.isNotNull == true"
+            :checked="true"
+          />
+          <el-checkbox disabled v-if="scope.row.isNotNull != true" />
+        </template>
+      </el-table-column>
+      <el-table-column prop="isPrimaryKey_1" label="主键" align="center">
+        <template #default="scope">
+          <el-checkbox
+            disabled
+            v-if="scope.row.isPrimaryKey == true"
+            :checked="true"
+          />
+          <el-checkbox disabled v-if="scope.row.isPrimaryKey != true" />
+        </template>
+      </el-table-column>
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">
@@ -44,34 +89,75 @@
         status-icon
         label-width="80px"
       >
-        <el-form-item label="字段" prop="column">
-          <el-input v-model="state.form.column" autocomplete="off"></el-input>
+        <el-form-item label="字段" prop="name">
+          <el-input v-model="state.form.name" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="类型" prop="type">
-          <el-select v-model="state.form.type" filterable placeholder=" ">
+          <el-select
+            v-model="state.form.dataType.name"
+            filterable
+            placeholder=" "
+            @change="dataTypeChange"
+          >
             <el-option
               v-for="item in state.dataTypeList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+              :key="item.formatName"
+              :label="item.formatName"
+              :value="item.formatName"
             >
             </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="长度" prop="length">
-          <el-input-number v-model="state.form.length" :min="0" />
+          <el-input-number v-model="state.form.dataType.length" :min="0" />
         </el-form-item>
         <el-form-item label="小数点" prop="point">
-          <el-input-number v-model="state.form.point" :min="0" />
+          <el-input-number
+            v-model="state.form.dataType.decimalNumber"
+            :min="0"
+          />
         </el-form-item>
-        <el-form-item label="不是null" prop="notnull">
-          <el-switch v-model="state.form.notnull" />
+        <el-form-item label="不是null" prop="isNotNull">
+          <el-switch v-model="state.form.isNotNull" />
         </el-form-item>
-        <el-form-item label="主键" prop="primary">
-          <el-switch v-model="state.form.primary" />
+        <el-form-item label="主键" prop="isPrimaryKey">
+          <el-switch v-model="state.form.isPrimaryKey" />
         </el-form-item>
         <el-form-item label="注释" prop="comment">
-          <el-input v-model="state.form.comment" autocomplete="off"></el-input>
+          <el-input v-model="state.form.comment"></el-input>
+        </el-form-item>
+        <el-form-item label="默认值" prop="defaultValue">
+          <el-input v-model="state.form.defaultValue"></el-input>
+        </el-form-item>
+        <el-form-item label="排序规则1" prop="collationSpaceName">
+          <el-select
+            v-model="state.form.dataType.name"
+            filterable
+            placeholder=" "
+            :disabled="!state.collationVis"
+          >
+            <el-option
+              v-for="item in state.dataTypeList"
+              :key="item.formatName"
+              :label="item.formatName"
+              :value="item.formatName"
+            >
+            </el-option>
+          </el-select>
+          <el-select
+            v-model="state.form.dataType.name"
+            filterable
+            placeholder=" "
+            :disabled="!state.collationVis"
+          >
+            <el-option
+              v-for="item in state.dataTypeList"
+              :key="item.name"
+              :label="item.formatName"
+              :value="item.name"
+            >
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -85,23 +171,35 @@
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, ref, onMounted } from "vue";
 import type { FormInstance, TabsPaneContext } from "element-plus";
-import { ResponseData, TreeNode, TableRow, DataType } from "@/types";
+import {
+  ResponseData,
+  TreeNode,
+  DataType,
+  FieldList,
+  FieldDataType,
+} from "@/types";
 import { getDataType } from "@/api/treeNode";
 const formRef = ref<FormInstance>();
-const rules = reactive({
-  column: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
-  // type: [{ required: true, message: "请选择数据类型！", trigger: "blur" }],
-});
-const demo = {
+const demo: FieldList = {
   id: -new Date().getTime(),
-  column: "",
-  type: "",
-  length: 0,
-  point: 0,
-  notnull: false,
-  primary: false,
+  name: "",
+  dataType: { name: "", length: 0, decimalNumber: 0 },
+  isNotNull: false,
+  isPrimaryKey: false,
   comment: "",
+  defaultValue: "", //默认
+  collationSpaceName: "", //规则1-1
+  collationName: "", //规则1-2
 };
+
+interface IState {
+  columnVisible: boolean;
+  tableData: FieldList[];
+  form: FieldList;
+  dataTypeList: DataType[];
+  isAdd: boolean; //add or update
+  collationVis: boolean; //排序规则
+}
 export default defineComponent({
   name: "columntab",
   props: {
@@ -114,92 +212,103 @@ export default defineComponent({
     removeColumn: Function,
     visableFlag: Function,
   },
-  // const data = state.treeNode.data as TreeNode<TableSimple>;
-  // getDataType(data).then((ResponseData:any) => {
-  //   console.log('getDataType ResponseData',ResponseData)
-  // });
   emits: ["visableFlag", "saveModal", "removeColumn"],
   setup(props, { emit }) {
     onMounted(() => {
       console.log("onMounted");
-      const sessionVal = sessionStorage.getItem("aaa");
+      const sessionVal = sessionStorage.getItem("create-table-session");
       if (sessionVal != null) {
         console.log("session get sessionVal  ", sessionVal);
         const treeData = JSON.parse(sessionVal!) as TreeNode<any>;
         console.log("sessionVal convert treeData = ", treeData);
 
-        getDataType(treeData).then((ResponseData: ResponseData<DataType[]>) => {
-          console.log("getDataType ResponseData", ResponseData);
+        getDataType(treeData).then((responseData: ResponseData<DataType[]>) => {
+          console.log("getDataType ResponseData", responseData);
+          state.dataTypeList = responseData.data;
         });
       }
     });
+    const validateType = (rule: any, value: any, callback: any) => {
+      if (state.form.dataType.name === "") {
+        callback(new Error("请选择数据类型！"));
+      } else {
+        callback();
+      }
+    };
+    const rules = reactive({
+      name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
+      type: [{ validator: validateType, trigger: "blur" }],
+      // type: [{ required: true, message: "请选择数据类型！", trigger: "blur" }],
+    });
+
     const { columnVisible, tableData } = toRefs(props);
-    const state = reactive({
+    const state: IState = reactive({
       columnVisible: columnVisible.value,
-      tableData: tableData.value,
-      form: {} as TableRow,
-      dataTypeList: [
-        {
-          value: "char",
-          label: "char",
-        },
-        {
-          value: "boolean",
-          label: "boolean",
-        },
-        {
-          value: "date",
-          label: "date",
-        },
-      ],
+      tableData: tableData.value as FieldList[],
+      form: {} as FieldList,
+      dataTypeList: [],
+      isAdd: true,
+      collationVis: false,
     });
     watch(
       columnVisible,
       (newValue) => {
         state.columnVisible = newValue;
-        if (newValue) {
+        if (newValue && state.isAdd) {
           demo.id = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
           resetFields(demo);
+          state.form.dataType = { name: "", length: 0, decimalNumber: 0 };
         }
       },
       { immediate: true }
     );
-
+    //对象拷贝
+    const createVal = (src: FieldList) => {
+      const target = {} as FieldList;
+      Object.assign(target, src);
+      return target;
+    };
     //重置row初始值
-    const resetFields = (resetVal: TableRow) => {
-      const target = {} as TableRow;
-      Object.assign(target, resetVal);
-      state.form = target;
+    const resetFields = (resetVal: FieldList) => {
+      Object.assign(state.form, resetVal);
     };
     //修改按钮
-    const columnUpdateClick = (row: TableRow) => {
+    const columnUpdateClick = (row: FieldList) => {
       console.log("columnUpdateButtonClick row ", row);
-      //使用target，为了避免弹窗后修改内容，后面表格有变化，所以复制了一个对象
       resetFields(row);
-      //修改不在调用父类方法，内部处理
-      state.columnVisible = true;
+      state.form.dataType = row.dataType;
+      emit("visableFlag", true);
+      state.isAdd = false;
     };
     //删除按钮
-    const removeColumnClick = (row: TableRow) => {
+    const removeColumnClick = (row: FieldList) => {
       emit("removeColumn", row);
     };
     //关闭
     const onClose = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
-      state.columnVisible = false;
       emit("visableFlag", false);
-      // formEl.resetFields();
+      state.isAdd = true;
     };
     //保存
     const submitForm = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
-          state.columnVisible = false;
-          emit("saveModal", state.form);
+          emit("saveModal", createVal(state.form));
         }
       });
+    };
+    const dataTypeChange = (val: string) => {
+      console.log("dataTypeChange val ", val);
+      const selected = state.dataTypeList.find(
+        (item) => item.formatName == val
+      );
+      console.log("selected", selected);
+      if (selected?.isCollatable) {
+        state.collationVis = true;
+      }
     };
     return {
       state,
@@ -207,9 +316,10 @@ export default defineComponent({
       rules,
       columnUpdateClick,
       removeColumnClick,
-
+      validateType,
       submitForm,
       onClose,
+      dataTypeChange,
     };
   },
 

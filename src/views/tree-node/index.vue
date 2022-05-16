@@ -668,18 +668,10 @@ export default defineComponent({
         } else {
           state.treeNode = node.parent;
         }
+        state.treeNode.data.nodePath = getNodePath(state.treeNode);
+        const val = JSON.stringify(state.treeNode.data);
+        sessionStorage.setItem("create-table-session", val);
         emit("addTable");
-        const val = JSON.stringify(state.treeNode);
-        console.log("session set before ", val);
-        sessionStorage.setItem("aaa", val);
-        // state.parentForm = state.treeNode.data as TreeNode<any>;
-        // state.defaultForm = {
-        //   "@clazz": "com.highgo.developer.model.HgdbSchema",
-        //   name: "", //数据库名
-        //   rolname: state.treeNode.data.object.databaseowner, //拥有者
-        //   connectionId: state.treeNode.data.connectionId as string,
-        // };
-        // switchSchemaAddVisable(true);
       }
     };
     /**

@@ -33,6 +33,7 @@ const getNodeName = (data: string[], node: Node) => {
         getNodeName(data, node.parent);
     }
 }
+
 export const getConnectionId = (node: Node) => {
     const nodeData = node.data as TreeNode<any>;
     const key =

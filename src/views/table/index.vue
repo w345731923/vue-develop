@@ -2,7 +2,7 @@
   <div class="box">
     <div class="tool-buttons">
       <div class="row-button">
-        <el-button size="small" color="#f2f2f2">
+        <el-button size="small" color="#f2f2f2" @click="saveTable">
           <el-icon><Avatar /></el-icon>
           保存
         </el-button>
@@ -85,15 +85,16 @@
 
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, ref } from "vue";
+import { ElMessage } from "element-plus";
 
 import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "@/components/table/columnTab.vue";
 import { TabsPaneContext } from "element-plus";
-import { ResponseData, TableRow } from "@/types";
+import { TableDesignModel, FieldList } from "@/types";
 
-interface Iprops {
+interface IState {
   tabsActive: string | number;
-  tableData: TableRow[];
+  tableData: FieldList[];
   columnVisible: boolean;
 }
 export default defineComponent({
@@ -104,7 +105,7 @@ export default defineComponent({
   },
   emits: [],
   setup(props, { emit }) {
-    const state: Iprops = reactive({
+    const state: IState = reactive({
       tabsActive: "columns",
       tableData: [],
       columnVisible: false,
@@ -113,14 +114,40 @@ export default defineComponent({
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
       state.tabsActive = pane.props.name;
     };
+    /**
+     * 保存表
+     */
+    const saveTable = () => {
+      const data: TableDesignModel = {
+        "@clazz": "com.highgo.developer.model.HgdbTable",
+        fieldList: state.tableData,
+        name: "c12",
+        comment: "",
+      };
+      console.log("saveTable data", data);
+    };
     //===============字段========================
     const appendColumnVis = (flag: boolean) => {
       state.columnVisible = flag;
     };
-    const appendColumn = (form: TableRow) => {
+    const appendColumn = (form: FieldList) => {
       console.log("appendColumnSubmit form", form);
+      //校验重名
+      const nIndex = state.tableData.findIndex(
+        (item) => item.name === form.name
+      );
       //判断新增还是修改
       const index = state.tableData.findIndex((item) => item.id === form.id);
+      if (nIndex > -1 && nIndex != index) {
+        //重名，且不是self，报错
+        ElMessage({
+          message: "表名称不能相同",
+          type: "error",
+          duration: 5 * 1000,
+        });
+        return;
+      }
+
       if (index > -1) {
         const item = state.tableData[index];
         state.tableData.splice(index, 1, {
@@ -132,12 +159,12 @@ export default defineComponent({
       }
       appendColumnVis(false);
     };
-    const removeColumn = (form: TableRow) => {
+    const removeColumn = (form: FieldList) => {
       const index = state.tableData.findIndex((item) => item.id === form.id);
       if (index > -1) {
         state.tableData.splice(index, 1);
       }
-      console.log('removeColumn state.tableData',state.tableData)
+      console.log("removeColumn state.tableData", state.tableData);
     };
 
     return {
@@ -146,6 +173,7 @@ export default defineComponent({
       appendColumnVis,
       appendColumn,
       removeColumn,
+      saveTable,
     };
   },
   data() {
