@@ -276,7 +276,7 @@ import {
   openDatabase,
   getTableList,
   getTableDesign,
-  getDataType,
+  checkConnect,
 } from "@/api/treeNode";
 import RemoveNodeDialog from "./removeNode.vue";
 import RenameNodeDialog from "./renameNode.vue";
@@ -668,10 +668,17 @@ export default defineComponent({
         } else {
           state.treeNode = node.parent;
         }
-        state.treeNode.data.nodePath = getNodePath(state.treeNode);
-        const val = JSON.stringify(state.treeNode.data);
+
+        state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
+        const val = JSON.stringify(state.treeNode!.data);
         sessionStorage.setItem("create-table-session", val);
         emit("addTable");
+        // checkConnect(state.treeNode.data.connectionId).then(() => {
+        //   state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
+        //   const val = JSON.stringify(state.treeNode!.data);
+        //   sessionStorage.setItem("create-table-session", val);
+        //   emit("addTable");
+        // });
       }
     };
     /**

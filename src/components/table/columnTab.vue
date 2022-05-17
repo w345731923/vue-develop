@@ -129,32 +129,31 @@
         <el-form-item label="默认值" prop="defaultValue">
           <el-input v-model="state.form.defaultValue"></el-input>
         </el-form-item>
-        <el-form-item label="排序规则1" prop="collationSpaceName">
+        <el-form-item label="排序规则1">
           <el-select
-            v-model="state.form.dataType.name"
-            filterable
+            v-model="state.form.collationSpaceName"
             placeholder=" "
             :disabled="!state.collationVis"
+            @change="collationSpaceNameChange"
           >
             <el-option
-              v-for="item in state.dataTypeList"
-              :key="item.formatName"
-              :label="item.formatName"
-              :value="item.formatName"
+              v-for="item in state.collation1"
+              :key="item"
+              :label="item"
+              :value="item"
             >
             </el-option>
           </el-select>
           <el-select
-            v-model="state.form.dataType.name"
-            filterable
+            v-model="state.form.collationName"
             placeholder=" "
             :disabled="!state.collationVis"
           >
             <el-option
-              v-for="item in state.dataTypeList"
-              :key="item.name"
-              :label="item.formatName"
-              :value="item.name"
+              v-for="item in state.collation2"
+              :key="item"
+              :label="item"
+              :value="item"
             >
             </el-option>
           </el-select>
@@ -178,7 +177,7 @@ import {
   FieldList,
   FieldDataType,
 } from "@/types";
-import { getDataType } from "@/api/treeNode";
+import { getDataType, getCollation } from "@/api/treeNode";
 const formRef = ref<FormInstance>();
 const demo: FieldList = {
   id: -new Date().getTime(),
@@ -199,6 +198,9 @@ interface IState {
   dataTypeList: DataType[];
   isAdd: boolean; //add or update
   collationVis: boolean; //排序规则
+  collation1: string[];
+  collation2: string[];
+  collationMap: Map<string, string>;
 }
 export default defineComponent({
   name: "columntab",
@@ -226,6 +228,14 @@ export default defineComponent({
           console.log("getDataType ResponseData", responseData);
           state.dataTypeList = responseData.data;
         });
+        getCollation(treeData).then((responseData) => {
+          console.log("getCollation ResponseData", responseData);
+          state.collationMap = responseData.data;
+          const map = new Map(Object.entries(responseData.data));
+          for (let [key, value] of map) {
+            state.collation1.push(key);
+          }
+        });
       }
     });
     const validateType = (rule: any, value: any, callback: any) => {
@@ -249,6 +259,9 @@ export default defineComponent({
       dataTypeList: [],
       isAdd: true,
       collationVis: false,
+      collation1: [],
+      collation2: [],
+      collationMap: new Map(),
     });
     watch(
       columnVisible,
@@ -280,7 +293,10 @@ export default defineComponent({
       state.form.dataType = row.dataType;
       emit("visableFlag", true);
       state.isAdd = false;
+      //初始化排序设定值
+      dataTypeChange(state.form.dataType.name)
     };
+
     //删除按钮
     const removeColumnClick = (row: FieldList) => {
       emit("removeColumn", row);
@@ -300,6 +316,7 @@ export default defineComponent({
         }
       });
     };
+    //数据类型下拉框事件
     const dataTypeChange = (val: string) => {
       console.log("dataTypeChange val ", val);
       const selected = state.dataTypeList.find(
@@ -308,7 +325,15 @@ export default defineComponent({
       console.log("selected", selected);
       if (selected?.isCollatable) {
         state.collationVis = true;
+      } else {
+        state.collationVis = false;
       }
+    };
+    //排序规则1下拉框事件
+    const collationSpaceNameChange = (val: string) => {
+      console.log("collationNameChange val ", val);
+      state.collation2 = [];
+      state.collation2 = state.collationMap[val] as string[];
     };
     return {
       state,
@@ -320,6 +345,7 @@ export default defineComponent({
       submitForm,
       onClose,
       dataTypeChange,
+      collationSpaceNameChange,
     };
   },
 

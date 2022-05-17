@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm,SQLDropPreview,TableSimple,DataType
+    SchemaEditForm, SQLDropPreview, TableSimple, DataType
 } from '@/types'
 
 
@@ -206,20 +206,37 @@ export async function editSchema(data: SchemaEditForm) {
  * 查询schema下的table
  * @returns 
  */
- export async function getTableList(data: TreeNode<Schema>) {
-    return await http.request<ResponseData<TreeNode<TableSimple>[]>>('/schema/listTable/', { method: 'POST', data });
+export async function getTableList(data: TreeNode<Schema>) {
+    return await http.request<ResponseData<TreeNode<TableSimple>[]>>('/schema/listTable', { method: 'POST', data });
+}
+/**
+ * 查询当前连接是否有效(新建表/设计表前的校验)
+ * @returns 
+ */
+export async function checkConnect(connectionID: string) {
+    const headers = { 'content-type': 'application/x-www-form-urlencoded' };
+    return await http.request<ResponseData<string[]>>('/tool/checkConnect?connectionID=' + connectionID, {
+        method: 'POST', headers
+    });
 }
 /**
  * 编辑表
  * @returns 
  */
- export async function getTableDesign(data: TreeNode<TableSimple>) {
-    return await http.request<ResponseData<TreeNode<any>[]>>('/table/designTable/', { method: 'POST', data });
+export async function getTableDesign(data: TreeNode<TableSimple>) {
+    return await http.request<ResponseData<TreeNode<any>[]>>('/table/designTable', { method: 'POST', data });
 }
 /**
  * 查询数据类型
  * @returns 
  */
- export async function getDataType(data: TreeNode<any>) {
+export async function getDataType(data: TreeNode<any>) {
     return await http.request<ResponseData<DataType[]>>('/dbinfo/findDataType', { method: 'POST', data });
+}
+/**
+ * 查询数据库排序规则
+ * @returns 
+ */
+export async function getCollation(data: TreeNode<any>) {
+    return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findCollation', { method: 'POST', data });
 }
