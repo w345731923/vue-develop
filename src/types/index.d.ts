@@ -45,7 +45,6 @@ export interface TreeNode<T> {
   object: T;
   connectionId: string | null;
   children?: TreeNode[];
-  index?: number;
 }
 //create SQL预览
 export interface SQLCreatePreview<T = any, S = any> {
@@ -198,6 +197,7 @@ export interface DataType {
 }
 
 export interface FieldList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbTable"
   id?:number,//前端使用的row key
   oid?: number,
   name: string,//"id"  字段名

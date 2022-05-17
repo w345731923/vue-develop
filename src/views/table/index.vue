@@ -39,6 +39,7 @@
       >
         <el-tab-pane label="字段" name="columns" style="margin: 0.5rem">
           <ColumnTab
+            :treeData="state.treeData"
             :tableData="state.tableData"
             :columnVisible="state.columnVisible"
             @saveModal="appendColumn"
@@ -84,18 +85,24 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, reactive, toRefs, watch, ref } from "vue";
+import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-
+import { tableAdd } from "@/api/treeNode";
 import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "@/components/table/columnTab.vue";
 import { TabsPaneContext } from "element-plus";
-import { TableDesignModel, FieldList } from "@/types";
-
+import {
+  ResponseData,
+  TreeNode,
+  DataType,
+  FieldList,
+  TableDesignModel,
+} from "@/types";
 interface IState {
   tabsActive: string | number;
   tableData: FieldList[];
   columnVisible: boolean;
+  treeData: TreeNode<any> | undefined;
 }
 export default defineComponent({
   name: "table-design",
@@ -105,10 +112,19 @@ export default defineComponent({
   },
   emits: [],
   setup(props, { emit }) {
+    onMounted(() => {
+      console.log("table-design onMounted");
+      const sessionVal = sessionStorage.getItem("create-table-session");
+      if (sessionVal != null) {
+        state.treeData = JSON.parse(sessionVal!) as TreeNode<any>;
+        console.log("sessionVal convert treeData = ", state.treeData);
+      }
+    });
     const state: IState = reactive({
       tabsActive: "columns",
       tableData: [],
       columnVisible: false,
+      treeData: undefined,
     });
 
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
@@ -124,7 +140,16 @@ export default defineComponent({
         name: "c12",
         comment: "",
       };
-      console.log("saveTable data", data);
+      const tar = {
+        type: "Table",
+        object: data,
+        connectionId: state.treeData?.contextId,
+        nodePath: state.treeData?.nodePath,
+      } as TreeNode<TableDesignModel>;
+
+      tableAdd(tar).then((resp: any) => {
+        console.log("tableAdd resp", resp);
+      });
     };
     //===============字段========================
     const appendColumnVis = (flag: boolean) => {

@@ -180,6 +180,7 @@ import {
 import { getDataType, getCollation } from "@/api/treeNode";
 const formRef = ref<FormInstance>();
 const demo: FieldList = {
+  '@clazz': "com.highgo.developer.model.HgdbField",
   id: -new Date().getTime(),
   name: "",
   dataType: { name: "", length: 0, decimalNumber: 0 },
@@ -193,6 +194,7 @@ const demo: FieldList = {
 
 interface IState {
   columnVisible: boolean;
+  treeData: TreeNode<any>;
   tableData: FieldList[];
   form: FieldList;
   dataTypeList: DataType[];
@@ -209,6 +211,7 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    treeData: Object,
     tableData: Array,
     saveModal: Function,
     removeColumn: Function,
@@ -216,28 +219,6 @@ export default defineComponent({
   },
   emits: ["visableFlag", "saveModal", "removeColumn"],
   setup(props, { emit }) {
-    onMounted(() => {
-      console.log("onMounted");
-      const sessionVal = sessionStorage.getItem("create-table-session");
-      if (sessionVal != null) {
-        console.log("session get sessionVal  ", sessionVal);
-        const treeData = JSON.parse(sessionVal!) as TreeNode<any>;
-        console.log("sessionVal convert treeData = ", treeData);
-
-        getDataType(treeData).then((responseData: ResponseData<DataType[]>) => {
-          console.log("getDataType ResponseData", responseData);
-          state.dataTypeList = responseData.data;
-        });
-        getCollation(treeData).then((responseData) => {
-          console.log("getCollation ResponseData", responseData);
-          state.collationMap = responseData.data;
-          const map = new Map(Object.entries(responseData.data));
-          for (let [key, value] of map) {
-            state.collation1.push(key);
-          }
-        });
-      }
-    });
     const validateType = (rule: any, value: any, callback: any) => {
       if (state.form.dataType.name === "") {
         callback(new Error("请选择数据类型！"));
@@ -250,10 +231,29 @@ export default defineComponent({
       type: [{ validator: validateType, trigger: "blur" }],
       // type: [{ required: true, message: "请选择数据类型！", trigger: "blur" }],
     });
-
-    const { columnVisible, tableData } = toRefs(props);
+    const getInitData = () => {
+      if (state.treeData != null) {
+        getDataType(state.treeData).then(
+          (responseData: ResponseData<DataType[]>) => {
+            console.log("getDataType ResponseData", responseData);
+            state.dataTypeList = responseData.data;
+          }
+        );
+        getCollation(state.treeData).then((responseData) => {
+          console.log("getCollation ResponseData", responseData);
+          state.collationMap = responseData.data;
+          const map = new Map(Object.entries(responseData.data));
+          for (let [key, value] of map) {
+            state.collation1.push(key);
+          }
+        });
+      }
+    };
+    const { columnVisible, treeData, tableData } = toRefs(props);
+    console.log("toRefs treeData", treeData);
     const state: IState = reactive({
       columnVisible: columnVisible.value,
+      treeData: treeData.value as TreeNode<any>,
       tableData: tableData.value as FieldList[],
       form: {} as FieldList,
       dataTypeList: [],
@@ -266,6 +266,8 @@ export default defineComponent({
     watch(
       columnVisible,
       (newValue) => {
+        console.log("watch columnVisible", newValue);
+
         state.columnVisible = newValue;
         if (newValue && state.isAdd) {
           demo.id = -new Date().getTime();
@@ -276,6 +278,16 @@ export default defineComponent({
       },
       { immediate: true }
     );
+    watch(
+      treeData,
+      (newValue) => {
+        console.log("watch treeData", newValue);
+        state.treeData = newValue as TreeNode<any>;
+        getInitData();
+      },
+      { immediate: true }
+    );
+
     //对象拷贝
     const createVal = (src: FieldList) => {
       const target = {} as FieldList;
@@ -294,7 +306,7 @@ export default defineComponent({
       emit("visableFlag", true);
       state.isAdd = false;
       //初始化排序设定值
-      dataTypeChange(state.form.dataType.name)
+      dataTypeChange(state.form.dataType.name);
     };
 
     //删除按钮

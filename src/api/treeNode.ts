@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm, SQLDropPreview, TableSimple, DataType
+    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel
 } from '@/types'
 
 
@@ -239,4 +239,11 @@ export async function getDataType(data: TreeNode<any>) {
  */
 export async function getCollation(data: TreeNode<any>) {
     return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findCollation', { method: 'POST', data });
+}
+/**
+ * 新建表
+ * @returns 
+ */
+export async function tableAdd(data: TreeNode<TableDesignModel>) {
+    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/add', { method: 'POST', data });
 }

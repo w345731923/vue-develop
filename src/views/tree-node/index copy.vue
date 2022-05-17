@@ -27,40 +27,45 @@
               v-if="
                 data.type === 'Database' &&
                 data.connectionId != null &&
-                data.connectionId != ''
+                data.connectionId != '' &&
+                data.index == null
               "
             />
             <img
               src="../../assets/database_icon.png"
               v-if="
                 data.type === 'Database' &&
-                (data.connectionId == null || data.connectionId == '')
+                (data.connectionId == null || data.connectionId == '') &&
+                data.index == null
               "
             />
             <img
               src="../../assets/folder_schema.png"
-              v-if="data.type === 'SchemaGroup'"
+              v-if="data.type === 'Database' && data.index == 0"
             />
             <img
               src="../../assets/folder_table.png"
-              v-if="data.type === 'RoleGroup'"
+              v-if="data.type === 'Database' && data.index == 1"
             />
             <img
               src="../../assets/folder_database.png"
-              v-if="data.type === 'TableSpaceGroup'"
+              v-if="data.type === 'Database' && data.index == 2"
             />
-            <!-- <img
+            <img
               src="../../assets/folder_admin.png"
-              v-if="data.type === 'RoleGroup'"
-            /> -->
-            <img src="../../assets/schema.png" v-if="data.type === 'Schema'" />
+              v-if="data.type === 'Database' && data.index == 3"
+            />
+            <img
+              src="../../assets/schema.png"
+              v-if="data.type === 'Schema' && data.index == null"
+            />
             <img
               src="../../assets/folder_table.png"
-              v-if="data.type === 'TableGroup'"
+              v-if="data.type === 'Schema' && data.index == 0"
             />
             <img
               src="../../assets/folder_view.png"
-              v-if="data.type === 'ViewsGroup'"
+              v-if="data.type === 'Schema' && data.index == 1"
             />
 
             <img
@@ -80,11 +85,8 @@
           >
             <span
               v-if="
-                data.type == 'SchemaGroup' ||
-                data.type == 'RoleGroup' ||
-                data.type == 'TableSpaceGroup' ||
-                data.type == 'TableGroup' ||
-                data.type == 'ViewsGroup'
+                (data.type == 'Database' || data.type == 'Schema') &&
+                data.index >= 0
               "
             >
               <span>{{ data.text }}</span>
@@ -92,10 +94,10 @@
             <span v-else-if="data.type == 'Server' || data.type == 'Database'">
               <span v-html="data.object.displayName"></span>
             </span>
-            <!-- <span v-else-if="data.type == 'Table' || data.type == 'Database'">
+            <span v-else-if="data.type == 'Table' || data.type == 'Database'">
               <span>{{ data.object.name }}</span>
-            </span> -->
-            <span v-else> {{ data.object.name }}</span>
+            </span>
+            <span v-else> {{ data.object.displayName }}</span>
           </div>
           <div class="tree-node-button">
             <el-dropdown
@@ -484,69 +486,71 @@ export default defineComponent({
         menu.push(renameMenu);
         menu.push(refreshMenu);
       } else if (treeNode.type == "Database") {
-        const connectionId = treeNode.connectionId;
-        if (connectionId) {
-          //默认库
+        if (treeNode.index == undefined) {
+          const connectionId = treeNode.connectionId;
+          if (connectionId) {
+            //默认库
+            menu.push({
+              key: 30,
+              text: "关闭数据库",
+              disabled: false,
+              onClick: handleCloseDB,
+            });
+          } else {
+            menu.push({
+              key: 31,
+              text: "打开数据库",
+              disabled: false,
+              onClick: handleOpenDB,
+            });
+          }
           menu.push({
-            key: 30,
-            text: "关闭数据库",
+            key: 32,
+            text: "新建数据库",
             disabled: false,
-            onClick: handleCloseDB,
+            onClick: openObjectAdd,
           });
-        } else {
           menu.push({
-            key: 31,
-            text: "打开数据库",
+            key: 33,
+            text: "编辑数据库",
             disabled: false,
-            onClick: handleOpenDB,
+            onClick: openObjectEdit,
+          });
+          menu.push(removeMenu);
+        } else {
+          //模式、角色、表空间、管理
+          menu.push({
+            key: 40,
+            text: "新建模式",
+            disabled: false,
+            onClick: openObjectAdd,
           });
         }
-        menu.push({
-          key: 32,
-          text: "新建数据库",
-          disabled: false,
-          onClick: openObjectAdd,
-        });
-        menu.push({
-          key: 33,
-          text: "编辑数据库",
-          disabled: false,
-          onClick: openObjectEdit,
-        });
-        menu.push(removeMenu);
-        menu.push(refreshMenu);
-      } else if (treeNode.type == "SchemaGroup") {
-        //模式、角色、表空间、管理
-        menu.push({
-          key: 40,
-          text: "新建模式",
-          disabled: false,
-          onClick: openObjectAdd,
-        });
         menu.push(refreshMenu);
       } else if (treeNode.type == "Schema") {
-        menu.push({
-          key: 41,
-          text: "新建模式",
-          disabled: false,
-          onClick: openObjectAdd,
-        });
-        menu.push({
-          key: 42,
-          text: "编辑模式",
-          disabled: false,
-          onClick: openObjectEdit,
-        });
-        menu.push(removeMenu);
-        menu.push(renameMenu);
-        menu.push(refreshMenu);
-      } else if (treeNode.type == "TableGroup") {
-        menu.push({
-          key: 50,
-          text: "新建表",
-          disabled: false,
-          onClick: openObjectAdd,
-        });
+        if (treeNode.index == undefined) {
+          menu.push({
+            key: 50,
+            text: "新建模式",
+            disabled: false,
+            onClick: openObjectAdd,
+          });
+          menu.push({
+            key: 51,
+            text: "编辑模式",
+            disabled: false,
+            onClick: openObjectEdit,
+          });
+          menu.push(removeMenu);
+          menu.push(renameMenu);
+        } else {
+          menu.push({
+            key: 60,
+            text: "新建表",
+            disabled: false,
+            onClick: openObjectAdd,
+          });
+        }
         menu.push(refreshMenu);
       } else if (treeNode.type == "Table") {
         menu.push({
@@ -599,7 +603,10 @@ export default defineComponent({
         //右键group、点击工具栏创建server
         state.treeNode = node;
         switchServerAddVisable(true);
-      } else if (type === "Server" || type === "Database") {
+      } else if (
+        type === "Server" ||
+        (type === "Database" && index == undefined)
+      ) {
         //在server节点、database节点，新建database
         if (type === "Server") {
           state.treeNode = node;
@@ -632,10 +639,13 @@ export default defineComponent({
           connectionId: state.treeNode.data.connectionId as string,
         };
         switchDBAddVisable(true);
-      } else if (type === "SchemaGroup" || type === "Schema") {
+      } else if (
+        (type === "Schema" && index == undefined) ||
+        (type === "Database" && index > -1)
+      ) {
         //在模式、schema节点，新建schema
 
-        if (type === "SchemaGroup") {
+        if (type === "Database") {
           state.treeNode = node;
         } else {
           state.treeNode = node.parent;
@@ -648,24 +658,27 @@ export default defineComponent({
           connectionId: state.treeNode.data.connectionId as string,
         };
         switchSchemaAddVisable(true);
-      } else if (type === "TableGroup" || type === "Table") {
+      } else if (
+        (type === "Table" && index == undefined) ||
+        (type === "Schema" && index > -1)
+      ) {
         //新建schema
-        if (type === "TableGroup") {
+        if (type === "Schema") {
           state.treeNode = node;
         } else {
           state.treeNode = node.parent;
         }
 
-        // state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
-        // const val = JSON.stringify(state.treeNode!.data);
-        // sessionStorage.setItem("create-table-session", val);
-        // emit("addTable");
-        checkConnect(state.treeNode.data.connectionId).then(() => {
-          state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
-          const val = JSON.stringify(state.treeNode!.data);
-          sessionStorage.setItem("create-table-session", val);
-          emit("addTable");
-        });
+        state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
+        const val = JSON.stringify(state.treeNode!.data);
+        sessionStorage.setItem("create-table-session", val);
+        emit("addTable");
+        // checkConnect(state.treeNode.data.connectionId).then(() => {
+        //   state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
+        //   const val = JSON.stringify(state.treeNode!.data);
+        //   sessionStorage.setItem("create-table-session", val);
+        //   emit("addTable");
+        // });
       }
     };
     /**
@@ -1028,82 +1041,113 @@ export default defineComponent({
         // return resolve(node.data.children);
       } else if (node.data.type == "Server") {
         return getDatabaseNode(node, resolve);
-      } else if (node.data.type == "Database") {
-        //显示模式、角色、表空间、管理
-        const treeData = node.data as TreeNode<Database>;
-        const dbs: any[] = [];
-        dbs.push({
-          type: "SchemaGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "模式",
-        });
-        dbs.push({
-          type: "RoleGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "角色",
-        });
-        dbs.push({
-          type: "TableSpaceGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "表空间",
-          index: 2,
-        });
+      } else if (
+        node.data.type == "Database" &&
+        node.data.typeGroup == undefined
+      ) {
+        if (node.data.index == undefined) {
+          //显示模式、角色、表空间、管理
+          const treeData = node.data as TreeNode<Database>;
+          const dbs: any[] = [];
+          dbs.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            typeGroup: "DatabaseGroup",
+            text: "模式",
+            index: 0,
+          });
+          dbs.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "角色",
+            index: 1,
+          });
+          dbs.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "表空间",
+            index: 2,
+          });
+          dbs.push({
+            type: "Database",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "管理",
+            index: 3,
+          });
 
-        //a)首先判断是否有connectionId
-        if (treeData.connectionId) {
-          return resolve(dbs);
+          //a)首先判断是否有connectionId
+          if (treeData.connectionId) {
+            return resolve(dbs);
+          } else {
+            treeData.nodePath = getNodePath(node);
+            openDatabase(treeData).then(
+              (respon: ResponseData<string>) => {
+                console.log("succ respon ", respon);
+                dbs.forEach((element) => {
+                  element.connectionId = respon.data;
+                });
+                treeData.connectionId = respon.data;
+                return resolve(dbs);
+              },
+              (err) => {
+                console.log("err", err);
+                handleCloseNode(node);
+                return resolve([]);
+              }
+            );
+          }
         } else {
-          treeData.nodePath = getNodePath(node);
-          openDatabase(treeData).then(
-            (respon: ResponseData<string>) => {
-              console.log("succ respon ", respon);
-              dbs.forEach((element) => {
-                element.connectionId = respon.data;
-              });
-              treeData.connectionId = respon.data;
-              return resolve(dbs);
-            },
-            (err) => {
-              console.log("err", err);
-              handleCloseNode(node);
-              return resolve([]);
-            }
-          );
+          if (node.data.index == 0) {
+            return getSchemaNode(node, resolve);
+          } else if (node.data.index == 1) {
+            return resolve([]);
+          }
+          return resolve([]);
         }
-      } else if (node.data.type == "SchemaGroup") {
-        return getSchemaNode(node, resolve);
       } else if (node.data.type == "Schema") {
-        //显示表、视图、物化视图
-        const treeData = node.data as TreeNode<Schema>;
-        const schemas: any[] = [];
-        schemas.push({
-          type: "TableGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "表",
-        });
-        schemas.push({
-          type: "ViewsGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "视图",
-        });
-        return resolve(schemas);
-      } else if (node.data.type == "TableGroup") {
-        return getTableNode(node, resolve);
+        if (node.data.index == undefined) {
+          //显示表、视图、物化视图
+          const treeData = node.data as TreeNode<Schema>;
+          const schemas: any[] = [];
+          schemas.push({
+            type: "Schema",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "表",
+            index: 0,
+          });
+          schemas.push({
+            type: "Schema",
+            contextId: "",
+            nodePath: "",
+            connectionId: treeData.connectionId,
+            object: treeData.object,
+            text: "视图",
+            index: 1,
+          });
+          return resolve(schemas);
+        } else {
+          if (node.data.index == 0) {
+            return getTableNode(node, resolve);
+          } else if (node.data.index == 1) {
+            return resolve([]);
+          }
+          return resolve([]);
+        }
       }
     };
     /**

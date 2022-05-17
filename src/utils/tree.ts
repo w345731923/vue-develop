@@ -23,11 +23,11 @@ const getNodeName = (data: string[], node: Node) => {
             data.push('/serverGroupName/' + treeData.object.name);
         } else if (treeData.type == 'Server') {
             data.push('/serverName/' + treeData.object.name);
-        } else if (treeData.type == 'Database' && treeData.index == undefined) {
+        } else if (treeData.type == 'Database') {
             data.push('/databaseName/' + treeData.object.name);
-        } else if (treeData.type == 'Schema' && treeData.index == undefined) {
+        } else if (treeData.type == 'Schema') {
             data.push('/schemaName/' + treeData.object.name);
-        } else if (treeData.type == 'Table' && treeData.index == undefined) {
+        } else if (treeData.type == 'Table') {
             data.push('/tableName/' + treeData.object.name);
         }
         getNodeName(data, node.parent);
