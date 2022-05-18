@@ -82,10 +82,19 @@
       </el-tabs>
     </div>
   </div>
+  <template v-if="state.nameVisible">
+    <TableNameDialog
+      :visible="state.nameVisible"
+      @saveModal="tableNameSubmit"
+      @closeModal="state.nameVisible = false"
+    />
+  </template>
 </template>
 
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
+import TableNameDialog from "./tableName.vue";
+
 import { ElMessage } from "element-plus";
 import { tableAdd } from "@/api/treeNode";
 import { Avatar } from "@element-plus/icons-vue";
@@ -103,12 +112,14 @@ interface IState {
   tableData: FieldList[];
   columnVisible: boolean;
   treeData: TreeNode<any> | undefined;
+  nameVisible: boolean;
 }
 export default defineComponent({
   name: "table-design",
   components: {
     Avatar,
     ColumnTab,
+    TableNameDialog,
   },
   emits: [],
   setup(props, { emit }) {
@@ -125,19 +136,18 @@ export default defineComponent({
       tableData: [],
       columnVisible: false,
       treeData: undefined,
+      nameVisible: false,
     });
 
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
       state.tabsActive = pane.props.name;
     };
-    /**
-     * 保存表
-     */
-    const saveTable = () => {
+
+    const tableNameSubmit = (form: { name: string }) => {
       const data: TableDesignModel = {
         "@clazz": "com.highgo.developer.model.HgdbTable",
         fieldList: state.tableData,
-        name: "c12",
+        name: form.name,
         comment: "",
       };
       const tar = {
@@ -150,6 +160,29 @@ export default defineComponent({
       tableAdd(tar).then((resp: any) => {
         console.log("tableAdd resp", resp);
       });
+    };
+
+    /**
+     * 保存表
+     */
+    const saveTable = () => {
+      // const data: TableDesignModel = {
+      //   "@clazz": "com.highgo.developer.model.HgdbTable",
+      //   fieldList: state.tableData,
+      //   name: "c122",
+      //   comment: "",
+      // };
+      // const tar = {
+      //   type: "Table",
+      //   object: data,
+      //   connectionId: state.treeData?.contextId,
+      //   nodePath: state.treeData?.nodePath,
+      // } as TreeNode<TableDesignModel>;
+
+      // tableAdd(tar).then((resp: any) => {
+      //   console.log("tableAdd resp", resp);
+      // });
+      state.nameVisible = true;
     };
     //===============字段========================
     const appendColumnVis = (flag: boolean) => {
@@ -199,6 +232,7 @@ export default defineComponent({
       appendColumn,
       removeColumn,
       saveTable,
+      tableNameSubmit,
     };
   },
   data() {

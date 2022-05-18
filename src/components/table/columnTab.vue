@@ -180,7 +180,7 @@ import {
 import { getDataType, getCollation } from "@/api/treeNode";
 const formRef = ref<FormInstance>();
 const demo: FieldList = {
-  '@clazz': "com.highgo.developer.model.HgdbField",
+  "@clazz": "com.highgo.developer.model.HgdbField",
   id: -new Date().getTime(),
   name: "",
   dataType: { name: "", length: 0, decimalNumber: 0 },
@@ -318,6 +318,7 @@ export default defineComponent({
       if (!formEl) return;
       emit("visableFlag", false);
       state.isAdd = true;
+      state.collationVis = false;
     };
     //保存
     const submitForm = (formEl: FormInstance | undefined) => {
