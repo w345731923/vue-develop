@@ -76,8 +76,6 @@ export default defineComponent({
      */
     const submitForm = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
-      console.log("submitForm", formEl);
-
       formEl.validate((valid) => {
         if (valid) {
           emit("saveModal", ruleForm);

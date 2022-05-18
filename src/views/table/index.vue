@@ -15,7 +15,7 @@
             <el-icon><Avatar /></el-icon>
             添加字段
           </el-button>
-          <el-button size="small" color="#f2f2f2" @click="removeColumn(true)"
+          <el-button size="small" color="#f2f2f2" @click="test1"
             ><el-icon><Avatar /></el-icon>删除字段</el-button
           >
         </el-button-group>
@@ -111,8 +111,9 @@ interface IState {
   tabsActive: string | number;
   tableData: FieldList[];
   columnVisible: boolean;
-  treeData: TreeNode<any> | undefined;
+  treeData: TreeNode<TableDesignModel> | undefined;
   nameVisible: boolean;
+  isAdd: boolean; //新增还是修改
 }
 export default defineComponent({
   name: "table-design",
@@ -132,11 +133,13 @@ export default defineComponent({
       }
     });
     const state: IState = reactive({
+      isAdd: true, //新增还是修改
       tabsActive: "columns",
-      tableData: [],
-      columnVisible: false,
-      treeData: undefined,
-      nameVisible: false,
+      treeData: undefined, //树形菜单值
+      nameVisible: false, //输入表名称
+
+      tableData: [], //字段列表--fieldList
+      columnVisible: false, //添加字段
     });
 
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
@@ -144,45 +147,57 @@ export default defineComponent({
     };
 
     const tableNameSubmit = (form: { name: string }) => {
+      //对象复制
+      let target = {} as TreeNode<TableDesignModel>;
+      Object.assign(target, state.treeData);
+
       const data: TableDesignModel = {
         "@clazz": "com.highgo.developer.model.HgdbTable",
         fieldList: state.tableData,
         name: form.name,
         comment: "",
       };
-      const tar = {
-        type: "Table",
-        object: data,
-        connectionId: state.treeData?.contextId,
-        nodePath: state.treeData?.nodePath,
-      } as TreeNode<TableDesignModel>;
+      target.type = "Table";
+      target.object = data;
 
-      tableAdd(tar).then((resp: any) => {
+      tableAdd(target).then((resp) => {
         console.log("tableAdd resp", resp);
+        state.nameVisible = false;
+        //刷新设计表数据
+        refreshTableDesign(resp.data, target.connectionId!, target.nodePath);
+        state.isAdd = false;
       });
     };
 
+    const refreshTableDesign = (
+      resp: TreeNode<TableDesignModel>,
+      connectionId: string,
+      nodePath: string
+    ) => {
+      //刷新设计表数据
+      state.treeData = resp;
+      state.treeData.connectionId = connectionId;
+      state.treeData.nodePath = nodePath;
+      //给表格重置值
+      state.tableData = resp.object.fieldList;
+    };
     /**
      * 保存表
      */
     const saveTable = () => {
-      // const data: TableDesignModel = {
-      //   "@clazz": "com.highgo.developer.model.HgdbTable",
-      //   fieldList: state.tableData,
-      //   name: "c122",
-      //   comment: "",
-      // };
-      // const tar = {
-      //   type: "Table",
-      //   object: data,
-      //   connectionId: state.treeData?.contextId,
-      //   nodePath: state.treeData?.nodePath,
-      // } as TreeNode<TableDesignModel>;
-
-      // tableAdd(tar).then((resp: any) => {
-      //   console.log("tableAdd resp", resp);
-      // });
-      state.nameVisible = true;
+      if (state.isAdd) {
+        //新增表，输入表名称
+        state.nameVisible = true;
+      } else {
+        state.treeData!.object.fieldList = state.tableData;
+        tableAdd(state.treeData!).then((resp) => {
+          refreshTableDesign(
+            resp.data,
+            state.treeData!.connectionId!,
+            state.treeData!.nodePath!
+          );
+        });
+      }
     };
     //===============字段========================
     const appendColumnVis = (flag: boolean) => {
@@ -224,7 +239,9 @@ export default defineComponent({
       }
       console.log("removeColumn state.tableData", state.tableData);
     };
-
+    const test1 = () => {
+      console.log("test1 state", state);
+    };
     return {
       state,
       handleTabClick,
@@ -233,6 +250,7 @@ export default defineComponent({
       removeColumn,
       saveTable,
       tableNameSubmit,
+      test1,
     };
   },
   data() {

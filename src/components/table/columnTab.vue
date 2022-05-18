@@ -279,6 +279,14 @@ export default defineComponent({
       { immediate: true }
     );
     watch(
+      tableData,
+      (newValue) => {
+        console.log("watch tableData", newValue);
+        state.tableData = newValue as FieldList[];
+      },
+      { immediate: true }
+    );
+    watch(
       treeData,
       (newValue) => {
         console.log("watch treeData", newValue);
