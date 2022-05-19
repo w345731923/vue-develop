@@ -198,8 +198,7 @@ export interface DataType {
 
 export interface FieldList {
   '@clazz': string;//"com.highgo.developer.model.HgdbTable"
-  id?:number,//前端使用的row key
-  oid?: number,
+  oid: number,
   name: string,//"id"  字段名
   dataType: FieldDataType,
   isNotNull: boolean,//是否不为NULL
@@ -268,4 +267,11 @@ export interface TableDesignModel {
   comment: string,//表注释
   partitionDef?: string,
   foreignServerName?: string,
+}
+/**
+ * 修改Table
+ */
+ export interface TableEditForm {
+  newObject: TreeNode<TableDesignModel>
+  oldObject: TreeNode<TableDesignModel>;
 }

@@ -96,19 +96,21 @@ import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 import TableNameDialog from "./tableName.vue";
 
 import { ElMessage } from "element-plus";
-import { tableAdd } from "@/api/treeNode";
+import { tableAdd, tableEdit } from "@/api/treeNode";
 import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "@/components/table/columnTab.vue";
 import { TabsPaneContext } from "element-plus";
 import {
   ResponseData,
   TreeNode,
-  DataType,
+  TableEditForm,
   FieldList,
   TableDesignModel,
 } from "@/types";
 interface IState {
   tabsActive: string | number;
+  oldObject: string;
+  oldObjectField: string;
   tableData: FieldList[];
   columnVisible: boolean;
   treeData: TreeNode<TableDesignModel> | undefined;
@@ -125,15 +127,27 @@ export default defineComponent({
   emits: [],
   setup(props, { emit }) {
     onMounted(() => {
-      console.log("table-design onMounted");
-      const sessionVal = sessionStorage.getItem("create-table-session");
-      if (sessionVal != null) {
-        state.treeData = JSON.parse(sessionVal!) as TreeNode<any>;
-        console.log("sessionVal convert treeData = ", state.treeData);
+      console.log("table-design onMounted...");
+      let createSession = sessionStorage.getItem("create-table-session");
+      if (createSession) {
+        //新建表
+        state.treeData = JSON.parse(createSession!) as TreeNode<any>;
+        console.log("create-table createSession treeData = ", state.treeData);
+        sessionStorage.setItem("create-table-session", "");
+      }
+      const designSession = sessionStorage.getItem("table-design-session");
+      if (designSession) {
+        //设计表
+        const data = JSON.parse(designSession!) as TreeNode<any>;
+        console.log("table-design designSession data = ", data);
+        sessionStorage.setItem("table-design-session", "");
+        refreshTableDesign(data, data.connectionId!, data.nodePath);
       }
     });
     const state: IState = reactive({
       isAdd: true, //新增还是修改
+      oldObject: "", //修改时用的oldObject
+      oldObjectField: "", //修改时用的FieldList
       tabsActive: "columns",
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
@@ -165,32 +179,57 @@ export default defineComponent({
         state.nameVisible = false;
         //刷新设计表数据
         refreshTableDesign(resp.data, target.connectionId!, target.nodePath);
-        state.isAdd = false;
       });
     };
 
+    //刷新设计表数据
     const refreshTableDesign = (
       resp: TreeNode<TableDesignModel>,
       connectionId: string,
       nodePath: string
     ) => {
-      //刷新设计表数据
-      state.treeData = resp;
-      state.treeData.connectionId = connectionId;
-      state.treeData.nodePath = nodePath;
-      //给表格重置值
+      state.isAdd = false;
+      resp.nodePath = nodePath;
+      resp.connectionId = connectionId;
+      //给表格授权RESPONSE值
       state.tableData = resp.object.fieldList;
+      //保存old数据，用于修改
+      state.oldObjectField = JSON.stringify(resp.object.fieldList);
+      //清空无用字段，最小化保存字符串
+      resp.object.fieldList = [];
+      resp.object.childrenModel = [];
+      state.oldObject = JSON.stringify(resp);
+      //刷新设计表动态数据
+      state.treeData = resp;
+
+      // const copyRespData = {} as TreeNode<TableDesignModel>;
+      // Object.assign(copyRespData, resp); //浅拷贝
+      // copyRespData.object.fieldList = [];
+      // copyRespData.object.childrenModel = [];
     };
     /**
      * 保存表
      */
     const saveTable = () => {
+      console.log('state',state)
+      debugger
       if (state.isAdd) {
         //新增表，输入表名称
         state.nameVisible = true;
       } else {
+        //newObject
         state.treeData!.object.fieldList = state.tableData;
-        tableAdd(state.treeData!).then((resp) => {
+        //oldObject
+        const oldData = JSON.parse(
+          state.oldObject
+        ) as TreeNode<TableDesignModel>;
+        oldData.object.fieldList = JSON.parse(state.oldObjectField);
+        const data: TableEditForm = {
+          newObject: state.treeData!,
+          oldObject: oldData,
+        };
+        debugger;
+        tableEdit(data).then((resp) => {
           refreshTableDesign(
             resp.data,
             state.treeData!.connectionId!,
@@ -210,11 +249,11 @@ export default defineComponent({
         (item) => item.name === form.name
       );
       //判断新增还是修改
-      const index = state.tableData.findIndex((item) => item.id === form.id);
+      const index = state.tableData.findIndex((item) => item.oid === form.oid);
       if (nIndex > -1 && nIndex != index) {
         //重名，且不是self，报错
         ElMessage({
-          message: "表名称不能相同",
+          message: "列名称不能相同",
           type: "error",
           duration: 5 * 1000,
         });
@@ -233,7 +272,7 @@ export default defineComponent({
       appendColumnVis(false);
     };
     const removeColumn = (form: FieldList) => {
-      const index = state.tableData.findIndex((item) => item.id === form.id);
+      const index = state.tableData.findIndex((item) => item.oid === form.oid);
       if (index > -1) {
         state.tableData.splice(index, 1);
       }

@@ -181,7 +181,7 @@ import { getDataType, getCollation } from "@/api/treeNode";
 const formRef = ref<FormInstance>();
 const demo: FieldList = {
   "@clazz": "com.highgo.developer.model.HgdbField",
-  id: -new Date().getTime(),
+  oid: -new Date().getTime(),
   name: "",
   dataType: { name: "", length: 0, decimalNumber: 0 },
   isNotNull: false,
@@ -232,7 +232,7 @@ export default defineComponent({
       // type: [{ required: true, message: "请选择数据类型！", trigger: "blur" }],
     });
     const getInitData = () => {
-      if (state.treeData != null) {
+      if (state.treeData != null && state.dataTypeList.length == 0) {
         getDataType(state.treeData).then(
           (responseData: ResponseData<DataType[]>) => {
             console.log("getDataType ResponseData", responseData);
@@ -270,7 +270,7 @@ export default defineComponent({
 
         state.columnVisible = newValue;
         if (newValue && state.isAdd) {
-          demo.id = -new Date().getTime();
+          demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
           resetFields(demo);
           state.form.dataType = { name: "", length: 0, decimalNumber: 0 };

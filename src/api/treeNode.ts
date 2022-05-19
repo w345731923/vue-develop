@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel
+    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel,TableEditForm
 } from '@/types'
 
 
@@ -220,11 +220,11 @@ export async function checkConnect(connectionID: string) {
     });
 }
 /**
- * 编辑表
+ * 设计表
  * @returns 
  */
 export async function getTableDesign(data: TreeNode<TableSimple>) {
-    return await http.request<ResponseData<TreeNode<any>[]>>('/table/designTable', { method: 'POST', data });
+    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/designTable', { method: 'POST', data });
 }
 /**
  * 查询数据类型
@@ -246,4 +246,11 @@ export async function getCollation(data: TreeNode<any>) {
  */
 export async function tableAdd(data: TreeNode<TableDesignModel>) {
     return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/add', { method: 'POST', data });
+}
+/**
+ * 修改表
+ * @returns 
+ */
+ export async function tableEdit(data: TableEditForm) {
+    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/edit', { method: 'POST', data });
 }

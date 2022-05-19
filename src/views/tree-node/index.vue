@@ -559,7 +559,7 @@ export default defineComponent({
           key: 62,
           text: "设计表",
           disabled: false,
-          onClick: aaa,
+          onClick: openTableDesign,
         });
         menu.push({
           key: 60,
@@ -575,7 +575,6 @@ export default defineComponent({
           onClick: openObjectAdd,
         });
         menu.push(renameMenu);
-
         menu.push(refreshMenu);
       }
       state.dropdownMenu = menu;
@@ -593,8 +592,6 @@ export default defineComponent({
     const openObjectAdd = (node: Node) => {
       console.log("openObjectAdd node", node);
       const type = node.data.type;
-      const index = node.data.index;
-
       if (type === "ServerGroup") {
         //右键group、点击工具栏创建server
         state.treeNode = node;
@@ -649,17 +646,12 @@ export default defineComponent({
         };
         switchSchemaAddVisable(true);
       } else if (type === "TableGroup" || type === "Table") {
-        //新建schema
+        //新建表
         if (type === "TableGroup") {
           state.treeNode = node;
         } else {
           state.treeNode = node.parent;
         }
-
-        // state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
-        // const val = JSON.stringify(state.treeNode!.data);
-        // sessionStorage.setItem("create-table-session", val);
-        // emit("addTable");
         checkConnect(state.treeNode.data.connectionId).then(() => {
           state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
           const val = JSON.stringify(state.treeNode!.data);
@@ -1011,6 +1003,25 @@ export default defineComponent({
       });
     };
 
+    //==============================Table================================
+    //设计表
+    const openTableDesign = (node: Node) => {
+      // state.treeNode = node;
+      const data = node.data as TreeNode<TableSimple>;
+      data.nodePath = getNodePath(node);
+
+      getTableDesign(data).then((responseData) => {
+        console.log("getTableDesign succ responseData ", responseData);
+
+        responseData.data.object.childrenModel = [];
+        responseData.data.nodePath = data.nodePath;
+        responseData.data.connectionId = data.connectionId;
+        const val = JSON.stringify(responseData.data);
+        sessionStorage.setItem("table-design-session", val);
+        emit("addTable");
+      });
+    };
+
     /**
      * 展开属性菜单 懒加载
      */
@@ -1194,17 +1205,6 @@ export default defineComponent({
           handleCloseNode(node);
         }
       );
-    };
-    /**
-     * 设计表
-     */
-    const aaa = (node: Node) => {
-      console.log("node ", node);
-      const data = node.data as TreeNode<any>;
-      data.nodePath = getNodePath(node);
-      getTableDesign(data).then((respon: ResponseData<TreeNode<any>[]>) => {
-        console.log("getTableDesign succ respon ", respon);
-      });
     };
     return {
       treeRef,
