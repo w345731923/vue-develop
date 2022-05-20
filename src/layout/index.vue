@@ -16,6 +16,7 @@
         class="pane_flex right home"
         :tabActiveName="state.tabActiveName"
         :editableTabs="state.editableTabs"
+        @modifyTitle="modifyTitle"
       />
       <!-- :removeTab="removeTab" -->
     </div>
@@ -48,7 +49,7 @@ const ruleFormRef = ref<any>();
  * https://v3.vuejs.org/guide/instance.html#lifecycle-diagram
  */
 export default defineComponent({
-  name: "Home",
+  name: "LayoutIndex",
   components: {
     vHeader,
     vSidebar,
@@ -88,15 +89,16 @@ export default defineComponent({
       }
       console.log(state.treeData);
     };
-    const addTable = () => {
+    const addTable = (title: string) => {
+      console.log("LayoutIndex addTable", addTable);
       const currentTime = new Date().getTime();
       let tabId = "";
-      const newTitle = `newTable@postgres.public(localhost)`;
       tabId = "create-table" + currentTime;
+      sessionStorage.setItem("tabId", tabId);
       state.editableTabs.push({
-        title: newTitle,
+        title: title,
         name: tabId,
-        currentView: 'table-create',
+        currentView: "table-create",
       });
       state.tabActiveName = tabId;
     };
@@ -202,6 +204,15 @@ export default defineComponent({
       //   };
       // }
     };
+    const modifyTitle = (tabId: string, title: string) => {
+      console.log("LayoutIndex modifyTitle", tabId, title);
+      const index = state.editableTabs.findIndex((item) => (item.name = tabId));
+      state.editableTabs[index].title = title;
+    };
+    const test1 = () => {
+      console.log("state.editableTabs", state.editableTabs);
+      state.editableTabs[0].title = "123";
+    };
     return {
       state,
       queryRoot,
@@ -209,6 +220,8 @@ export default defineComponent({
       addTable,
       drag,
       ruleFormRef,
+      modifyTitle,
+      test1,
     };
   },
 

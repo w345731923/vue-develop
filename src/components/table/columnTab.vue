@@ -266,8 +266,6 @@ export default defineComponent({
     watch(
       columnVisible,
       (newValue) => {
-        console.log("watch columnVisible", newValue);
-
         state.columnVisible = newValue;
         if (newValue && state.isAdd) {
           demo.oid = -new Date().getTime();
@@ -281,7 +279,6 @@ export default defineComponent({
     watch(
       tableData,
       (newValue) => {
-        console.log("watch tableData", newValue);
         state.tableData = newValue as FieldList[];
       },
       { immediate: true }
@@ -289,7 +286,6 @@ export default defineComponent({
     watch(
       treeData,
       (newValue) => {
-        console.log("watch treeData", newValue);
         state.treeData = newValue as TreeNode<any>;
         getInitData();
       },

@@ -355,9 +355,8 @@ export default defineComponent({
   },
   props: {
     treeData: Array,
-    addTreeNode: Function,
   },
-  emits: ["addTable"],
+  emits: ["addTable","modifyTabsTitle"],
   setup(props, { emit }) {
     const treeRef: Ref = ref(null); //树形结果对象
     const buttonDropdown = ref(); //节点扩展按钮下拉对象
@@ -656,7 +655,9 @@ export default defineComponent({
           state.treeNode!.data.nodePath = getNodePath(state.treeNode!);
           const val = JSON.stringify(state.treeNode!.data);
           sessionStorage.setItem("create-table-session", val);
-          emit("addTable");
+          const names = state.treeNode!.data.nodePath.split("/");
+          //表名@数据库名.模式名
+          emit("addTable", "newtable@" + names[7] + "." + names[5]);
         });
       }
     };
@@ -1014,11 +1015,14 @@ export default defineComponent({
         console.log("getTableDesign succ responseData ", responseData);
 
         responseData.data.object.childrenModel = [];
+        //hgdbDeveloper://serverName/test1/databaseName/f1/schemaName/f2/tableName/t1
         responseData.data.nodePath = data.nodePath;
         responseData.data.connectionId = data.connectionId;
         const val = JSON.stringify(responseData.data);
         sessionStorage.setItem("table-design-session", val);
-        emit("addTable");
+        const names = responseData.data.nodePath.split("/");
+        //表名@数据库名.模式名
+        emit("addTable", names[9] + "@" + names[7] + "." + names[5]);
       });
     };
 

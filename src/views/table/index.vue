@@ -108,6 +108,7 @@ import {
   TableDesignModel,
 } from "@/types";
 interface IState {
+  tabId: string;
   tabsActive: string | number;
   oldObject: string;
   oldObjectField: string;
@@ -124,10 +125,15 @@ export default defineComponent({
     ColumnTab,
     TableNameDialog,
   },
-  emits: [],
+  props: {
+    modifyTitle: Function,
+  },
+  emits: ["modifyTitle"],
   setup(props, { emit }) {
     onMounted(() => {
       console.log("table-design onMounted...");
+      state.tabId = sessionStorage.getItem("tabId") as string;
+
       let createSession = sessionStorage.getItem("create-table-session");
       if (createSession) {
         //新建表
@@ -145,10 +151,11 @@ export default defineComponent({
       }
     });
     const state: IState = reactive({
+      tabId: "",
+      tabsActive: "columns",
       isAdd: true, //新增还是修改
       oldObject: "", //修改时用的oldObject
       oldObjectField: "", //修改时用的FieldList
-      tabsActive: "columns",
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
 
@@ -177,8 +184,18 @@ export default defineComponent({
       tableAdd(target).then((resp) => {
         console.log("tableAdd resp", resp);
         state.nameVisible = false;
+        ElMessage({
+          message: "连接成功！",
+          type: "success",
+        });
         //刷新设计表数据
         refreshTableDesign(resp.data, target.connectionId!, target.nodePath);
+        const names = target.nodePath.split("/");
+        emit(
+          "modifyTitle",
+          state.tabId,
+          form.name + "@" + names[7] + "." + names[5]
+        );
       });
     };
 
@@ -201,18 +218,11 @@ export default defineComponent({
       state.oldObject = JSON.stringify(resp);
       //刷新设计表动态数据
       state.treeData = resp;
-
-      // const copyRespData = {} as TreeNode<TableDesignModel>;
-      // Object.assign(copyRespData, resp); //浅拷贝
-      // copyRespData.object.fieldList = [];
-      // copyRespData.object.childrenModel = [];
     };
     /**
      * 保存表
      */
     const saveTable = () => {
-      console.log('state',state)
-      debugger
       if (state.isAdd) {
         //新增表，输入表名称
         state.nameVisible = true;
@@ -228,8 +238,11 @@ export default defineComponent({
           newObject: state.treeData!,
           oldObject: oldData,
         };
-        debugger;
         tableEdit(data).then((resp) => {
+          ElMessage({
+            message: "连接成功！",
+            type: "success",
+          });
           refreshTableDesign(
             resp.data,
             state.treeData!.connectionId!,
