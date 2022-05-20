@@ -10,6 +10,8 @@
       border
       :highlight-current-row="true"
       size="small"
+      style="width: 100%"
+      :max-height="state.tableHieght"
     >
       <el-table-column prop="name" label="字段名" align="center" />
       <el-table-column
@@ -196,6 +198,7 @@ interface IState {
   columnVisible: boolean;
   treeData: TreeNode<any>;
   tableData: FieldList[];
+  tableHieght: number;
   form: FieldList;
   dataTypeList: DataType[];
   isAdd: boolean; //add or update
@@ -250,11 +253,11 @@ export default defineComponent({
       }
     };
     const { columnVisible, treeData, tableData } = toRefs(props);
-    console.log("toRefs treeData", treeData);
     const state: IState = reactive({
       columnVisible: columnVisible.value,
       treeData: treeData.value as TreeNode<any>,
       tableData: tableData.value as FieldList[],
+      tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
       form: {} as FieldList,
       dataTypeList: [],
       isAdd: true,

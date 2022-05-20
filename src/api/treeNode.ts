@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel,TableEditForm
+    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel, TableEditForm
 } from '@/types'
 
 
@@ -245,12 +245,18 @@ export async function getCollation(data: TreeNode<any>) {
  * @returns 
  */
 export async function tableAdd(data: TreeNode<TableDesignModel>) {
-    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/add', { method: 'POST', data });
+    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/add', {
+        timeout: 20000,
+        method: 'POST', data
+    });
 }
 /**
  * 修改表
  * @returns 
  */
- export async function tableEdit(data: TableEditForm) {
-    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/edit', { method: 'POST', data });
+export async function tableEdit(data: TableEditForm) {
+    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/edit', {
+        timeout: 20000,
+        method: 'POST', data
+    });
 }

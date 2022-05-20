@@ -16,7 +16,7 @@ const defaultConfig: AxiosRequestConfig = {
   baseURL:'/api/v2',
   // baseURL: "http://192.168.110.117:8088",
   // baseURL: "http://192.168.8.75:8088",
-  timeout: 1000,
+  timeout: 10000,
   headers: {
     Accept: "application/json, text/plain, */*",
     "Content-Type": "application/json",

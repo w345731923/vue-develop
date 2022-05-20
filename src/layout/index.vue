@@ -90,7 +90,7 @@ export default defineComponent({
       console.log(state.treeData);
     };
     const addTable = (title: string) => {
-      console.log("LayoutIndex addTable", addTable);
+      // console.log("LayoutIndex addTable", addTable);
       const currentTime = new Date().getTime();
       let tabId = "";
       tabId = "create-table" + currentTime;

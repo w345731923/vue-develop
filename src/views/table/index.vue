@@ -94,6 +94,7 @@
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 import TableNameDialog from "./tableName.vue";
+import { getDataType, getCollation } from "@/api/treeNode";
 
 import { ElMessage } from "element-plus";
 import { tableAdd, tableEdit } from "@/api/treeNode";
@@ -185,7 +186,7 @@ export default defineComponent({
         console.log("tableAdd resp", resp);
         state.nameVisible = false;
         ElMessage({
-          message: "连接成功！",
+          message: "保存成功！",
           type: "success",
         });
         //刷新设计表数据
@@ -228,6 +229,7 @@ export default defineComponent({
         state.nameVisible = true;
       } else {
         //newObject
+
         state.treeData!.object.fieldList = state.tableData;
         //oldObject
         const oldData = JSON.parse(
@@ -240,14 +242,16 @@ export default defineComponent({
         };
         tableEdit(data).then((resp) => {
           ElMessage({
-            message: "连接成功！",
+            message: "保存成功！",
             type: "success",
           });
-          refreshTableDesign(
-            resp.data,
-            state.treeData!.connectionId!,
-            state.treeData!.nodePath!
-          );
+          if (resp.data) {
+            refreshTableDesign(
+              resp.data,
+              state.treeData!.connectionId!,
+              state.treeData!.nodePath!
+            );
+          }
         });
       }
     };
@@ -293,6 +297,24 @@ export default defineComponent({
     };
     const test1 = () => {
       console.log("test1 state", state);
+      getDataType(state.treeData!).then((responseData) => {
+        console.log("getDataType ResponseData", responseData);
+        responseData.data.forEach((item, index) => {
+          const demo: FieldList = {
+            "@clazz": "com.highgo.developer.model.HgdbField",
+            oid: -new Date().getTime() - index,
+            name: "a" + index,
+            dataType: { name: item.formatName, length: 0, decimalNumber: 0 },
+            isNotNull: false,
+            isPrimaryKey: false,
+            comment: "",
+            defaultValue: "", //默认
+            collationSpaceName: "", //规则1-1
+            collationName: "", //规则1-2
+          };
+          state.tableData.push(demo);
+        });
+      });
     };
     return {
       state,
