@@ -230,7 +230,7 @@ export interface TableDesignModel {
   foreignTableOptions?: [];
   primaryConstraintName?: string;//c1_pkey
   ruleList?: [];//[]
-  indexList?: [];//[]
+  indexList: IndexList[];//[]
   acl?: string,
   hasPartition?: boolean,
   oid?: number,
@@ -271,7 +271,25 @@ export interface TableDesignModel {
 /**
  * 修改Table
  */
- export interface TableEditForm {
+export interface TableEditForm {
   newObject: TreeNode<TableDesignModel>
   oldObject: TreeNode<TableDesignModel>;
 }
+//表-索引
+export interface IndexList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbIndex"
+  oid: number,
+  name: string,//索引名 "index_a2_t1"
+  columns: string,//索引字段，""1","444""
+  indexType: string,//索引方法  btree
+  isUnique: boolean,//唯一键
+  isClustered: boolean,//并发
+  comment: string,//注释
+  tablespaceName: string,//表空间 pg_default
+  reloption: number,//填充系数
+  constraint: string,//条件 "1 = 1"
+  expression?: string,//表达式
+  childrenModel?: [],
+  roleChildrenModel?: [],
+}
+

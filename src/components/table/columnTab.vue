@@ -217,10 +217,10 @@ export default defineComponent({
     treeData: Object,
     tableData: Array,
     saveModal: Function,
-    removeColumn: Function,
+    removeRow: Function,
     visableFlag: Function,
   },
-  emits: ["visableFlag", "saveModal", "removeColumn"],
+  emits: ["visableFlag", "saveModal", "removeRow"],
   setup(props, { emit }) {
     const validateType = (rule: any, value: any, callback: any) => {
       if (state.form.dataType.name === "") {
@@ -318,7 +318,7 @@ export default defineComponent({
 
     //删除按钮
     const removeColumnClick = (row: FieldList) => {
-      emit("removeColumn", row);
+      emit("removeRow", row);
     };
     //关闭
     const onClose = (formEl: FormInstance | undefined) => {

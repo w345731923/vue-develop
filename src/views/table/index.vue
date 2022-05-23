@@ -3,52 +3,50 @@
     <div class="tool-buttons">
       <div class="row-button">
         <el-button size="small" color="#f2f2f2" @click="saveTable">
-          <el-icon><Avatar /></el-icon>
+          <el-icon>
+            <Avatar />
+          </el-icon>
           保存
         </el-button>
         <el-button-group v-if="state.tabsActive == 'columns'">
-          <el-button
-            size="small"
-            color="#f2f2f2"
-            @click="appendColumnVis(true)"
-          >
-            <el-icon><Avatar /></el-icon>
+          <el-button size="small" color="#f2f2f2" @click="appendColumnVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>
             添加字段
           </el-button>
-          <el-button size="small" color="#f2f2f2" @click="test1"
-            ><el-icon><Avatar /></el-icon>删除字段</el-button
-          >
+          <el-button size="small" color="#f2f2f2" @click="test1">
+            <el-icon>
+              <Avatar />
+            </el-icon>删除字段
+          </el-button>
         </el-button-group>
         <el-button-group v-if="state.tabsActive == 'index'">
-          <el-button size="small" color="#f2f2f2"
-            ><el-icon><Avatar /></el-icon>添加索引</el-button
-          >
-          <el-button size="small" color="#f2f2f2"
-            ><el-icon><Avatar /></el-icon>删除索引</el-button
-          >
+          <el-button size="small" color="#f2f2f2" @click="appendIndexVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>添加索引
+          </el-button>
+          <el-button size="small" color="#f2f2f2">
+            <el-icon>
+              <Avatar />
+            </el-icon>删除索引
+          </el-button>
         </el-button-group>
       </div>
     </div>
 
     <!-- <img src="../assets/database.png" /> -->
     <div class="query-result">
-      <el-tabs
-        v-model="state.tabsActive"
-        type="card"
-        @tab-click="handleTabClick"
-      >
+      <el-tabs v-model="state.tabsActive" type="card" @tab-click="handleTabClick">
         <el-tab-pane label="字段" name="columns" style="margin: 0.5rem">
-          <ColumnTab
-            :treeData="state.treeData"
-            :tableData="state.tableData"
-            :columnVisible="state.columnVisible"
-            @saveModal="appendColumn"
-            @removeColumn="removeColumn"
-            @visableFlag="appendColumnVis"
-          />
+          <ColumnTab :treeData="state.treeData" :tableData="state.fieldList" :columnVisible="state.columnVisible"
+            @saveModal="appendColumn" @removeRow="removeColumn" @visableFlag="appendColumnVis" />
         </el-tab-pane>
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
-          <div>索引</div>
+          <IndexTab :treeData="state.treeData" :tableData="state.indexList" :indexVisible="state.indexVisible"
+            :tableSpaceList="state.tableSpaceList" @saveModal="appendIndex" @removeRow="removeIndex"
+            @visableFlag="appendIndexVis" />
         </el-tab-pane>
         <el-tab-pane label="外键" name="foreign" style="margin: 0.5rem">
           <div>外键</div>
@@ -83,29 +81,28 @@
     </div>
   </div>
   <template v-if="state.nameVisible">
-    <TableNameDialog
-      :visible="state.nameVisible"
-      @saveModal="tableNameSubmit"
-      @closeModal="state.nameVisible = false"
-    />
+    <TableNameDialog :visible="state.nameVisible" @saveModal="tableNameSubmit"
+      @closeModal="state.nameVisible = false" />
   </template>
 </template>
 
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 import TableNameDialog from "./tableName.vue";
-import { getDataType, getCollation } from "@/api/treeNode";
+import { getDataType, getDatabaseTableSpace } from "@/api/treeNode";
 
 import { ElMessage } from "element-plus";
 import { tableAdd, tableEdit } from "@/api/treeNode";
 import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "@/components/table/columnTab.vue";
+import IndexTab from "@/components/table/indexTab.vue";
+
 import { TabsPaneContext } from "element-plus";
 import {
-  ResponseData,
   TreeNode,
   TableEditForm,
   FieldList,
+  IndexList,
   TableDesignModel,
 } from "@/types";
 interface IState {
@@ -113,17 +110,22 @@ interface IState {
   tabsActive: string | number;
   oldObject: string;
   oldObjectField: string;
-  tableData: FieldList[];
+  fieldList: FieldList[];
+  indexList: IndexList[];
   columnVisible: boolean;
   treeData: TreeNode<TableDesignModel> | undefined;
   nameVisible: boolean;
+  indexVisible: boolean;
   isAdd: boolean; //新增还是修改
+  tableSpaceList: string[];//表空间
+
 }
 export default defineComponent({
   name: "table-design",
   components: {
     Avatar,
     ColumnTab,
+    IndexTab,
     TableNameDialog,
   },
   props: {
@@ -150,6 +152,11 @@ export default defineComponent({
         sessionStorage.setItem("table-design-session", "");
         refreshTableDesign(data, data.connectionId!, data.nodePath);
       }
+      //查询表空间
+      getDatabaseTableSpace(state.treeData!.connectionId!).then((responseData) => {
+        console.log("getDatabaseTableSpace ResponseData", responseData);
+        state.tableSpaceList = responseData.data;
+      })
     });
     const state: IState = reactive({
       tabId: "",
@@ -159,9 +166,14 @@ export default defineComponent({
       oldObjectField: "", //修改时用的FieldList
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
+      tableSpaceList: [],
 
-      tableData: [], //字段列表--fieldList
+      fieldList: [], //字段列表--fieldList
+      indexList: [], //索引列表--indexList
+
       columnVisible: false, //添加字段
+      indexVisible: false, //添加索引
+
     });
 
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
@@ -175,7 +187,8 @@ export default defineComponent({
 
       const data: TableDesignModel = {
         "@clazz": "com.highgo.developer.model.HgdbTable",
-        fieldList: state.tableData,
+        fieldList: state.fieldList,
+        indexList: state.indexList,
         name: form.name,
         comment: "",
       };
@@ -210,7 +223,7 @@ export default defineComponent({
       resp.nodePath = nodePath;
       resp.connectionId = connectionId;
       //给表格授权RESPONSE值
-      state.tableData = resp.object.fieldList;
+      state.fieldList = resp.object.fieldList;
       //保存old数据，用于修改
       state.oldObjectField = JSON.stringify(resp.object.fieldList);
       //清空无用字段，最小化保存字符串
@@ -230,7 +243,7 @@ export default defineComponent({
       } else {
         //newObject
 
-        state.treeData!.object.fieldList = state.tableData;
+        state.treeData!.object.fieldList = state.fieldList;
         //oldObject
         const oldData = JSON.parse(
           state.oldObject
@@ -260,13 +273,13 @@ export default defineComponent({
       state.columnVisible = flag;
     };
     const appendColumn = (form: FieldList) => {
-      console.log("appendColumnSubmit form", form);
+      console.log("appendColumn form", form);
       //校验重名
-      const nIndex = state.tableData.findIndex(
+      const nIndex = state.fieldList.findIndex(
         (item) => item.name === form.name
       );
       //判断新增还是修改
-      const index = state.tableData.findIndex((item) => item.oid === form.oid);
+      const index = state.fieldList.findIndex((item) => item.oid === form.oid);
       if (nIndex > -1 && nIndex != index) {
         //重名，且不是self，报错
         ElMessage({
@@ -278,22 +291,22 @@ export default defineComponent({
       }
 
       if (index > -1) {
-        const item = state.tableData[index];
-        state.tableData.splice(index, 1, {
+        const item = state.fieldList[index];
+        state.fieldList.splice(index, 1, {
           ...item,
           ...form,
         });
       } else {
-        state.tableData.push(form);
+        state.fieldList.push(form);
       }
       appendColumnVis(false);
     };
     const removeColumn = (form: FieldList) => {
-      const index = state.tableData.findIndex((item) => item.oid === form.oid);
+      const index = state.fieldList.findIndex((item) => item.oid === form.oid);
       if (index > -1) {
-        state.tableData.splice(index, 1);
+        state.fieldList.splice(index, 1);
       }
-      console.log("removeColumn state.tableData", state.tableData);
+      console.log("removeColumn state.fieldList", state.fieldList);
     };
     const test1 = () => {
       console.log("test1 state", state);
@@ -312,9 +325,39 @@ export default defineComponent({
             collationSpaceName: "", //规则1-1
             collationName: "", //规则1-2
           };
-          state.tableData.push(demo);
+          state.fieldList.push(demo);
         });
       });
+    };
+    //=========================索引=====================
+    const appendIndexVis = (flag: boolean) => {
+      state.indexVisible = flag;
+    };
+    const appendIndex = (form: IndexList) => {
+      console.log("appendIndex form", form);
+      //校验重名
+      // const nIndex = state.indexList.findIndex(
+      //   (item) => item.name === form.name
+      // );
+      //判断新增还是修改
+      const index = state.indexList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        const item = state.indexList[index];
+        state.indexList.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.indexList.push(form);
+      }
+      appendIndexVis(false);
+    };
+    const removeIndex = (form: IndexList) => {
+      const index = state.indexList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        state.indexList.splice(index, 1);
+      }
+      console.log("removeIndex state.indexList", state.indexList);
     };
     return {
       state,
@@ -325,6 +368,10 @@ export default defineComponent({
       saveTable,
       tableNameSubmit,
       test1,
+
+      appendIndexVis,
+      appendIndex,
+      removeIndex
     };
   },
   data() {
@@ -339,6 +386,7 @@ export default defineComponent({
   padding: 0;
   width: 100%;
 }
+
 .tool-buttons {
   padding: 4px 4px 8px 4px;
   background-color: #f2f2f2;
