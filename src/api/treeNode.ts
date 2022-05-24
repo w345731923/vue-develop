@@ -246,7 +246,7 @@ export async function getCollation(data: TreeNode<any>) {
  */
 export async function tableAdd(data: TreeNode<TableDesignModel>) {
     return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/add', {
-        timeout: 20000,
+        timeout: 25000,
         method: 'POST', data
     });
 }
@@ -256,7 +256,7 @@ export async function tableAdd(data: TreeNode<TableDesignModel>) {
  */
 export async function tableEdit(data: TableEditForm) {
     return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/edit', {
-        timeout: 20000,
+        timeout: 25000,
         method: 'POST', data
     });
 }

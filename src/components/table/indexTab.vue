@@ -134,14 +134,11 @@ export default defineComponent({
   emits: ["visableFlag", "saveModal", "removeRow"],
   setup(props, { emit }) {
     onMounted(() => {
-      getInitData();
     });
     const rules = reactive({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
       indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
     });
-    const getInitData = () => {
-    }
     const { indexVisible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
     const state: IState = reactive({
       indexVisible: indexVisible.value,
@@ -162,7 +159,8 @@ export default defineComponent({
           demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
           resetFields(demo);
-          // state.form.dataType = { name: "", length: 0, decimalNumber: 0 };
+          state.form.columns = "";
+          state.form.columnsT = [];
         }
       },
       { immediate: true }
@@ -178,7 +176,6 @@ export default defineComponent({
       treeData,
       (newValue) => {
         state.treeData = newValue as TreeNode<any>;
-        getInitData();
       },
       { immediate: true }
     );
@@ -237,6 +234,7 @@ export default defineComponent({
         }
       });
     };
+    //合并column字段值
     const mergeColumn = (selected: string[]) => {
       let columns = '';
       state.form.columnsT?.forEach(item => {
@@ -246,6 +244,7 @@ export default defineComponent({
       columns = columns.length > 0 ? columns.substring(0, columns.length - 1) : columns;
       return columns;
     }
+    //拆分选择的column值本方法源于后台方法
     const splitColumns = (val: string) => {
       let result: string[] = [];
       let count: number = 0;
