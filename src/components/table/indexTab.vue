@@ -39,7 +39,9 @@
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
         <el-form-item label="字段" prop="columns">
-          <el-input-number v-model="state.form.columns" />
+          <el-select v-model="state.form.columns" multiple placeholder=" " style="width: 240px">
+            <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
+          </el-select>
         </el-form-item>
         <el-form-item label="索引方法" prop="indexType">
           <el-select v-model="state.form.indexType" placeholder=" ">
@@ -83,7 +85,7 @@ import type { FormInstance, TabsPaneContext } from "element-plus";
 import {
   ResponseData,
   TreeNode,
-  DataType,
+  FieldList,
   IndexList,
 } from "@/types";
 import { getDatabaseTableSpace } from "@/api/treeNode";
@@ -111,6 +113,7 @@ interface IState {
   form: IndexList;
   isAdd: boolean; //add or update
   tableSpaceList: string[];
+  fieldList: FieldList[];
 }
 export default defineComponent({
   name: "columntab",
@@ -122,6 +125,7 @@ export default defineComponent({
     treeData: Object,
     tableData: Array,
     tableSpaceList: Array,
+    fieldList: Array,
     saveModal: Function,
     removeRow: Function,
     visableFlag: Function,
@@ -133,18 +137,11 @@ export default defineComponent({
     });
     const rules = reactive({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
+      indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
     });
     const getInitData = () => {
-      console.log('state.treeData', state.treeData)
-      // if (state.treeData != null && state.tableSpaceList.length == 0) {
-      //   getDatabaseTableSpace(state.treeData.connectionId!).then(
-      //     (resp: ResponseData<string[]>) => {
-      //       state.tableSpaceList = resp.data;
-      //     }
-      //   );
-      // };
     }
-    const { indexVisible, treeData, tableData, tableSpaceList } = toRefs(props);
+    const { indexVisible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
     const state: IState = reactive({
       indexVisible: indexVisible.value,
       treeData: treeData.value as TreeNode<any>,
@@ -154,7 +151,7 @@ export default defineComponent({
       dataTypeList: [],
       isAdd: true,
       tableSpaceList: tableSpaceList.value as string[],
-
+      fieldList: fieldList.value as FieldList[],
     });
     watch(
       indexVisible,
@@ -188,6 +185,13 @@ export default defineComponent({
       tableSpaceList,
       (newValue) => {
         state.tableSpaceList = newValue as string[];
+      },
+      { immediate: true }
+    );
+    watch(
+      fieldList,
+      (newValue) => {
+        state.fieldList = newValue as FieldList[];
       },
       { immediate: true }
     );

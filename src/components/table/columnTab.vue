@@ -236,6 +236,13 @@ export default defineComponent({
     });
     const getInitData = () => {
       if (state.treeData != null && state.dataTypeList.length == 0) {
+        // const data = {
+        //   type: "TableGroup",
+        //   contextId: "",
+        //   nodePath: state.treeData.nodePath,
+        //   connectionId: state.treeData.connectionId,
+        //   object: null
+        // }
         getDataType(state.treeData).then(
           (responseData: ResponseData<DataType[]>) => {
             console.log("getDataType ResponseData", responseData);

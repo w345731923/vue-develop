@@ -45,8 +45,8 @@
         </el-tab-pane>
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
           <IndexTab :treeData="state.treeData" :tableData="state.indexList" :indexVisible="state.indexVisible"
-            :tableSpaceList="state.tableSpaceList" @saveModal="appendIndex" @removeRow="removeIndex"
-            @visableFlag="appendIndexVis" />
+            :fieldList="state.fieldList" :tableSpaceList="state.tableSpaceList" @saveModal="appendIndex"
+            @removeRow="removeIndex" @visableFlag="appendIndexVis" />
         </el-tab-pane>
         <el-tab-pane label="外键" name="foreign" style="margin: 0.5rem">
           <div>外键</div>
@@ -110,6 +110,7 @@ interface IState {
   tabsActive: string | number;
   oldObject: string;
   oldObjectField: string;
+  oldObjectIndex: string;
   fieldList: FieldList[];
   indexList: IndexList[];
   columnVisible: boolean;
@@ -164,6 +165,8 @@ export default defineComponent({
       isAdd: true, //新增还是修改
       oldObject: "", //修改时用的oldObject
       oldObjectField: "", //修改时用的FieldList
+      oldObjectIndex: "", //修改时用的IndexList
+
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
       tableSpaceList: [],
@@ -224,10 +227,15 @@ export default defineComponent({
       resp.connectionId = connectionId;
       //给表格授权RESPONSE值
       state.fieldList = resp.object.fieldList;
+      state.indexList = resp.object.indexList;
+
       //保存old数据，用于修改
       state.oldObjectField = JSON.stringify(resp.object.fieldList);
+      state.oldObjectIndex = JSON.stringify(resp.object.indexList);
+
       //清空无用字段，最小化保存字符串
       resp.object.fieldList = [];
+      resp.object.indexList = [];
       resp.object.childrenModel = [];
       state.oldObject = JSON.stringify(resp);
       //刷新设计表动态数据
