@@ -38,8 +38,8 @@
         <el-form-item label="索引名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
-        <el-form-item label="字段" prop="columns">
-          <el-select v-model="state.form.columns" multiple placeholder=" " style="width: 240px">
+        <el-form-item label="字段">
+          <el-select v-model="state.form.columnsT" multiple placeholder=" " style="width: 240px">
             <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
           </el-select>
         </el-form-item>
@@ -89,6 +89,7 @@ import {
   IndexList,
 } from "@/types";
 import { getDatabaseTableSpace } from "@/api/treeNode";
+import { debug } from "console";
 const formRef = ref<FormInstance>();
 const demo: IndexList = {
   "@clazz": "com.highgo.developer.model.HgdbIndex",
@@ -209,6 +210,8 @@ export default defineComponent({
     const columnUpdateClick = (row: IndexList) => {
       console.log("columnUpdateButtonClick row ", row);
       resetFields(row);
+      //解析索引字段
+      state.form.columnsT = splitColumns(row.columns);
       emit("visableFlag", true);
       state.isAdd = false;
     };
@@ -228,11 +231,49 @@ export default defineComponent({
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
-          emit("saveModal", createVal(state.form));
+          const data = createVal(state.form);
+          data.columns = mergeColumn(state.form.columnsT!)
+          emit("saveModal", data);
         }
       });
     };
-
+    const mergeColumn = (selected: string[]) => {
+      let columns = '';
+      state.form.columnsT?.forEach(item => {
+        columns += '"' + item + '",'
+      })
+      // columns = ""444","1","
+      columns = columns.length > 0 ? columns.substring(0, columns.length - 1) : columns;
+      return columns;
+    }
+    const splitColumns = (val: string) => {
+      let result: string[] = [];
+      let count: number = 0;
+      let sb: string[] = [];
+      for (var i = 0; i < val.length; i++) {
+        const c = val.charAt(i)
+        if (c == '"') {
+          count++;
+          if (i < val.length - 1 && val.charAt(i + 1) == '"') {
+            count++;
+            i = i + 1;
+            sb.push(c)
+          }
+          continue;
+        }
+        if (c == ',' && count % 2 == 0) {
+          result.push(sb.join(''));
+          sb = [];
+        } else {
+          sb.push(c)
+        }
+      }
+      if (sb.length > 0) {
+        result.push(sb.join(''))
+      }
+      console.log('result', result)
+      return result;
+    }
     return {
       state,
       formRef,

@@ -73,9 +73,7 @@
           <div>注释</div>
         </el-tab-pane>
         <el-tab-pane label="SQL预览" name="sqlview" style="margin: 0.5rem">
-          <p style="margin: 0.3rem">> SQL:select now()</p>
-          <p style="margin: 0.3rem">> SUCCESS:OK</p>
-          <p style="margin: 0.3rem">> TIME:148ms</p>
+          <el-input v-model="state.sqlpreview" type="textarea" :rows="20" />
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -89,7 +87,7 @@
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 import TableNameDialog from "./tableName.vue";
-import { getDataType, getDatabaseTableSpace } from "@/api/treeNode";
+import { getDataType, getDatabaseTableSpace, showCreateSQL, showAlterSQL } from "@/api/treeNode";
 
 import { ElMessage } from "element-plus";
 import { tableAdd, tableEdit } from "@/api/treeNode";
@@ -103,7 +101,7 @@ import {
   TableEditForm,
   FieldList,
   IndexList,
-  TableDesignModel,
+  TableDesignModel, SQLCreatePreview, SQLAlterPreview
 } from "@/types";
 interface IState {
   tabId: string;
@@ -120,6 +118,7 @@ interface IState {
   isAdd: boolean; //新增还是修改
   tableSpaceList: string[];//表空间
 
+  sqlpreview: string;//sql预览
 }
 export default defineComponent({
   name: "table-design",
@@ -177,13 +176,31 @@ export default defineComponent({
       columnVisible: false, //添加字段
       indexVisible: false, //添加索引
 
+      sqlpreview: "",
     });
 
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
       state.tabsActive = pane.props.name;
+      if ('sqlview' == pane.props.name) {
+        if (state.isAdd) {
+          const data: SQLCreatePreview = {
+            newObject: packageAddData('Untitled'),
+            parent: null,
+          };
+          debugger
+          showCreateSQL(data).then((resp) => {
+            state.sqlpreview = resp.data;
+          });
+        } else {
+          const data = packageUpdateData()
+          showAlterSQL(data).then((resp) => {
+            state.sqlpreview = resp.data;
+          });
+        }
+      }
     };
 
-    const tableNameSubmit = (form: { name: string }) => {
+    const packageAddData = (name: string) => {
       //对象复制
       let target = {} as TreeNode<TableDesignModel>;
       Object.assign(target, state.treeData);
@@ -192,12 +209,32 @@ export default defineComponent({
         "@clazz": "com.highgo.developer.model.HgdbTable",
         fieldList: state.fieldList,
         indexList: state.indexList,
-        name: form.name,
+        name: name,
         comment: "",
       };
       target.type = "Table";
       target.object = data;
+      return target;
+    }
+    const packageUpdateData = () => {
+      //newObject
+      state.treeData!.object.fieldList = state.fieldList;
+      state.treeData!.object.indexList = state.indexList;
+      //oldObject
+      const oldData = JSON.parse(
+        state.oldObject
+      ) as TreeNode<TableDesignModel>;
+      oldData.object.fieldList = JSON.parse(state.oldObjectField);
+      oldData.object.indexList = JSON.parse(state.oldObjectIndex);
 
+      const data: TableEditForm = {
+        newObject: state.treeData!,
+        oldObject: oldData,
+      };
+      return data;
+    }
+    const tableNameSubmit = (form: { name: string }) => {
+      const target = packageAddData(form.name)
       tableAdd(target).then((resp) => {
         console.log("tableAdd resp", resp);
         state.nameVisible = false;
@@ -249,19 +286,7 @@ export default defineComponent({
         //新增表，输入表名称
         state.nameVisible = true;
       } else {
-        //newObject
-
-        state.treeData!.object.fieldList = state.fieldList;
-        //oldObject
-        const oldData = JSON.parse(
-          state.oldObject
-        ) as TreeNode<TableDesignModel>;
-        oldData.object.fieldList = JSON.parse(state.oldObjectField);
-        const data: TableEditForm = {
-          newObject: state.treeData!,
-          oldObject: oldData,
-        };
-        tableEdit(data).then((resp) => {
+        tableEdit(packageUpdateData()).then((resp) => {
           ElMessage({
             message: "保存成功！",
             type: "success",

@@ -151,7 +151,7 @@
     <template v-if="state.removeDialogVisible">
       <RemoveNodeDialog
         :visible="state.removeDialogVisible"
-        :data="state.treeNode.data"
+        :data="state.treeNode?.data"
         @saveModal="handleRemoveNodeSubmit"
         @closeModal="state.removeDialogVisible = false"
       />
@@ -160,7 +160,7 @@
     <template v-if="state.renameDialogVisible">
       <RenameNodeDialog
         :visible="state.renameDialogVisible"
-        :data="state.treeNode.data"
+        :data="state.treeNode?.data"
         @saveModal="handleRenameNodeSubmit"
         @closeModal="state.renameDialogVisible = false"
       />
@@ -309,9 +309,9 @@ interface TreeNodeState {
   dropdownMenu: DropDownMenu[];
   treeNode: Node | null;
   treeResolve: Function | undefined;
-  removeDialogVisible: Boolean;
-  renameDialogVisible: Boolean;
-  closeConnectDialogVisible: Boolean;
+  removeDialogVisible: boolean;
+  renameDialogVisible: boolean;
+  closeConnectDialogVisible: boolean;
   closeConnectForm: Server | null;
 
   treeNodeString: string;
@@ -319,25 +319,25 @@ interface TreeNodeState {
   defaultForm: any;
 
   //group
-  groupVisible: Boolean;
+  groupVisible: boolean;
   groupOldObject: TreeNode<ServerGroup> | null;
   groupOldName: string;
 
   //server
-  serverAddVisible: Boolean;
-  serverEditVisible: Boolean;
+  serverAddVisible: boolean;
+  serverEditVisible: boolean;
   serverForm: Server | null;
   serverObject: TreeNode<Server> | null;
-  serverPwdVisible: Boolean;
-  enterPwdDialogVisible: Boolean;
+  serverPwdVisible: boolean;
+  enterPwdDialogVisible: boolean;
 
   //database
-  dbAddVisible: Boolean;
-  dbEditVisible: Boolean;
+  dbAddVisible: boolean;
+  dbEditVisible: boolean;
 
   //schema
-  schemaAddVisible: Boolean;
-  schemaEditVisible: Boolean;
+  schemaAddVisible: boolean;
+  schemaEditVisible: boolean;
 }
 
 export default defineComponent({

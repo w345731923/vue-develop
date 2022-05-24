@@ -281,6 +281,7 @@ export interface IndexList {
   oid: number,
   name: string,//索引名 "index_a2_t1"
   columns: string,//索引字段，""1","444""
+  columnsT?:string[],//临时使用，索引字段转换
   indexType: string,//索引方法  btree
   isUnique: boolean,//唯一键
   isClustered: boolean,//并发
