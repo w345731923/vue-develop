@@ -44,7 +44,14 @@
               <Avatar />
             </el-icon>删除外键
           </el-button>
-        </el-button-group>        
+        </el-button-group>
+        <el-button-group v-if="state.tabsActive == 'unique'">
+          <el-button size="small" color="#f2f2f2" @click="appendUniqueVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>添加唯一键
+          </el-button>
+        </el-button-group>
       </div>
     </div>
 
@@ -62,11 +69,13 @@
         </el-tab-pane>
         <el-tab-pane label="外键" name="foreign" style="margin: 0.5rem">
           <ForeignTab :treeData="state.treeData" :tableData="state.foreignKeyList" :indexVisible="state.foreignVisible"
-            :fieldList="state.fieldList" :tableSpaceList="state.tableSpaceList" @saveModal="appendForeign"
-            @removeRow="removeForeign" @visableFlag="appendForeignVis" />
+            :fieldList="state.fieldList" @saveModal="appendForeign" @removeRow="removeForeign"
+            @visableFlag="appendForeignVis" />
         </el-tab-pane>
         <el-tab-pane label="唯一键" name="unique" style="margin: 0.5rem">
-          <div>唯一键</div>
+          <UniqueTab :treeData="state.treeData" :tableData="state.uniqueConstraintList"
+            :indexVisible="state.uniqueVisible" :fieldList="state.fieldList" @saveModal="appendUnique"
+            @removeRow="removeUnique" @visableFlag="appendUniqueVis" />
         </el-tab-pane>
         <el-tab-pane label="检查" name="check" style="margin: 0.5rem">
           <div>检查</div>
@@ -109,6 +118,7 @@ import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "@/components/table/columnTab.vue";
 import IndexTab from "@/components/table/indexTab.vue";
 import ForeignTab from "@/components/table/foreignTab.vue";
+import UniqueTab from "@/components/table/uniqueTab.vue";
 
 import { TabsPaneContext } from "element-plus";
 import {
@@ -117,24 +127,30 @@ import {
   FieldList,
   IndexList,
   ForeignKeyList,
+  UniqueConstraintList,
   TableDesignModel, SQLCreatePreview, SQLAlterPreview
 } from "@/types";
 interface IState {
   tabId: string;
   tabsActive: string | number;
+  treeData: TreeNode<TableDesignModel> | undefined;
+  nameVisible: boolean;
+
   oldObject: string;
   oldObjectField: string;
   oldObjectIndex: string;
   oldObjectForeign: string;
+  oldObjectUnique: string;
 
   fieldList: FieldList[];
   indexList: IndexList[];
   foreignKeyList: ForeignKeyList[];
+  uniqueConstraintList: ForeignKeyList[];
+
   columnVisible: boolean;
-  treeData: TreeNode<TableDesignModel> | undefined;
-  nameVisible: boolean;
   indexVisible: boolean;
   foreignVisible: boolean;
+  uniqueVisible: boolean;
 
   isAdd: boolean; //新增还是修改
   tableSpaceList: string[];//表空间
@@ -148,6 +164,7 @@ export default defineComponent({
     ColumnTab,
     IndexTab,
     ForeignTab,
+    UniqueTab,
     TableNameDialog,
   },
   props: {
@@ -188,6 +205,7 @@ export default defineComponent({
       oldObjectField: "", //修改时用的FieldList
       oldObjectIndex: "", //修改时用的IndexList
       oldObjectForeign: "", //foreignKeyList
+      oldObjectUnique: "",
 
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
@@ -196,9 +214,13 @@ export default defineComponent({
       fieldList: [], //字段列表--fieldList
       indexList: [], //索引列表--indexList
       foreignKeyList: [],//外键列表--foreignKeyList
+      uniqueConstraintList: [],//唯一列表--uniqueConstraintList
+
       columnVisible: false, //添加字段
       indexVisible: false, //添加索引
       foreignVisible: false,//添加外键
+      uniqueVisible: false,//添加外键
+
       sqlpreview: "",
     });
 
@@ -233,6 +255,7 @@ export default defineComponent({
         fieldList: state.fieldList,
         indexList: state.indexList,
         foreignKeyList: state.foreignKeyList,
+        uniqueConstraintList: state.uniqueConstraintList,
         name: name,
         comment: "",
       };
@@ -450,6 +473,33 @@ export default defineComponent({
       }
       console.log("removeForeign state.foreignKeyList", state.foreignKeyList);
     };
+
+    //=========================唯一键=====================
+    const appendUniqueVis = (flag: boolean) => {
+      state.uniqueVisible = flag;
+    };
+    const appendUnique = (form: UniqueConstraintList) => {
+      console.log("appendUnique form", form);
+      //判断新增还是修改
+      const index = state.uniqueConstraintList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        const item = state.uniqueConstraintList[index];
+        state.uniqueConstraintList.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.uniqueConstraintList.push(form);
+      }
+      appendUniqueVis(false);
+    };
+    const removeUnique = (form: UniqueConstraintList) => {
+      const index = state.uniqueConstraintList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        state.uniqueConstraintList.splice(index, 1);
+      }
+      console.log("removeForeign state.uniqueConstraintList", state.uniqueConstraintList);
+    };
     return {
       state,
       handleTabClick,
@@ -466,7 +516,11 @@ export default defineComponent({
 
       appendForeignVis,
       appendForeign,
-      removeForeign
+      removeForeign,
+
+      appendUniqueVis,
+      appendUnique,
+      removeUnique
     };
   },
   data() {

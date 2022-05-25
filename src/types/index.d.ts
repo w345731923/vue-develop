@@ -255,7 +255,7 @@ export interface TableDesignModel {
   hasrules?: boolean,
   partitionType?: string,
   foreignKeyList: foreignKeyList[],
-  uniqueConstraintList?: [],
+  uniqueConstraintList: UniqueConstraintList[],
   isRoleLeaf?: boolean,
   tableSpace?: string,
   foreignServerOption?: string,
@@ -301,4 +301,22 @@ export interface ForeignKeyList {
   name: string,//索引名 "index_a2_t1"
   columns: string,//索引字段，""1","444""
   columnsT?:string[],//临时使用，索引字段转换
+
+  comment: string,//注释
+
+  gezhi:string;
+  kegezhi:string;
+}
+//表-唯一
+export interface UniqueConstraintList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbForeignKey"
+  oid: number,
+  name: string,//索引名 "index_a2_t1"
+  columns: string,//索引字段，""1","444""
+  columnsT?:string[],//临时使用，索引字段转换
+
+  comment: string,//注释
+
+  gezhi:string;
+  kegezhi:string;
 }

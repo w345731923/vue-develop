@@ -810,6 +810,7 @@ export default defineComponent({
     //打开编辑数据库
     const handleDBUpdate = (node: Node) => {
       console.log("handleDBUpdate node ", node);
+      node.data.nodePath = getNodePath(node);
       const row = node.data as TreeNode<Database>;
       state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
       state.treeNode = node; //用于请求成功后的更新

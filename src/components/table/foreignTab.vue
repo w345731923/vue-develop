@@ -9,11 +9,11 @@
       :max-height="state.tableHieght">
       <el-table-column prop="name" label="外键约束名" align="center" />
       <el-table-column prop="columns" label="字段" align="center" />
-      <el-table-column prop="indexType" label="参考模式" align="center" />
-      <el-table-column prop="indexType" label="参考表" align="center" />
-      <el-table-column prop="indexType" label="参考字段" align="center" />
-      <el-table-column prop="indexType" label="删除时" align="center" />
-      <el-table-column prop="indexType" label="更新时" align="center" />
+      <el-table-column prop="comment" label="参考模式" align="center" />
+      <el-table-column prop="comment" label="参考表" align="center" />
+      <el-table-column prop="comment" label="参考字段" align="center" />
+      <el-table-column prop="comment" label="删除时" align="center" />
+      <el-table-column prop="comment" label="更新时" align="center" />
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">
@@ -25,7 +25,7 @@
 
     <el-dialog :close-on-click-modal="false" v-model="state.indexVisible" title="添加外键" :destroy-on-close="false"
       @closed="onClose(formRef)">
-      <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="90px">
+      <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="100px">
         <el-form-item label="外键约束名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
@@ -38,18 +38,18 @@
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
         <el-form-item label="参考表" prop="isUnique">
-          <el-switch v-model="state.form.isUnique" />
+          <el-switch v-model="state.form.comment" />
         </el-form-item>
         <el-form-item label="参考字段" prop="isClustered">
-          <el-switch v-model="state.form.isClustered" />
+          <el-switch v-model="state.form.comment" />
         </el-form-item>
         <el-form-item label="删除时" prop="comment">
-          <el-select v-model="state.form.indexType" placeholder=" ">
+          <el-select v-model="state.form.comment" placeholder=" ">
             <el-option v-for="item in time" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="更新时" prop="tablespaceName">
-          <el-select v-model="state.form.indexType" placeholder=" ">
+          <el-select v-model="state.form.comment" placeholder=" ">
             <el-option v-for="item in time" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
@@ -57,12 +57,12 @@
           <el-input v-model="state.form.comment"></el-input>
         </el-form-item>
         <el-form-item label="可搁置">
-          <el-select v-model="state.form.indexType" placeholder=" " @change="kegezhiChange">
+          <el-select v-model="state.form.gezhi" placeholder=" " @change="kegezhiChange">
             <el-option v-for="item in a1" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="搁置">
-          <el-select v-model="state.form.indexType" placeholder=" " :disabled="state.gezhi">
+          <el-select v-model="state.form.kegezhi" placeholder=" " :disabled="state.gezhiDisabled">
             <el-option v-for="item in a2" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
@@ -79,44 +79,37 @@
 import { defineComponent, reactive, toRefs, watch, ref, onMounted } from "vue";
 import type { FormInstance, TabsPaneContext } from "element-plus";
 import {
-  ResponseData,
   TreeNode,
   FieldList,
-  IndexList,
+  ForeignKeyList,
 } from "@/types";
-import { getDatabaseTableSpace } from "@/api/treeNode";
-import {getCurrentInstance} from 'vue'
+import { getCurrentInstance } from 'vue'
 
 const formRef = ref<FormInstance>();
-const demo: IndexList = {
-  "@clazz": "com.highgo.developer.model.HgdbIndex",
+const demo: ForeignKeyList = {
+  "@clazz": "com.highgo.developer.model.HgdbForeignKey",
   oid: -new Date().getTime(),
   name: "",
   columns: "",
-  indexType: "",
-  isUnique: false,
-  isClustered: false,
   comment: "",
-  tablespaceName: "",
-  reloption: -1,//填充系数，api是string，填入是number的百分比
-  constraint: "",
-  expression: "" //表达式
+
+  gezhi: 'NOT DEFERRABLE',
+  kegezhi: 'INITIALLY IMMEDIATE'
 };
 
 interface IState {
   indexVisible: boolean;
   treeData: TreeNode<any>;
-  tableData: IndexList[];
+  tableData: ForeignKeyList[];
   tableHieght: number;
-  form: IndexList;
+  form: ForeignKeyList;
   isAdd: boolean; //add or update
-  tableSpaceList: string[];
   fieldList: FieldList[];
 
-  gezhi: boolean;
+  gezhiDisabled: boolean;
 }
 export default defineComponent({
-  name: "columntab",
+  name: "foreigntab",
   props: {
     indexVisible: {
       type: Boolean,
@@ -124,7 +117,6 @@ export default defineComponent({
     },
     treeData: Object,
     tableData: Array,
-    tableSpaceList: Array,
     fieldList: Array,
     saveModal: Function,
     removeRow: Function,
@@ -139,19 +131,18 @@ export default defineComponent({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
       indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
     });
-    const { indexVisible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
+    const { indexVisible, treeData, tableData, fieldList } = toRefs(props);
     const state: IState = reactive({
       indexVisible: indexVisible.value,
       treeData: treeData.value as TreeNode<any>,
-      tableData: tableData.value as IndexList[],
+      tableData: tableData.value as ForeignKeyList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
-      form: {} as IndexList,
+      form: {} as ForeignKeyList,
       dataTypeList: [],
       isAdd: true,
-      tableSpaceList: tableSpaceList.value as string[],
       fieldList: fieldList.value as FieldList[],
 
-      gezhi: true,
+      gezhiDisabled: true,
     });
     watch(
       indexVisible,
@@ -170,7 +161,7 @@ export default defineComponent({
     watch(
       tableData,
       (newValue) => {
-        state.tableData = newValue as IndexList[];
+        state.tableData = newValue as ForeignKeyList[];
       },
       { immediate: true }
     );
@@ -182,13 +173,6 @@ export default defineComponent({
       { immediate: true }
     );
     watch(
-      tableSpaceList,
-      (newValue) => {
-        state.tableSpaceList = newValue as string[];
-      },
-      { immediate: true }
-    );
-    watch(
       fieldList,
       (newValue) => {
         state.fieldList = newValue as FieldList[];
@@ -196,17 +180,17 @@ export default defineComponent({
       { immediate: true }
     );
     //对象拷贝
-    const createVal = (src: IndexList) => {
-      const target = {} as IndexList;
+    const createVal = (src: ForeignKeyList) => {
+      const target = {} as ForeignKeyList;
       Object.assign(target, src);
       return target;
     };
     //重置row初始值
-    const resetFields = (resetVal: IndexList) => {
+    const resetFields = (resetVal: ForeignKeyList) => {
       Object.assign(state.form, resetVal);
     };
     //修改按钮
-    const columnUpdateClick = (row: IndexList) => {
+    const columnUpdateClick = (row: ForeignKeyList) => {
       console.log("columnUpdateButtonClick row ", row);
       resetFields(row);
       //解析索引字段
@@ -215,7 +199,7 @@ export default defineComponent({
     };
 
     //删除按钮
-    const removeColumnClick = (row: IndexList) => {
+    const removeColumnClick = (row: ForeignKeyList) => {
       emit("removeRow", row);
     };
     //关闭
@@ -235,14 +219,14 @@ export default defineComponent({
       });
     };
     const kegezhiChange = (val: string) => {
-      console.log('datab',datab)
+      console.log('datab', datab)
       const a1 = datab!.data.a1 as string[];
-      if(a1[0] == val){
+      if (a1[0] == val) {
         //DEFERRABLE 启用
-        state.gezhi = false;
-      }else{
+        state.gezhiDisabled = false;
+      } else {
         //NOT DEFERRABLE 禁用
-        state.gezhi = true;
+        state.gezhiDisabled = true;
       }
     }
     return {
