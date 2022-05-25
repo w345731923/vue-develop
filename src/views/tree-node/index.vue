@@ -875,11 +875,12 @@ export default defineComponent({
     };
     const handleSchemaUpdate = (node: Node) => {
       console.log("handleSchemaUpdate node ", node);
+      node.data.nodePath = getNodePath(node);
       const row = node.data as TreeNode<Schema>;
       state.treeNodeString = JSON.stringify(row); //存储old值，用于save参数
       state.treeNode = node; //用于请求成功后的更新
-
-      state.defaultForm = row.object; //传给子界面
+      //传给子界面
+      state.defaultForm = row.object;
       state.defaultForm.connectionId = node.data.connectionId;
       switchSchemaEditVisable(true);
     };
