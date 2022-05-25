@@ -44,6 +44,7 @@ export interface TreeNode<T> {
   nodePath: string,  //node整体路径
   object: T;
   connectionId: string | null;
+  defConnectionId?:string;
   children?: TreeNode[];
 }
 //create SQL预览
@@ -253,7 +254,7 @@ export interface TableDesignModel {
   roleList?: [],
   hasrules?: boolean,
   partitionType?: string,
-  foreignKeyList?: [],
+  foreignKeyList: foreignKeyList[],
   uniqueConstraintList?: [],
   isRoleLeaf?: boolean,
   tableSpace?: string,
@@ -293,4 +294,11 @@ export interface IndexList {
   childrenModel?: [],
   roleChildrenModel?: [],
 }
-
+//表-外键
+export interface ForeignKeyList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbForeignKey"
+  oid: number,
+  name: string,//索引名 "index_a2_t1"
+  columns: string,//索引字段，""1","444""
+  columnsT?:string[],//临时使用，索引字段转换
+}

@@ -7,22 +7,13 @@
     -->
     <el-table :data="state.tableData" border :highlight-current-row="true" size="small" style="width: 100%"
       :max-height="state.tableHieght">
-      <el-table-column prop="name" label="索引名" align="center" />
+      <el-table-column prop="name" label="外键约束名" align="center" />
       <el-table-column prop="columns" label="字段" align="center" />
-      <el-table-column prop="indexType" label="索引方法" align="center" />
-      <el-table-column prop="isUnique" label="唯一键" align="center">
-        <template #default="scope">
-          <el-checkbox disabled v-if="scope.row.isUnique == true" :checked="true" />
-          <el-checkbox disabled v-if="scope.row.isUnique != true" />
-        </template>
-      </el-table-column>
-
-      <el-table-column prop="isClustered" label="并发" align="center">
-        <template #default="scope">
-          <el-checkbox disabled v-if="scope.row.isClustered == true" :checked="true" />
-          <el-checkbox disabled v-if="scope.row.isClustered != true" />
-        </template>
-      </el-table-column>
+      <el-table-column prop="indexType" label="参考模式" align="center" />
+      <el-table-column prop="indexType" label="参考表" align="center" />
+      <el-table-column prop="indexType" label="参考字段" align="center" />
+      <el-table-column prop="indexType" label="删除时" align="center" />
+      <el-table-column prop="indexType" label="更新时" align="center" />
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">
@@ -32,10 +23,10 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog :close-on-click-modal="false" v-model="state.indexVisible" title="添加索引" :destroy-on-close="false"
+    <el-dialog :close-on-click-modal="false" v-model="state.indexVisible" title="添加外键" :destroy-on-close="false"
       @closed="onClose(formRef)">
       <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="90px">
-        <el-form-item label="索引名" prop="name">
+        <el-form-item label="外键约束名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
         <el-form-item label="字段">
@@ -43,31 +34,37 @@
             <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
           </el-select>
         </el-form-item>
-        <el-form-item label="索引方法" prop="indexType">
-          <el-select v-model="state.form.indexType" placeholder=" ">
-            <el-option v-for="item in indexType" :key="item" :label="item" :value="item" />
-          </el-select>
+        <el-form-item label="参考模式" prop="indexType">
+          <el-input v-model="state.form.name"></el-input>
         </el-form-item>
-        <el-form-item label="唯一键" prop="isUnique">
+        <el-form-item label="参考表" prop="isUnique">
           <el-switch v-model="state.form.isUnique" />
         </el-form-item>
-        <el-form-item label="并发" prop="isClustered">
+        <el-form-item label="参考字段" prop="isClustered">
           <el-switch v-model="state.form.isClustered" />
         </el-form-item>
-        <el-form-item label="注释" prop="comment">
-          <el-input v-model="state.form.comment"></el-input>
-        </el-form-item>
-        <el-form-item label="表空间" prop="tablespaceName">
-          <el-select v-model="state.form.tablespaceName" placeholder=" ">
-            <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
+        <el-form-item label="删除时" prop="comment">
+          <el-select v-model="state.form.indexType" placeholder=" ">
+            <el-option v-for="item in time" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
-        <el-form-item label="填充系数(%)" prop="reloption">
-          <el-input-number v-model="state.form.reloption" />
-          <!-- <el-input-number v-model="state.form.reloption" oninput="value=value.replace(/[^\d]/g,'')"></el-input> -->
+        <el-form-item label="更新时" prop="tablespaceName">
+          <el-select v-model="state.form.indexType" placeholder=" ">
+            <el-option v-for="item in time" :key="item" :label="item" :value="item" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="条件" prop="constraint">
-          <el-input v-model="state.form.constraint"></el-input>
+        <el-form-item label="注释">
+          <el-input v-model="state.form.comment"></el-input>
+        </el-form-item>
+        <el-form-item label="可搁置">
+          <el-select v-model="state.form.indexType" placeholder=" " @change="kegezhiChange">
+            <el-option v-for="item in a1" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="搁置">
+          <el-select v-model="state.form.indexType" placeholder=" " :disabled="state.gezhi">
+            <el-option v-for="item in a2" :key="item" :label="item" :value="item" />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -88,7 +85,8 @@ import {
   IndexList,
 } from "@/types";
 import { getDatabaseTableSpace } from "@/api/treeNode";
-import { debug } from "console";
+import {getCurrentInstance} from 'vue'
+
 const formRef = ref<FormInstance>();
 const demo: IndexList = {
   "@clazz": "com.highgo.developer.model.HgdbIndex",
@@ -114,6 +112,8 @@ interface IState {
   isAdd: boolean; //add or update
   tableSpaceList: string[];
   fieldList: FieldList[];
+
+  gezhi: boolean;
 }
 export default defineComponent({
   name: "columntab",
@@ -134,6 +134,7 @@ export default defineComponent({
   setup(props, { emit }) {
     onMounted(() => {
     });
+    const datab = getCurrentInstance();
     const rules = reactive({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
       indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
@@ -149,6 +150,8 @@ export default defineComponent({
       isAdd: true,
       tableSpaceList: tableSpaceList.value as string[],
       fieldList: fieldList.value as FieldList[],
+
+      gezhi: true,
     });
     watch(
       indexVisible,
@@ -207,7 +210,6 @@ export default defineComponent({
       console.log("columnUpdateButtonClick row ", row);
       resetFields(row);
       //解析索引字段
-      state.form.columnsT = splitColumns(row.columns);
       emit("visableFlag", true);
       state.isAdd = false;
     };
@@ -228,49 +230,20 @@ export default defineComponent({
       formEl.validate((valid) => {
         if (valid) {
           const data = createVal(state.form);
-          data.columns = mergeColumn(state.form.columnsT!)
           emit("saveModal", data);
         }
       });
     };
-    //合并column字段值
-    const mergeColumn = (selected: string[]) => {
-      let columns = '';
-      state.form.columnsT?.forEach(item => {
-        columns += '"' + item + '",'
-      })
-      // columns = ""444","1","
-      columns = columns.length > 0 ? columns.substring(0, columns.length - 1) : columns;
-      return columns;
-    }
-    //拆分选择的column值本方法源于后台方法
-    const splitColumns = (val: string) => {
-      let result: string[] = [];
-      let count: number = 0;
-      let sb: string[] = [];
-      for (var i = 0; i < val.length; i++) {
-        const c = val.charAt(i)
-        if (c == '"') {
-          count++;
-          if (i < val.length - 1 && val.charAt(i + 1) == '"') {
-            count++;
-            i = i + 1;
-            sb.push(c)
-          }
-          continue;
-        }
-        if (c == ',' && count % 2 == 0) {
-          result.push(sb.join(''));
-          sb = [];
-        } else {
-          sb.push(c)
-        }
+    const kegezhiChange = (val: string) => {
+      console.log('datab',datab)
+      const a1 = datab!.data.a1 as string[];
+      if(a1[0] == val){
+        //DEFERRABLE 启用
+        state.gezhi = false;
+      }else{
+        //NOT DEFERRABLE 禁用
+        state.gezhi = true;
       }
-      if (sb.length > 0) {
-        result.push(sb.join(''))
-      }
-      console.log('result', result)
-      return result;
     }
     return {
       state,
@@ -280,12 +253,15 @@ export default defineComponent({
       removeColumnClick,
       submitForm,
       onClose,
+      kegezhiChange
     };
   },
 
   data() {
     return {
-      indexType: ['btree', 'hash', 'gist', 'gin', 'spgist', 'brin']
+      time: ['RESTRICT', 'NO ACTION', 'CASCADE', 'SET NULL', 'SET DEFAULT'],
+      a1: ['DEFERRABLE', 'NOT DEFERRABLE'],
+      a2: ['INITIALLY IMMEDIATE', 'INITIALLY DEFERRED']
     };
   },
   methods: {},

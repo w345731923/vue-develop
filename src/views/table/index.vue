@@ -33,6 +33,18 @@
             </el-icon>删除索引
           </el-button>
         </el-button-group>
+        <el-button-group v-if="state.tabsActive == 'foreign'">
+          <el-button size="small" color="#f2f2f2" @click="appendForeignVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>添加外键
+          </el-button>
+          <el-button size="small" color="#f2f2f2">
+            <el-icon>
+              <Avatar />
+            </el-icon>删除外键
+          </el-button>
+        </el-button-group>        
       </div>
     </div>
 
@@ -49,7 +61,9 @@
             @removeRow="removeIndex" @visableFlag="appendIndexVis" />
         </el-tab-pane>
         <el-tab-pane label="外键" name="foreign" style="margin: 0.5rem">
-          <div>外键</div>
+          <ForeignTab :treeData="state.treeData" :tableData="state.foreignKeyList" :indexVisible="state.foreignVisible"
+            :fieldList="state.fieldList" :tableSpaceList="state.tableSpaceList" @saveModal="appendForeign"
+            @removeRow="removeForeign" @visableFlag="appendForeignVis" />
         </el-tab-pane>
         <el-tab-pane label="唯一键" name="unique" style="margin: 0.5rem">
           <div>唯一键</div>
@@ -94,6 +108,7 @@ import { tableAdd, tableEdit } from "@/api/treeNode";
 import { Avatar } from "@element-plus/icons-vue";
 import ColumnTab from "@/components/table/columnTab.vue";
 import IndexTab from "@/components/table/indexTab.vue";
+import ForeignTab from "@/components/table/foreignTab.vue";
 
 import { TabsPaneContext } from "element-plus";
 import {
@@ -101,6 +116,7 @@ import {
   TableEditForm,
   FieldList,
   IndexList,
+  ForeignKeyList,
   TableDesignModel, SQLCreatePreview, SQLAlterPreview
 } from "@/types";
 interface IState {
@@ -109,12 +125,17 @@ interface IState {
   oldObject: string;
   oldObjectField: string;
   oldObjectIndex: string;
+  oldObjectForeign: string;
+
   fieldList: FieldList[];
   indexList: IndexList[];
+  foreignKeyList: ForeignKeyList[];
   columnVisible: boolean;
   treeData: TreeNode<TableDesignModel> | undefined;
   nameVisible: boolean;
   indexVisible: boolean;
+  foreignVisible: boolean;
+
   isAdd: boolean; //新增还是修改
   tableSpaceList: string[];//表空间
 
@@ -126,6 +147,7 @@ export default defineComponent({
     Avatar,
     ColumnTab,
     IndexTab,
+    ForeignTab,
     TableNameDialog,
   },
   props: {
@@ -165,6 +187,7 @@ export default defineComponent({
       oldObject: "", //修改时用的oldObject
       oldObjectField: "", //修改时用的FieldList
       oldObjectIndex: "", //修改时用的IndexList
+      oldObjectForeign: "", //foreignKeyList
 
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
@@ -172,10 +195,10 @@ export default defineComponent({
 
       fieldList: [], //字段列表--fieldList
       indexList: [], //索引列表--indexList
-
+      foreignKeyList: [],//外键列表--foreignKeyList
       columnVisible: false, //添加字段
       indexVisible: false, //添加索引
-
+      foreignVisible: false,//添加外键
       sqlpreview: "",
     });
 
@@ -209,6 +232,7 @@ export default defineComponent({
         "@clazz": "com.highgo.developer.model.HgdbTable",
         fieldList: state.fieldList,
         indexList: state.indexList,
+        foreignKeyList: state.foreignKeyList,
         name: name,
         comment: "",
       };
@@ -220,12 +244,15 @@ export default defineComponent({
       //newObject
       state.treeData!.object.fieldList = state.fieldList;
       state.treeData!.object.indexList = state.indexList;
+      state.treeData!.object.foreignKeyList = state.foreignKeyList;
+
       //oldObject
       const oldData = JSON.parse(
         state.oldObject
       ) as TreeNode<TableDesignModel>;
       oldData.object.fieldList = JSON.parse(state.oldObjectField);
       oldData.object.indexList = JSON.parse(state.oldObjectIndex);
+      oldData.object.foreignKeyList = JSON.parse(state.oldObjectForeign);
 
       const data: TableEditForm = {
         newObject: state.treeData!,
@@ -265,14 +292,18 @@ export default defineComponent({
       //给表格授权RESPONSE值
       state.fieldList = resp.object.fieldList;
       state.indexList = resp.object.indexList;
+      state.foreignKeyList = resp.object.foreignKeyList;
 
       //保存old数据，用于修改
       state.oldObjectField = JSON.stringify(resp.object.fieldList);
       state.oldObjectIndex = JSON.stringify(resp.object.indexList);
+      state.oldObjectForeign = JSON.stringify(resp.object.foreignKeyList);
 
       //清空无用字段，最小化保存字符串
       resp.object.fieldList = [];
       resp.object.indexList = [];
+      resp.object.foreignKeyList = [];
+
       resp.object.childrenModel = [];
       state.oldObject = JSON.stringify(resp);
       //刷新设计表动态数据
@@ -392,6 +423,33 @@ export default defineComponent({
       }
       console.log("removeIndex state.indexList", state.indexList);
     };
+
+    //=========================外键=====================
+    const appendForeignVis = (flag: boolean) => {
+      state.foreignVisible = flag;
+    };
+    const appendForeign = (form: ForeignKeyList) => {
+      console.log("appendForeign form", form);
+      //判断新增还是修改
+      const index = state.foreignKeyList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        const item = state.foreignKeyList[index];
+        state.foreignKeyList.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.foreignKeyList.push(form);
+      }
+      appendForeignVis(false);
+    };
+    const removeForeign = (form: ForeignKeyList) => {
+      const index = state.foreignKeyList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        state.foreignKeyList.splice(index, 1);
+      }
+      console.log("removeForeign state.foreignKeyList", state.foreignKeyList);
+    };
     return {
       state,
       handleTabClick,
@@ -404,7 +462,11 @@ export default defineComponent({
 
       appendIndexVis,
       appendIndex,
-      removeIndex
+      removeIndex,
+
+      appendForeignVis,
+      appendForeign,
+      removeForeign
     };
   },
   data() {

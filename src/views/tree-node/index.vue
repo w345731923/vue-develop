@@ -1,92 +1,45 @@
 <template>
   <div class="tree-view">
-    <el-tree
-      :data="treeData"
-      node-key="id"
-      :expand-on-click-node="false"
-      :highlight-current="true"
-      :load="loadNode"
-      lazy
-      ref="treeRef"
-      :props="treeProps"
-    >
+    <el-tree :data="treeData" node-key="id" :expand-on-click-node="false" :highlight-current="true" :load="loadNode"
+      lazy ref="treeRef" :props="treeProps">
       <template #default="{ node, data }">
-        <div
-          class="tree-node-row"
-          aria-selected="false"
-          @click="handleNodeClick($event, data, node)"
-        >
+        <div class="tree-node-row" aria-selected="false" @click="handleNodeClick($event, data, node)">
           <div class="tree-node-icon tree-node-icon-gt">
-            <img
-              src="../../assets/server.png"
-              v-if="data.type === 'ServerGroup'"
-            />
+            <img src="../../assets/server.png" v-if="data.type === 'ServerGroup'" />
             <img src="../../assets/hgdb16.png" v-if="data.type === 'Server'" />
-            <img
-              src="../../assets/database.png"
-              v-if="
-                data.type === 'Database' &&
-                data.connectionId != null &&
-                data.connectionId != ''
-              "
-            />
-            <img
-              src="../../assets/database_icon.png"
-              v-if="
-                data.type === 'Database' &&
-                (data.connectionId == null || data.connectionId == '')
-              "
-            />
-            <img
-              src="../../assets/folder_schema.png"
-              v-if="data.type === 'SchemaGroup'"
-            />
-            <img
-              src="../../assets/folder_table.png"
-              v-if="data.type === 'RoleGroup'"
-            />
-            <img
-              src="../../assets/folder_database.png"
-              v-if="data.type === 'TableSpaceGroup'"
-            />
+            <img src="../../assets/database.png" v-if="
+              data.type === 'Database' &&
+              data.connectionId != null &&
+              data.connectionId != ''
+            " />
+            <img src="../../assets/database_icon.png" v-if="
+              data.type === 'Database' &&
+              (data.connectionId == null || data.connectionId == '')
+            " />
+            <img src="../../assets/folder_schema.png" v-if="data.type === 'SchemaGroup'" />
+            <img src="../../assets/folder_table.png" v-if="data.type === 'RoleGroup'" />
+            <img src="../../assets/folder_database.png" v-if="data.type === 'TableSpaceGroup'" />
             <!-- <img
               src="../../assets/folder_admin.png"
               v-if="data.type === 'RoleGroup'"
             /> -->
             <img src="../../assets/schema.png" v-if="data.type === 'Schema'" />
-            <img
-              src="../../assets/folder_table.png"
-              v-if="data.type === 'TableGroup'"
-            />
-            <img
-              src="../../assets/folder_view.png"
-              v-if="data.type === 'ViewsGroup'"
-            />
+            <img src="../../assets/folder_table.png" v-if="data.type === 'TableGroup'" />
+            <img src="../../assets/folder_view.png" v-if="data.type === 'ViewsGroup'" />
 
-            <img
-              src="../../assets/folder_table.png"
-              v-if="data.type === 'table-group'"
-            />
+            <img src="../../assets/folder_table.png" v-if="data.type === 'table-group'" />
             <img src="../../assets/table.png" v-if="data.type === 'Table'" />
-            <img
-              src="../../assets/folder_user.png"
-              v-if="data.type === 'role-group'"
-            />
+            <img src="../../assets/folder_user.png" v-if="data.type === 'role-group'" />
             <img src="../../assets/user.png" v-if="node.data.type === 'user'" />
           </div>
-          <div
-            class="tree-node-name tree-node-name-gt"
-            style="padding-right: 16px"
-          >
-            <span
-              v-if="
-                data.type == 'SchemaGroup' ||
-                data.type == 'RoleGroup' ||
-                data.type == 'TableSpaceGroup' ||
-                data.type == 'TableGroup' ||
-                data.type == 'ViewsGroup'
-              "
-            >
+          <div class="tree-node-name tree-node-name-gt" style="padding-right: 16px">
+            <span v-if="
+              data.type == 'SchemaGroup' ||
+              data.type == 'RoleGroup' ||
+              data.type == 'TableSpaceGroup' ||
+              data.type == 'TableGroup' ||
+              data.type == 'ViewsGroup'
+            ">
               <span>{{ data.text }}</span>
             </span>
             <span v-else-if="data.type == 'Server' || data.type == 'Database'">
@@ -98,21 +51,14 @@
             <span v-else> {{ data.object.name }}</span>
           </div>
           <div class="tree-node-button">
-            <el-dropdown
-              ref="buttonDropdown"
-              trigger="click"
-              @command="handleCommand"
-            >
-              <el-icon><message-box @click="addDropDownMenu(node)" /></el-icon>
+            <el-dropdown ref="buttonDropdown" trigger="click" @command="handleCommand">
+              <el-icon>
+                <message-box @click="addDropDownMenu(node)" />
+              </el-icon>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item
-                    class="dropMenu-item"
-                    v-for="(item, index) in state.dropdownMenu"
-                    :key="index"
-                    :command="{ menu: item, node: node }"
-                    :disabled="item.disabled"
-                    >{{ item.text }}
+                  <el-dropdown-item class="dropMenu-item" v-for="(item, index) in state.dropdownMenu" :key="index"
+                    :command="{ menu: item, node: node }" :disabled="item.disabled">{{ item.text }}
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -124,24 +70,13 @@
 
     <!-- ===============================关闭连接======================================= -->
     <template v-if="state.closeConnectDialogVisible">
-      <el-dialog
-        :close-on-click-modal="false"
-        v-model="state.closeConnectDialogVisible"
-        title="关闭连接"
-        width="30%"
-        center
-      >
+      <el-dialog :close-on-click-modal="false" v-model="state.closeConnectDialogVisible" title="关闭连接" width="30%"
+        center>
         <span>保存服务器信息必须关闭服务器连接。要关闭连接吗？</span>
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="state.closeConnectDialogVisible = false"
-              >取消</el-button
-            >
-            <el-button
-              type="primary"
-              @click="handleEditServer(state.closeConnectForm)"
-              >确认</el-button
-            >
+            <el-button @click="state.closeConnectDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="handleEditServer(state.closeConnectForm)">确认</el-button>
           </span>
         </template>
       </el-dialog>
@@ -149,89 +84,48 @@
 
     <!-- ===============================删除节点======================================= -->
     <template v-if="state.removeDialogVisible">
-      <RemoveNodeDialog
-        :visible="state.removeDialogVisible"
-        :data="state.treeNode?.data"
-        @saveModal="handleRemoveNodeSubmit"
-        @closeModal="state.removeDialogVisible = false"
-      />
+      <RemoveNodeDialog :visible="state.removeDialogVisible" :data="state.treeNode?.data"
+        @saveModal="handleRemoveNodeSubmit" @closeModal="state.removeDialogVisible = false" />
     </template>
     <!-- ===============================重命名节点======================================= -->
     <template v-if="state.renameDialogVisible">
-      <RenameNodeDialog
-        :visible="state.renameDialogVisible"
-        :data="state.treeNode?.data"
-        @saveModal="handleRenameNodeSubmit"
-        @closeModal="state.renameDialogVisible = false"
-      />
+      <RenameNodeDialog :visible="state.renameDialogVisible" :data="state.treeNode?.data"
+        @saveModal="handleRenameNodeSubmit" @closeModal="state.renameDialogVisible = false" />
     </template>
 
     <!-- ===============================Server======================================= -->
-    <ServerDialogAdd
-      :visible="state.serverAddVisible"
-      @saveModal="handleSaveServer"
-      @closeModal="switchServerAddVisable"
-    />
-    <ServerPwdDialog
-      :visible="state.serverPwdVisible"
-      @saveModal="handleServerPwdSubmit"
-      @closeModal="switchServerPwdVisable"
-    />
+    <ServerDialogAdd :visible="state.serverAddVisible" @saveModal="handleSaveServer"
+      @closeModal="switchServerAddVisable" />
+    <ServerPwdDialog :visible="state.serverPwdVisible" @saveModal="handleServerPwdSubmit"
+      @closeModal="switchServerPwdVisable" />
     <template v-if="state.serverEditVisible">
       <!-- Server弹出框 -->
-      <ServerDialogEdit
-        :visible="state.serverEditVisible"
-        :serverObject="state.serverForm"
-        @saveModal="isConnect"
-        @closeModal="switchServerEditVisable"
-      />
+      <ServerDialogEdit :visible="state.serverEditVisible" :serverObject="state.serverForm" @saveModal="isConnect"
+        @closeModal="switchServerEditVisable" />
     </template>
     <template v-if="state.enterPwdDialogVisible">
-      <EnterPassword
-        :visible="state.enterPwdDialogVisible"
-        @saveModal="handleEnterPwdSubmit"
-        @closeModal="handleEnterPwdCancel"
-      />
+      <EnterPassword :visible="state.enterPwdDialogVisible" @saveModal="handleEnterPwdSubmit"
+        @closeModal="handleEnterPwdCancel" />
     </template>
 
     <!-- ===============================database======================================= -->
     <template v-if="state.dbAddVisible">
-      <DBFormDialog
-        :visible="state.dbAddVisible"
-        :defaultForm="state.defaultForm"
-        :parentForm="state.parentForm"
-        @saveModal="handleAddDB"
-        @closeModal="switchDBAddVisable"
-      />
+      <DBFormDialog :visible="state.dbAddVisible" :defaultForm="state.defaultForm" :parentForm="state.parentForm"
+        @saveModal="handleAddDB" @closeModal="switchDBAddVisable" />
     </template>
     <template v-if="state.dbEditVisible">
-      <DBFormDialog
-        :visible="state.dbEditVisible"
-        :defaultForm="state.defaultForm"
-        :treeNodeString="state.treeNodeString"
-        @saveModal="handleDBUpdateSubmit"
-        @closeModal="switchDBEditVisable"
-      />
+      <DBFormDialog :visible="state.dbEditVisible" :defaultForm="state.defaultForm"
+        :treeNodeString="state.treeNodeString" @saveModal="handleDBUpdateSubmit" @closeModal="switchDBEditVisable" />
     </template>
     <!-- ===============================schema======================================= -->
     <template v-if="state.schemaAddVisible">
-      <SchemaFormDialog
-        :visible="state.schemaAddVisible"
-        :defaultForm="state.defaultForm"
-        :parentForm="state.parentForm"
-        @saveModal="handleAddSchemaSubmit"
-        @closeModal="switchSchemaAddVisable"
-      />
+      <SchemaFormDialog :visible="state.schemaAddVisible" :defaultForm="state.defaultForm"
+        :parentForm="state.parentForm" @saveModal="handleAddSchemaSubmit" @closeModal="switchSchemaAddVisable" />
     </template>
     <template v-if="state.schemaEditVisible">
-      <SchemaFormDialog
-        :visible="state.schemaEditVisible"
-        :defaultForm="state.defaultForm"
-        :parentForm="state.parentForm"
-        :treeNodeString="state.treeNodeString"
-        @saveModal="handleSchemaUpdateSubmit"
-        @closeModal="switchSchemaEditVisable"
-      />
+      <SchemaFormDialog :visible="state.schemaEditVisible" :defaultForm="state.defaultForm"
+        :parentForm="state.parentForm" :treeNodeString="state.treeNodeString" @saveModal="handleSchemaUpdateSubmit"
+        @closeModal="switchSchemaEditVisable" />
     </template>
   </div>
 </template>
@@ -356,7 +250,7 @@ export default defineComponent({
   props: {
     treeData: Array,
   },
-  emits: ["addTable","modifyTabsTitle"],
+  emits: ["addTable", "modifyTabsTitle"],
   setup(props, { emit }) {
     const treeRef: Ref = ref(null); //树形结果对象
     const buttonDropdown = ref(); //节点扩展按钮下拉对象
@@ -913,6 +807,7 @@ export default defineComponent({
           treeRef.value.append(result.data, state.treeNode);
       });
     };
+    //打开编辑数据库
     const handleDBUpdate = (node: Node) => {
       console.log("handleDBUpdate node ", node);
       const row = node.data as TreeNode<Database>;
@@ -920,7 +815,8 @@ export default defineComponent({
       state.treeNode = node; //用于请求成功后的更新
 
       state.defaultForm = row.object; //传给子界面
-      state.defaultForm.connectionId = node.data.connectionId;
+      const connectionId = row.connectionId ? row.connectionId : row.defConnectionId;
+      state.defaultForm.connectionId = connectionId;
       switchDBEditVisable(true);
     };
     const handleDBUpdateSubmit = (form: Database) => {
@@ -928,7 +824,6 @@ export default defineComponent({
       const newObject: TreeNode<Database> = JSON.parse(state.treeNodeString);
       newObject.object = form;
       const oldObject: TreeNode<Database> = JSON.parse(state.treeNodeString);
-      oldObject.nodePath = getNodePath(state.treeNode!);
       const data: DatabaseEditForm = {
         newObject: newObject,
         oldObject: oldObject,
@@ -993,7 +888,6 @@ export default defineComponent({
       const newObject: TreeNode<Schema> = JSON.parse(state.treeNodeString);
       newObject.object = form;
       const oldObject: TreeNode<Schema> = JSON.parse(state.treeNodeString);
-      oldObject.nodePath = getNodePath(state.treeNode!);
       const data: SchemaEditForm = {
         newObject: newObject,
         oldObject: oldObject,
@@ -1163,6 +1057,8 @@ export default defineComponent({
                 //赋值connectionId
                 if (element.object.name == nodeData.object.databaseName) {
                   element.connectionId = connectionId;
+                } else {
+                  element.defConnectionId = connectionId;
                 }
               });
               nodeData.connectionId = connectionId;
@@ -1263,10 +1159,12 @@ export default defineComponent({
   /* max-width: 20%; */
   max-width: auto;
 }
+
 .el-tree {
   flex: 1;
   width: 100%;
 }
+
 .el-tree-node__content .tree-node-row div {
   margin-right: 2px;
   margin-left: 2px;
@@ -1284,6 +1182,7 @@ export default defineComponent({
   position: static;
   outline: none;
 }
+
 .tree-node-icon {
   box-sizing: border-box;
   flex-shrink: 0;
@@ -1291,19 +1190,24 @@ export default defineComponent({
   height: 16px;
   flex-shrink: 0;
 }
+
 .tree-node-icon-gt {
   position: relative;
 }
+
 .tree-node-icon img {
   margin-top: 3px;
 }
+
 .tree-node-name {
   box-sizing: border-box;
   padding-right: 16px;
 }
+
 .tree-node-name-gt {
   height: 100%;
 }
+
 .tree-node-row .tree-node-button {
   margin-left: auto !important;
   margin-right: 16px !important;
@@ -1323,11 +1227,9 @@ export default defineComponent({
 .tree-node-action .el-icon {
   margin-right: 3px;
 }
+
 .el-tree-node__content:hover .tree-node-button,
-.el-tree--highlight-current
-  .el-tree-node.is-current
-  > .el-tree-node__content
-  .tree-node-button {
+.el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content .tree-node-button {
   visibility: visible;
 }
 </style>
