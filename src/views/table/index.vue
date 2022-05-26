@@ -72,7 +72,7 @@
             :fieldList="state.fieldList" @saveModal="appendForeign" @removeRow="removeForeign"
             @visableFlag="appendForeignVis" />
         </el-tab-pane>
-        <el-tab-pane label="唯一键" name="unique" style="margin: 0.5rem">
+        <el-tab-pane label="唯一键" name="unique" style="margin: 0.5rem" lazy="true">
           <UniqueTab :treeData="state.treeData" :tableData="state.uniqueConstraintList"
             :indexVisible="state.uniqueVisible" :fieldList="state.fieldList" @saveModal="appendUnique"
             @removeRow="removeUnique" @visableFlag="appendUniqueVis" />
@@ -145,7 +145,7 @@ interface IState {
   fieldList: FieldList[];
   indexList: IndexList[];
   foreignKeyList: ForeignKeyList[];
-  uniqueConstraintList: ForeignKeyList[];
+  uniqueConstraintList: UniqueConstraintList[];
 
   columnVisible: boolean;
   indexVisible: boolean;

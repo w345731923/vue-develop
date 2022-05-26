@@ -8,12 +8,12 @@
     <el-table :data="state.tableData" border :highlight-current-row="true" size="small" style="width: 100%"
       :max-height="state.tableHieght">
       <el-table-column prop="name" label="外键约束名" align="center" />
-      <el-table-column prop="columns" label="字段" align="center" />
-      <el-table-column prop="comment" label="参考模式" align="center" />
-      <el-table-column prop="comment" label="参考表" align="center" />
-      <el-table-column prop="comment" label="参考字段" align="center" />
-      <el-table-column prop="comment" label="删除时" align="center" />
-      <el-table-column prop="comment" label="更新时" align="center" />
+      <el-table-column prop="foreignKeyFields" label="字段" align="center" />
+      <el-table-column prop="referencesSchemaName" label="参考模式" align="center" />
+      <el-table-column prop="referencesTableName" label="参考表" align="center" />
+      <el-table-column prop="referencesFields" label="参考字段" align="center" />
+      <el-table-column prop="deleteStrategy" label="删除时" align="center" />
+      <el-table-column prop="updateStretegy" label="更新时" align="center" />
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">
@@ -22,47 +22,52 @@
         </template>
       </el-table-column>
     </el-table>
-
     <el-dialog :close-on-click-modal="false" v-model="state.indexVisible" title="添加外键" :destroy-on-close="false"
       @closed="onClose(formRef)">
       <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="100px">
         <el-form-item label="外键约束名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
-        <el-form-item label="字段">
-          <el-select v-model="state.form.columnsT" multiple placeholder=" " style="width: 240px">
+        <el-form-item label="字段" prop="foreignKeyFields">
+          <el-select v-model="state.form.foreignKeyFields" multiple placeholder=" " style="width: 240px">
             <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
           </el-select>
         </el-form-item>
-        <el-form-item label="参考模式" prop="indexType">
-          <el-input v-model="state.form.name"></el-input>
+        <el-form-item label="参考模式" prop="referencesSchemaName">
+          <el-input v-model="state.form.referencesSchemaName"></el-input>
         </el-form-item>
-        <el-form-item label="参考表" prop="isUnique">
-          <el-switch v-model="state.form.comment" />
+        <el-form-item label="参考表" prop="referencesTableName">
+          <el-input v-model="state.form.referencesTableName"></el-input>
         </el-form-item>
-        <el-form-item label="参考字段" prop="isClustered">
-          <el-switch v-model="state.form.comment" />
+        <el-form-item label="参考字段" prop="referencesFields">
+          <!-- <el-input v-model="state.form.referencesFields"></el-input> -->
+          <el-select v-model="state.form.referencesFields" multiple placeholder=" " style="width: 240px">
+            <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="删除时" prop="comment">
-          <el-select v-model="state.form.comment" placeholder=" ">
+        <el-form-item label="删除时">
+          <el-select v-model="state.form.deleteStrategy" placeholder=" ">
             <el-option v-for="item in time" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
-        <el-form-item label="更新时" prop="tablespaceName">
-          <el-select v-model="state.form.comment" placeholder=" ">
+        <el-form-item label="更新时">
+          <el-select v-model="state.form.updateStretegy" placeholder=" ">
             <el-option v-for="item in time" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="注释">
           <el-input v-model="state.form.comment"></el-input>
         </el-form-item>
+        <el-form-item label="符合全部">
+          <el-switch v-model="state.form.isMatchFull" />
+        </el-form-item>
         <el-form-item label="可搁置">
-          <el-select v-model="state.form.gezhi" placeholder=" " @change="kegezhiChange">
+          <el-select v-model="state.form.isDeferrableTemp" placeholder=" " @change="isDeferrableChange">
             <el-option v-for="item in a1" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="搁置">
-          <el-select v-model="state.form.kegezhi" placeholder=" " :disabled="state.gezhiDisabled">
+          <el-select v-model="state.form.isDeferredTemp" placeholder=" " :disabled="state.isDeferredDisabled">
             <el-option v-for="item in a2" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
@@ -84,17 +89,24 @@ import {
   ForeignKeyList,
 } from "@/types";
 import { getCurrentInstance } from 'vue'
+import { findSchema } from "@/api/treeNode";
 
 const formRef = ref<FormInstance>();
 const demo: ForeignKeyList = {
   "@clazz": "com.highgo.developer.model.HgdbForeignKey",
   oid: -new Date().getTime(),
   name: "",
-  columns: "",
-  comment: "",
 
-  gezhi: 'NOT DEFERRABLE',
-  kegezhi: 'INITIALLY IMMEDIATE'
+  foreignKeyFields: [],//外键字段，["fl1_id","fl1_id1"]
+  referencesSchemaName: '',//参考模式
+  referencesTableName: '',//参考表
+  referencesFields: [],//参考字段 ["fl1_id","fl1_id1"]
+  updateStretegy: '',//删除时
+  deleteStrategy: '',//更新时
+  comment: '',//注释
+  isMatchFull: false,//符合全部
+  isDeferrable: false,//可搁置  false-NOT DEFERRABLE true-DEFERRABLE 
+  isDeferred: true,//搁置 false-INITIALLY IMMEDIATE  true-INITIALLY DEFERRED
 };
 
 interface IState {
@@ -106,7 +118,8 @@ interface IState {
   isAdd: boolean; //add or update
   fieldList: FieldList[];
 
-  gezhiDisabled: boolean;
+  schemaList: string[];
+  isDeferredDisabled: boolean;
 }
 export default defineComponent({
   name: "foreigntab",
@@ -125,12 +138,22 @@ export default defineComponent({
   emits: ["visableFlag", "saveModal", "removeRow"],
   setup(props, { emit }) {
     onMounted(() => {
+      console.log(state.treeData)
+      debugger
+      findSchema(state.treeData!).then((responseData) => {
+        console.log("findSchema ResponseData", responseData);
+      })
     });
     const datab = getCurrentInstance();
     const rules = reactive({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
-      indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
+      foreignKeyFields: [{ required: true, message: "请选择外键字段！", trigger: "blur" }],
+      referencesSchemaName: [{ required: true, message: "请选择参考模式！", trigger: "blur" }],
+      referencesTableName: [{ required: true, message: "请选择参考表！", trigger: "blur" }],
+      referencesFields: [{ required: true, message: "请选择参考字段！", trigger: "blur" }],
     });
+
+
     const { indexVisible, treeData, tableData, fieldList } = toRefs(props);
     const state: IState = reactive({
       indexVisible: indexVisible.value,
@@ -138,11 +161,11 @@ export default defineComponent({
       tableData: tableData.value as ForeignKeyList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
       form: {} as ForeignKeyList,
-      dataTypeList: [],
       isAdd: true,
-      fieldList: fieldList.value as FieldList[],
 
-      gezhiDisabled: true,
+      fieldList: fieldList.value as FieldList[],
+      schemaList: [],
+      isDeferredDisabled: true,//禁用搁置
     });
     watch(
       indexVisible,
@@ -152,8 +175,7 @@ export default defineComponent({
           demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
           resetFields(demo);
-          state.form.columns = "";
-          state.form.columnsT = [];
+          resetDefer(demo)
         }
       },
       { immediate: true }
@@ -189,13 +211,27 @@ export default defineComponent({
     const resetFields = (resetVal: ForeignKeyList) => {
       Object.assign(state.form, resetVal);
     };
+    const resetDefer = (row: ForeignKeyList) => {
+      //解析索引字段
+      const a1 = datab!.data.a1 as string[];
+      const a2 = datab!.data.a2 as string[];
+      if (row.isDeferrable) {//DEFERRABLE
+        state.form.isDeferrableTemp = a1[0];
+        state.isDeferredDisabled = false
+      } else {//NOT DEFERRABLE
+        state.form.isDeferrableTemp = a1[1];
+        state.isDeferredDisabled = true
+      }
+      state.form.isDeferredTemp = row.isDeferred ? a2[0] : a2[1];
+    }
     //修改按钮
     const columnUpdateClick = (row: ForeignKeyList) => {
       console.log("columnUpdateButtonClick row ", row);
-      resetFields(row);
-      //解析索引字段
-      emit("visableFlag", true);
       state.isAdd = false;
+      resetFields(row);
+      resetDefer(row);
+      emit("visableFlag", true);
+
     };
 
     //删除按钮
@@ -214,19 +250,23 @@ export default defineComponent({
       formEl.validate((valid) => {
         if (valid) {
           const data = createVal(state.form);
+          const a1 = datab!.data.a1 as string[];
+          const a2 = datab!.data.a2 as string[];
+          data.isDeferrable = data.isDeferrableTemp == a1[0] ? true : false;
+          data.isDeferred = data.isDeferredTemp == a2[0] ? true : false;
           emit("saveModal", data);
         }
       });
     };
-    const kegezhiChange = (val: string) => {
+    const isDeferrableChange = (val: string) => {
       console.log('datab', datab)
       const a1 = datab!.data.a1 as string[];
       if (a1[0] == val) {
         //DEFERRABLE 启用
-        state.gezhiDisabled = false;
+        state.isDeferredDisabled = false;
       } else {
         //NOT DEFERRABLE 禁用
-        state.gezhiDisabled = true;
+        state.isDeferredDisabled = true;
       }
     }
     return {
@@ -237,7 +277,7 @@ export default defineComponent({
       removeColumnClick,
       submitForm,
       onClose,
-      kegezhiChange
+      isDeferrableChange
     };
   },
 

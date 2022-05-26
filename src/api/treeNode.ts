@@ -260,3 +260,10 @@ export async function tableEdit(data: TableEditForm) {
         method: 'POST', data
     });
 }
+/**
+ * 查询database下的schema的列表string[]
+ * @returns 
+ */
+ export async function findSchema(data: TreeNode<any>) {
+    return await http.request<ResponseData<string[]>>('/dbinfo/findSchema', { method: 'POST', data });
+}

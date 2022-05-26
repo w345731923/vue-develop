@@ -29,11 +29,6 @@
         <el-form-item label="外键约束名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
-        <el-form-item label="字段">
-          <el-select v-model="state.form.columnsT" multiple placeholder=" " style="width: 240px">
-            <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="参考模式" prop="indexType">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
@@ -56,16 +51,6 @@
         <el-form-item label="注释">
           <el-input v-model="state.form.comment"></el-input>
         </el-form-item>
-        <el-form-item label="可搁置">
-          <el-select v-model="state.form.gezhi" placeholder=" " @change="kegezhiChange">
-            <el-option v-for="item in a1" :key="item" :label="item" :value="item" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="搁置">
-          <el-select v-model="state.form.kegezhi" placeholder=" " :disabled="state.gezhiDisabled">
-            <el-option v-for="item in a2" :key="item" :label="item" :value="item" />
-          </el-select>
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="onClose(formRef)">取消</el-button>
@@ -81,28 +66,24 @@ import type { FormInstance, TabsPaneContext } from "element-plus";
 import {
   TreeNode,
   FieldList,
-  ForeignKeyList,
+  UniqueConstraintList,
 } from "@/types";
 import { getCurrentInstance } from 'vue'
 
 const formRef = ref<FormInstance>();
-const demo: ForeignKeyList = {
+const demo: UniqueConstraintList = {
   "@clazz": "com.highgo.developer.model.HgdbForeignKey",
   oid: -new Date().getTime(),
   name: "",
-  columns: "",
   comment: "",
-
-  gezhi: 'NOT DEFERRABLE',
-  kegezhi: 'INITIALLY IMMEDIATE'
 };
 
 interface IState {
   indexVisible: boolean;
   treeData: TreeNode<any>;
-  tableData: ForeignKeyList[];
+  tableData: UniqueConstraintList[];
   tableHieght: number;
-  form: ForeignKeyList;
+  form: UniqueConstraintList;
   isAdd: boolean; //add or update
   tableSpaceList: string[];
   fieldList: FieldList[];
@@ -137,9 +118,9 @@ export default defineComponent({
     const state: IState = reactive({
       indexVisible: indexVisible.value,
       treeData: treeData.value as TreeNode<any>,
-      tableData: tableData.value as ForeignKeyList[],
+      tableData: tableData.value as UniqueConstraintList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
-      form: {} as ForeignKeyList,
+      form: {} as UniqueConstraintList,
       dataTypeList: [],
       isAdd: true,
       tableSpaceList: tableSpaceList.value as string[],
@@ -155,8 +136,8 @@ export default defineComponent({
           demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
           resetFields(demo);
-          state.form.columns = "";
-          state.form.columnsT = [];
+          // state.form.columns = "";
+          // state.form.columnsT = [];
         }
       },
       { immediate: true }
@@ -164,7 +145,7 @@ export default defineComponent({
     watch(
       tableData,
       (newValue) => {
-        state.tableData = newValue as ForeignKeyList[];
+        state.tableData = newValue as UniqueConstraintList[];
       },
       { immediate: true }
     );
@@ -190,17 +171,17 @@ export default defineComponent({
       { immediate: true }
     );
     //对象拷贝
-    const createVal = (src: ForeignKeyList) => {
-      const target = {} as ForeignKeyList;
+    const createVal = (src: UniqueConstraintList) => {
+      const target = {} as UniqueConstraintList;
       Object.assign(target, src);
       return target;
     };
     //重置row初始值
-    const resetFields = (resetVal: ForeignKeyList) => {
+    const resetFields = (resetVal: UniqueConstraintList) => {
       Object.assign(state.form, resetVal);
     };
     //修改按钮
-    const columnUpdateClick = (row: ForeignKeyList) => {
+    const columnUpdateClick = (row: UniqueConstraintList) => {
       console.log("columnUpdateButtonClick row ", row);
       resetFields(row);
       //解析索引字段
@@ -209,7 +190,7 @@ export default defineComponent({
     };
 
     //删除按钮
-    const removeColumnClick = (row: ForeignKeyList) => {
+    const removeColumnClick = (row: UniqueConstraintList) => {
       emit("removeRow", row);
     };
     //关闭

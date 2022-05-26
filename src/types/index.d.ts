@@ -44,7 +44,7 @@ export interface TreeNode<T> {
   nodePath: string,  //node整体路径
   object: T;
   connectionId: string | null;
-  defConnectionId?:string;
+  defConnectionId?: string;
   children?: TreeNode[];
 }
 //create SQL预览
@@ -282,7 +282,7 @@ export interface IndexList {
   oid: number,
   name: string,//索引名 "index_a2_t1"
   columns: string,//索引字段，""1","444""
-  columnsT?:string[],//临时使用，索引字段转换
+  columnsT?: string[],//临时使用，索引字段转换
   indexType: string,//索引方法  btree
   isUnique: boolean,//唯一键
   isClustered: boolean,//并发
@@ -298,25 +298,32 @@ export interface IndexList {
 export interface ForeignKeyList {
   '@clazz': string;//"com.highgo.developer.model.HgdbForeignKey"
   oid: number,
-  name: string,//索引名 "index_a2_t1"
-  columns: string,//索引字段，""1","444""
-  columnsT?:string[],//临时使用，索引字段转换
-
+  name: string,//外键名 "index_a2_t1"
+  foreignKeyFields: string[],//外键字段，["fl1_id","fl1_id1"]
+  referencesSchemaName: string,//参考模式
+  referencesTableName: string,//参考表
+  referencesFields: string[],//参考字段 ["fl1_id","fl1_id1"]
+  updateStretegy: string,//删除时
+  deleteStrategy: string,//更新时
   comment: string,//注释
+  isMatchFull: boolean,//符合全部
+  isDeferrable: boolean,//可搁置  false-NOT DEFERRABLE true-DEFERRABLE 
+  isDeferred: boolean,//搁置 false-INITIALLY IMMEDIATE  true-INITIALLY DEFERRED
 
-  gezhi:string;
-  kegezhi:string;
+  confkeys?: string[],
+  referencesFieldsTemp?: string[],
+  isDeferrableTemp?:string,
+  isDeferredTemp?:string,
 }
 //表-唯一
 export interface UniqueConstraintList {
   '@clazz': string;//"com.highgo.developer.model.HgdbForeignKey"
   oid: number,
-  name: string,//索引名 "index_a2_t1"
-  columns: string,//索引字段，""1","444""
-  columnsT?:string[],//临时使用，索引字段转换
-
+  name: string,//外键名 "index_a2_t1"
   comment: string,//注释
 
-  gezhi:string;
-  kegezhi:string;
 }
+
+
+
+
