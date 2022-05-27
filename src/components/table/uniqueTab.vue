@@ -7,13 +7,8 @@
     -->
     <el-table :data="state.tableData" border :highlight-current-row="true" size="small" style="width: 100%"
       :max-height="state.tableHieght">
-      <el-table-column prop="name" label="外键约束名" align="center" />
-      <el-table-column prop="columns" label="字段" align="center" />
-      <el-table-column prop="comment" label="参考模式" align="center" />
-      <el-table-column prop="comment" label="参考表" align="center" />
-      <el-table-column prop="comment" label="参考字段" align="center" />
-      <el-table-column prop="comment" label="删除时" align="center" />
-      <el-table-column prop="comment" label="更新时" align="center" />
+      <el-table-column prop="name" label="唯一键约束名" align="center" />
+      <el-table-column prop="includeFieldNames" label="字段" align="center" />
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">
@@ -26,30 +21,34 @@
     <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加外键" :destroy-on-close="false"
       @closed="onClose(formRef)">
       <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="100px">
-        <el-form-item label="外键约束名" prop="name">
+        <el-form-item label="唯一约束名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
-        <el-form-item label="参考模式" prop="indexType">
-          <el-input v-model="state.form.name"></el-input>
-        </el-form-item>
-        <el-form-item label="参考表" prop="isUnique">
-          <el-switch v-model="state.form.comment" />
-        </el-form-item>
-        <el-form-item label="参考字段" prop="isClustered">
-          <el-switch v-model="state.form.comment" />
-        </el-form-item>
-        <el-form-item label="删除时" prop="comment">
-          <el-select v-model="state.form.comment" placeholder=" ">
-            <el-option v-for="item in time" :key="item" :label="item" :value="item" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="更新时" prop="tablespaceName">
-          <el-select v-model="state.form.comment" placeholder=" ">
-            <el-option v-for="item in time" :key="item" :label="item" :value="item" />
+        <el-form-item label="字段" prop="includeFieldNames">
+          <el-select v-model="state.form.includeFieldNames" multiple placeholder=" " style="width: 240px">
+            <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
           </el-select>
         </el-form-item>
         <el-form-item label="注释">
           <el-input v-model="state.form.comment"></el-input>
+        </el-form-item>
+        <el-form-item label="表空间" prop="tablespaceName">
+          <el-select v-model="state.form.tableSpaceName" placeholder=" ">
+            <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="填充系数(%)" prop="fillFactor">
+          <el-input-number v-model="state.form.fillFactor" />
+        </el-form-item>
+        <el-form-item label="可搁置">
+          <el-select v-model="state.form.isDeferrableTemp" placeholder=" " @change="isDeferrableChange">
+            <el-option v-for="item in a1" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="搁置">
+          <el-select v-model="state.form.isDeferredTemp" placeholder=" " :disabled="state.isDeferredDisabled">
+            <el-option v-for="item in a2" :key="item" :label="item" :value="item" />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -72,10 +71,15 @@ import { getCurrentInstance } from 'vue'
 
 const formRef = ref<FormInstance>();
 const demo: UniqueConstraintList = {
-  "@clazz": "com.highgo.developer.model.HgdbForeignKey",
+  "@clazz": "com.highgo.developer.model.HgdbUniqueConstraint",
   oid: -new Date().getTime(),
-  name: "",
-  comment: "",
+  name: '',//唯一键约束名 "index_a2_t1"
+  includeFieldNames: [],//字段["fl1_id"]
+  comment: '',//注释
+  tableSpaceName: '',//表空间
+  fillFactor: -1,//填充系数 -1
+  isDeferrable: false,//可搁置
+  isDeferred: false,//搁置  
 };
 
 interface IState {
@@ -88,7 +92,7 @@ interface IState {
   tableSpaceList: string[];
   fieldList: FieldList[];
 
-  gezhiDisabled: boolean;
+  isDeferredDisabled: boolean;
 }
 export default defineComponent({
   name: "uniquetab",
@@ -112,8 +116,9 @@ export default defineComponent({
     const datab = getCurrentInstance();
     const rules = reactive({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
-      indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
+      includeFieldNames: [{ required: true, message: "请选择字段！", trigger: "blur" }],
     });
+
     const { visible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
     const state: IState = reactive({
       visible: visible.value,
@@ -126,7 +131,7 @@ export default defineComponent({
       tableSpaceList: tableSpaceList.value as string[],
       fieldList: fieldList.value as FieldList[],
 
-      gezhiDisabled: true,
+      isDeferredDisabled: true,//禁用搁置
     });
     watch(
       visible,
@@ -136,8 +141,7 @@ export default defineComponent({
           demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
           resetFields(demo);
-          // state.form.columns = "";
-          // state.form.columnsT = [];
+          resetDefer(demo)
         }
       },
       { immediate: true }
@@ -183,10 +187,10 @@ export default defineComponent({
     //修改按钮
     const columnUpdateClick = (row: UniqueConstraintList) => {
       console.log("columnUpdateButtonClick row ", row);
-      resetFields(row);
-      //解析索引字段
-      emit("visableFlag", true);
       state.isAdd = false;
+      resetFields(row);
+      resetDefer(row);
+      emit("visableFlag", true);
     };
 
     //删除按钮
@@ -205,19 +209,36 @@ export default defineComponent({
       formEl.validate((valid) => {
         if (valid) {
           const data = createVal(state.form);
+          const a1 = datab!.data.a1 as string[];
+          const a2 = datab!.data.a2 as string[];
+          data.isDeferrable = data.isDeferrableTemp == a1[0] ? true : false;
+          data.isDeferred = data.isDeferredTemp == a2[0] ? true : false;
           emit("saveModal", data);
         }
       });
     };
-    const kegezhiChange = (val: string) => {
+    const resetDefer = (row: UniqueConstraintList) => {
+      //解析索引字段
+      const a1 = datab!.data.a1 as string[];
+      const a2 = datab!.data.a2 as string[];
+      if (row.isDeferrable) {//DEFERRABLE
+        state.form.isDeferrableTemp = a1[0];
+        state.isDeferredDisabled = false
+      } else {//NOT DEFERRABLE
+        state.form.isDeferrableTemp = a1[1];
+        state.isDeferredDisabled = true
+      }
+      state.form.isDeferredTemp = row.isDeferred ? a2[0] : a2[1];
+    }
+    const isDeferrableChange = (val: string) => {
       console.log('datab', datab)
       const a1 = datab!.data.a1 as string[];
       if (a1[0] == val) {
         //DEFERRABLE 启用
-        state.gezhiDisabled = false;
+        state.isDeferredDisabled = false;
       } else {
         //NOT DEFERRABLE 禁用
-        state.gezhiDisabled = true;
+        state.isDeferredDisabled = true;
       }
     }
     return {
@@ -228,7 +249,7 @@ export default defineComponent({
       removeColumnClick,
       submitForm,
       onClose,
-      kegezhiChange
+      isDeferrableChange
     };
   },
 

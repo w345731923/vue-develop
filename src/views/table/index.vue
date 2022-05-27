@@ -269,6 +269,7 @@ export default defineComponent({
       state.treeData!.object.fieldList = state.fieldList;
       state.treeData!.object.indexList = state.indexList;
       state.treeData!.object.foreignKeyList = state.foreignKeyList;
+      state.treeData!.object.uniqueConstraintList = state.uniqueConstraintList;
 
       //oldObject
       const oldData = JSON.parse(
@@ -277,6 +278,7 @@ export default defineComponent({
       oldData.object.fieldList = JSON.parse(state.oldObjectField);
       oldData.object.indexList = JSON.parse(state.oldObjectIndex);
       oldData.object.foreignKeyList = JSON.parse(state.oldObjectForeign);
+      oldData.object.uniqueConstraintList = JSON.parse(state.oldObjectUnique);
 
       const data: TableEditForm = {
         newObject: state.treeData!,
@@ -317,11 +319,13 @@ export default defineComponent({
       state.fieldList = resp.object.fieldList;
       state.indexList = resp.object.indexList;
       state.foreignKeyList = resp.object.foreignKeyList;
+      state.uniqueConstraintList = resp.object.uniqueConstraintList;
 
       //保存old数据，用于修改
       state.oldObjectField = JSON.stringify(resp.object.fieldList);
       state.oldObjectIndex = JSON.stringify(resp.object.indexList);
       state.oldObjectForeign = JSON.stringify(resp.object.foreignKeyList);
+      state.oldObjectUnique = JSON.stringify(resp.object.uniqueConstraintList);
 
       //清空无用字段，最小化保存字符串
       resp.object.fieldList = [];

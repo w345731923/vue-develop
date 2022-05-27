@@ -317,11 +317,17 @@ export interface ForeignKeyList {
 }
 //表-唯一
 export interface UniqueConstraintList {
-  '@clazz': string;//"com.highgo.developer.model.HgdbForeignKey"
+  '@clazz': string;//"com.highgo.developer.model.HgdbUniqueConstraint"
   oid: number,
-  name: string,//外键名 "index_a2_t1"
+  name: string,//唯一键约束名 "index_a2_t1"
+  includeFieldNames: string[],//字段["fl1_id"]
   comment: string,//注释
-
+  tableSpaceName:string,//表空间
+  fillFactor:number,//填充系数 -1
+  isDeferrable:boolean,//可搁置
+  isDeferred:boolean,//搁置
+  isDeferrableTemp?:string,//临时存储可搁置
+  isDeferredTemp?:string,  //临时存储搁置
 }
 
 
