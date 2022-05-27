@@ -32,7 +32,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog :close-on-click-modal="false" v-model="state.indexVisible" title="添加索引" :destroy-on-close="false"
+    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加索引" :destroy-on-close="false"
       @closed="onClose(formRef)">
       <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="90px">
         <el-form-item label="索引名" prop="name">
@@ -106,7 +106,7 @@ const demo: IndexList = {
 };
 
 interface IState {
-  indexVisible: boolean;
+  visible: boolean;
   treeData: TreeNode<any>;
   tableData: IndexList[];
   tableHieght: number;
@@ -118,7 +118,7 @@ interface IState {
 export default defineComponent({
   name: "indextab",
   props: {
-    indexVisible: {
+    visible: {
       type: Boolean,
       default: false,
     },
@@ -138,9 +138,9 @@ export default defineComponent({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
       indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
     });
-    const { indexVisible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
+    const { visible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
     const state: IState = reactive({
-      indexVisible: indexVisible.value,
+      visible: visible.value,
       treeData: treeData.value as TreeNode<any>,
       tableData: tableData.value as IndexList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
@@ -151,9 +151,9 @@ export default defineComponent({
       fieldList: fieldList.value as FieldList[],
     });
     watch(
-      indexVisible,
+      visible,
       (newValue) => {
-        state.indexVisible = newValue;
+        state.visible = newValue;
         if (newValue && state.isAdd) {
           demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值

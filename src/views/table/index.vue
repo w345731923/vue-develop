@@ -59,23 +59,24 @@
     <div class="query-result">
       <el-tabs v-model="state.tabsActive" type="card" @tab-click="handleTabClick">
         <el-tab-pane label="字段" name="columns" style="margin: 0.5rem">
-          <ColumnTab :treeData="state.treeData" :tableData="state.fieldList" :columnVisible="state.columnVisible"
+          <ColumnTab :treeData="state.treeData" :tableData="state.fieldList" :visible="state.columnVisible"
             @saveModal="appendColumn" @removeRow="removeColumn" @visableFlag="appendColumnVis" />
         </el-tab-pane>
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
-          <IndexTab :treeData="state.treeData" :tableData="state.indexList" :indexVisible="state.indexVisible"
+          <IndexTab :treeData="state.treeData" :tableData="state.indexList" :visible="state.indexVisible"
             :fieldList="state.fieldList" :tableSpaceList="state.tableSpaceList" @saveModal="appendIndex"
             @removeRow="removeIndex" @visableFlag="appendIndexVis" v-if="state.tabsActive == 'index'" />
         </el-tab-pane>
         <el-tab-pane label="外键" name="foreign" style="margin: 0.5rem">
-          <ForeignTab :treeData="state.treeData" :tableData="state.foreignKeyList" :indexVisible="state.foreignVisible"
+          <ForeignTab :treeData="state.treeData" :tableData="state.foreignKeyList" :visible="state.foreignVisible"
             :fieldList="state.fieldList" @saveModal="appendForeign" @removeRow="removeForeign"
             @visableFlag="appendForeignVis" v-if="state.tabsActive == 'foreign'" />
         </el-tab-pane>
         <el-tab-pane label="唯一键" name="unique" style="margin: 0.5rem">
           <UniqueTab :treeData="state.treeData" :tableData="state.uniqueConstraintList"
-            :indexVisible="state.uniqueVisible" :fieldList="state.fieldList" @saveModal="appendUnique"
-            @removeRow="removeUnique" @visableFlag="appendUniqueVis" v-if="state.tabsActive == 'unique'"/>
+            :tableSpaceList="state.tableSpaceList" :visible="state.uniqueVisible" :fieldList="state.fieldList"
+            @saveModal="appendUnique" @removeRow="removeUnique" @visableFlag="appendUniqueVis"
+            v-if="state.tabsActive == 'unique'" />
         </el-tab-pane>
         <el-tab-pane label="检查" name="check" style="margin: 0.5rem">
           <div>检查</div>

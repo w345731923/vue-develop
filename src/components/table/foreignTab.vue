@@ -22,7 +22,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog :close-on-click-modal="false" v-model="state.indexVisible" title="添加外键" :destroy-on-close="false"
+    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加外键" :destroy-on-close="false"
       @closed="onClose(formRef)">
       <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="100px">
         <el-form-item label="外键约束名" prop="name">
@@ -115,7 +115,7 @@ const demo: ForeignKeyList = {
 };
 
 interface IState {
-  indexVisible: boolean;
+  visible: boolean;
   treeData: TreeNode<any>;
   tableData: ForeignKeyList[];
   tableHieght: number;
@@ -131,7 +131,7 @@ interface IState {
 export default defineComponent({
   name: "foreigntab",
   props: {
-    indexVisible: {
+    visible: {
       type: Boolean,
       default: false,
     },
@@ -171,9 +171,9 @@ export default defineComponent({
     });
 
 
-    const { indexVisible, treeData, tableData, fieldList } = toRefs(props);
+    const { visible, treeData, tableData, fieldList } = toRefs(props);
     const state: IState = reactive({
-      indexVisible: indexVisible.value,
+      visible: visible.value,
       treeData: treeData.value as TreeNode<any>,
       tableData: tableData.value as ForeignKeyList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
@@ -187,9 +187,9 @@ export default defineComponent({
       isDeferredDisabled: true,//禁用搁置
     });
     watch(
-      indexVisible,
+      visible,
       (newValue) => {
-        state.indexVisible = newValue;
+        state.visible = newValue;
         if (newValue && state.isAdd) {
           demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
