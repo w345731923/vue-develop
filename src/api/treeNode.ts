@@ -267,3 +267,17 @@ export async function tableEdit(data: TableEditForm) {
  export async function findSchema(data: TreeNode<any>) {
     return await http.request<ResponseData<string[]>>('/dbinfo/findSchema', { method: 'POST', data });
 }
+/**
+ * 查询schema下的table的列表string[]
+ * @returns 
+ */
+ export async function findTable(data: TreeNode<any>) {
+    return await http.request<ResponseData<string[]>>('/dbinfo/findTable', { method: 'POST', data });
+}
+/**
+ * 查询table下的table的列表field[]
+ * @returns 
+ */
+ export async function findField(data: TreeNode<any>) {
+    return await http.request<ResponseData<string[]>>('/dbinfo/findField', { method: 'POST', data });
+}

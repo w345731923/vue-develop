@@ -65,17 +65,17 @@
         <el-tab-pane label="索引" name="index" style="margin: 0.5rem">
           <IndexTab :treeData="state.treeData" :tableData="state.indexList" :indexVisible="state.indexVisible"
             :fieldList="state.fieldList" :tableSpaceList="state.tableSpaceList" @saveModal="appendIndex"
-            @removeRow="removeIndex" @visableFlag="appendIndexVis" />
+            @removeRow="removeIndex" @visableFlag="appendIndexVis" v-if="state.tabsActive == 'index'" />
         </el-tab-pane>
         <el-tab-pane label="外键" name="foreign" style="margin: 0.5rem">
           <ForeignTab :treeData="state.treeData" :tableData="state.foreignKeyList" :indexVisible="state.foreignVisible"
             :fieldList="state.fieldList" @saveModal="appendForeign" @removeRow="removeForeign"
-            @visableFlag="appendForeignVis" />
+            @visableFlag="appendForeignVis" v-if="state.tabsActive == 'foreign'" />
         </el-tab-pane>
-        <el-tab-pane label="唯一键" name="unique" style="margin: 0.5rem" lazy="true">
+        <el-tab-pane label="唯一键" name="unique" style="margin: 0.5rem">
           <UniqueTab :treeData="state.treeData" :tableData="state.uniqueConstraintList"
             :indexVisible="state.uniqueVisible" :fieldList="state.fieldList" @saveModal="appendUnique"
-            @removeRow="removeUnique" @visableFlag="appendUniqueVis" />
+            @removeRow="removeUnique" @visableFlag="appendUniqueVis" v-if="state.tabsActive == 'unique'"/>
         </el-tab-pane>
         <el-tab-pane label="检查" name="check" style="margin: 0.5rem">
           <div>检查</div>

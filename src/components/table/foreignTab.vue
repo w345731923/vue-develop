@@ -34,15 +34,20 @@
           </el-select>
         </el-form-item>
         <el-form-item label="参考模式" prop="referencesSchemaName">
-          <el-input v-model="state.form.referencesSchemaName"></el-input>
+          <el-select v-model="state.form.referencesSchemaName" placeholder=" " style="width: 240px"
+            @change="schemaChange">
+            <el-option v-for="item in state.schemaList" :key="item" :label="item" :value="item" />
+          </el-select>
         </el-form-item>
         <el-form-item label="参考表" prop="referencesTableName">
-          <el-input v-model="state.form.referencesTableName"></el-input>
+          <el-select v-model="state.form.referencesTableName" placeholder=" " style="width: 240px"
+            @change="tableChange">
+            <el-option v-for="item in state.tableList" :key="item" :label="item" :value="item" />
+          </el-select>
         </el-form-item>
         <el-form-item label="参考字段" prop="referencesFields">
-          <!-- <el-input v-model="state.form.referencesFields"></el-input> -->
           <el-select v-model="state.form.referencesFields" multiple placeholder=" " style="width: 240px">
-            <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
+            <el-option v-for="item in state.tarFieldList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="删除时">
@@ -89,7 +94,7 @@ import {
   ForeignKeyList,
 } from "@/types";
 import { getCurrentInstance } from 'vue'
-import { findSchema } from "@/api/treeNode";
+import { findSchema, findTable, findField } from "@/api/treeNode";
 
 const formRef = ref<FormInstance>();
 const demo: ForeignKeyList = {
@@ -119,6 +124,8 @@ interface IState {
   fieldList: FieldList[];
 
   schemaList: string[];
+  tableList: string[];
+  tarFieldList: string[];
   isDeferredDisabled: boolean;
 }
 export default defineComponent({
@@ -139,10 +146,20 @@ export default defineComponent({
   setup(props, { emit }) {
     onMounted(() => {
       console.log(state.treeData)
-      debugger
-      findSchema(state.treeData!).then((responseData) => {
-        console.log("findSchema ResponseData", responseData);
+      findSchema(state.treeData!).then((result) => {
+        console.log("findSchema result", result);
+        state.schemaList = result.data;
       })
+
+      // findTable(state.treeData!).then((result) => {
+      //   console.log("findTable result", result);
+      //   state.tableList = result.data;
+      // })
+
+      // findField(state.treeData!).then((result) => {
+      //   console.log("findField result", result);
+      //   state.tarFieldList = result.data;
+      // })
     });
     const datab = getCurrentInstance();
     const rules = reactive({
@@ -165,6 +182,8 @@ export default defineComponent({
 
       fieldList: fieldList.value as FieldList[],
       schemaList: [],
+      tableList: [],
+      tarFieldList: [],
       isDeferredDisabled: true,//禁用搁置
     });
     watch(
@@ -269,6 +288,36 @@ export default defineComponent({
         state.isDeferredDisabled = true;
       }
     }
+    const schemaChange = (val: string) => {
+      const index = state.treeData!.nodePath.indexOf('schemaName');
+      const str = state.treeData!.nodePath.substring(0, index);
+      const nodePath = str + 'schemaName/' + val;
+      const temp = {
+        type: "Schema",
+        object: null,
+        nodePath: nodePath,
+        connectionId: state.treeData!.connectionId
+      } as TreeNode<any>;
+      findTable(temp).then((result) => {
+        console.log("findTable result", result);
+        state.tableList = result.data;
+      })
+    }
+    const tableChange = (val: string) => {
+      const index = state.treeData!.nodePath.indexOf('tableName');
+      const str = state.treeData!.nodePath.substring(0, index);
+      const nodePath = str + 'tableName/' + val;
+      const temp = {
+        type: "Table",
+        object: null,
+        nodePath: nodePath,
+        connectionId: state.treeData!.connectionId
+      } as TreeNode<any>;
+      findField(temp).then((result) => {
+        console.log("findField result", result);
+        state.tarFieldList = result.data;
+      })
+    }
     return {
       state,
       formRef,
@@ -277,7 +326,9 @@ export default defineComponent({
       removeColumnClick,
       submitForm,
       onClose,
-      isDeferrableChange
+      isDeferrableChange,
+      schemaChange,
+      tableChange
     };
   },
 
