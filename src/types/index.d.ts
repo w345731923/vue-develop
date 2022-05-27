@@ -288,7 +288,7 @@ export interface IndexList {
   isClustered: boolean,//并发
   comment: string,//注释
   tablespaceName: string,//表空间 pg_default
-  reloption: number,//填充系数
+  reloptions: number,//填充系数
   constraint: string,//条件 "1 = 1"
   expression?: string,//表达式
   childrenModel?: [],

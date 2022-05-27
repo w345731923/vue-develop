@@ -62,9 +62,8 @@
             <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
-        <el-form-item label="填充系数(%)" prop="reloption">
-          <el-input-number v-model="state.form.reloption" />
-          <!-- <el-input-number v-model="state.form.reloption" oninput="value=value.replace(/[^\d]/g,'')"></el-input> -->
+        <el-form-item label="填充系数(%)" prop="reloptions">
+          <el-input-number v-model="state.form.reloptions" />
         </el-form-item>
         <el-form-item label="条件" prop="constraint">
           <el-input v-model="state.form.constraint"></el-input>
@@ -80,15 +79,12 @@
 
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, ref, onMounted } from "vue";
-import type { FormInstance, TabsPaneContext } from "element-plus";
+import type { FormInstance } from "element-plus";
 import {
-  ResponseData,
   TreeNode,
   FieldList,
   IndexList,
 } from "@/types";
-import { getDatabaseTableSpace } from "@/api/treeNode";
-import { debug } from "console";
 const formRef = ref<FormInstance>();
 const demo: IndexList = {
   "@clazz": "com.highgo.developer.model.HgdbIndex",
@@ -100,7 +96,7 @@ const demo: IndexList = {
   isClustered: false,
   comment: "",
   tablespaceName: "",
-  reloption: -1,//填充系数，api是string，填入是number的百分比
+  reloptions: -1,//填充系数，api是string，填入是number的百分比
   constraint: "",
   expression: "" //表达式
 };

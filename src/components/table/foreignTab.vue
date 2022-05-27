@@ -87,7 +87,7 @@
 
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, ref, onMounted } from "vue";
-import type { FormInstance, TabsPaneContext } from "element-plus";
+import type { FormInstance } from "element-plus";
 import {
   TreeNode,
   FieldList,
@@ -150,16 +150,6 @@ export default defineComponent({
         console.log("findSchema result", result);
         state.schemaList = result.data;
       })
-
-      // findTable(state.treeData!).then((result) => {
-      //   console.log("findTable result", result);
-      //   state.tableList = result.data;
-      // })
-
-      // findField(state.treeData!).then((result) => {
-      //   console.log("findField result", result);
-      //   state.tarFieldList = result.data;
-      // })
     });
     const datab = getCurrentInstance();
     const rules = reactive({
