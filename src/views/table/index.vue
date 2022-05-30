@@ -52,6 +52,7 @@
             </el-icon>添加唯一键
           </el-button>
         </el-button-group>
+        <el-button-group v-if="state.tabsActive == 'comment'" />
       </div>
     </div>
 
@@ -94,7 +95,7 @@
           <div>选项</div>
         </el-tab-pane>
         <el-tab-pane label="注释" name="comment" style="margin: 0.5rem">
-          <div>注释</div>
+          <el-input v-model="state.comment" type="textarea" :rows="20" />
         </el-tab-pane>
         <el-tab-pane label="SQL预览" name="sqlview" style="margin: 0.5rem">
           <el-input v-model="state.sqlpreview" type="textarea" :rows="20" />
@@ -142,11 +143,13 @@ interface IState {
   oldObjectIndex: string;
   oldObjectForeign: string;
   oldObjectUnique: string;
+  oldComment: string;
 
   fieldList: FieldList[];
   indexList: IndexList[];
   foreignKeyList: ForeignKeyList[];
   uniqueConstraintList: UniqueConstraintList[];
+  comment: string;
 
   columnVisible: boolean;
   indexVisible: boolean;
@@ -207,6 +210,7 @@ export default defineComponent({
       oldObjectIndex: "", //修改时用的IndexList
       oldObjectForeign: "", //foreignKeyList
       oldObjectUnique: "",
+      oldComment: '',
 
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
@@ -216,6 +220,7 @@ export default defineComponent({
       indexList: [], //索引列表--indexList
       foreignKeyList: [],//外键列表--foreignKeyList
       uniqueConstraintList: [],//唯一列表--uniqueConstraintList
+      comment: '',
 
       columnVisible: false, //添加字段
       indexVisible: false, //添加索引
@@ -258,7 +263,7 @@ export default defineComponent({
         foreignKeyList: state.foreignKeyList,
         uniqueConstraintList: state.uniqueConstraintList,
         name: name,
-        comment: "",
+        comment: state.comment,
       };
       target.type = "Table";
       target.object = data;
@@ -270,6 +275,7 @@ export default defineComponent({
       state.treeData!.object.indexList = state.indexList;
       state.treeData!.object.foreignKeyList = state.foreignKeyList;
       state.treeData!.object.uniqueConstraintList = state.uniqueConstraintList;
+      state.treeData!.object.comment = state.comment;
 
       //oldObject
       const oldData = JSON.parse(
@@ -279,6 +285,7 @@ export default defineComponent({
       oldData.object.indexList = JSON.parse(state.oldObjectIndex);
       oldData.object.foreignKeyList = JSON.parse(state.oldObjectForeign);
       oldData.object.uniqueConstraintList = JSON.parse(state.oldObjectUnique);
+      oldData.object.comment = state.oldComment;
 
       const data: TableEditForm = {
         newObject: state.treeData!,
@@ -320,17 +327,21 @@ export default defineComponent({
       state.indexList = resp.object.indexList;
       state.foreignKeyList = resp.object.foreignKeyList;
       state.uniqueConstraintList = resp.object.uniqueConstraintList;
+      state.comment = resp.object.comment;
 
       //保存old数据，用于修改
       state.oldObjectField = JSON.stringify(resp.object.fieldList);
       state.oldObjectIndex = JSON.stringify(resp.object.indexList);
       state.oldObjectForeign = JSON.stringify(resp.object.foreignKeyList);
       state.oldObjectUnique = JSON.stringify(resp.object.uniqueConstraintList);
+      state.comment = resp.object.comment;
 
       //清空无用字段，最小化保存字符串
       resp.object.fieldList = [];
       resp.object.indexList = [];
       resp.object.foreignKeyList = [];
+      resp.object.comment = '';
+
 
       resp.object.childrenModel = [];
       state.oldObject = JSON.stringify(resp);
