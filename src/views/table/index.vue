@@ -58,6 +58,13 @@
               <Avatar />
             </el-icon>添加检查
           </el-button>
+        </el-button-group>
+        <el-button-group v-if="state.tabsActive == 'rule'">
+          <el-button size="small" color="#f2f2f2" @click="appendRuleVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>添加规则
+          </el-button>
         </el-button-group>        
         <el-button-group v-if="state.tabsActive == 'comment'" />
       </div>
@@ -93,8 +100,9 @@
         <el-tab-pane label="排除" name="exclude" style="margin: 0.5rem">
           <div>排除</div>
         </el-tab-pane>
-        <el-tab-pane label="规则" name="role" style="margin: 0.5rem">
-          <div>规则</div>
+        <el-tab-pane label="规则" name="rule" style="margin: 0.5rem">
+          <RuleTab :tableData="state.ruleList" :visible="state.ruleVisible" @saveModal="appendRule"
+            @removeRow="removeRule" @visableFlag="appendRuleVis" v-if="state.tabsActive == 'rule'" />
         </el-tab-pane>
         <el-tab-pane label="触发器" name="trigger" style="margin: 0.5rem">
           <div>触发器</div>
@@ -130,6 +138,8 @@ import IndexTab from "@/components/table/indexTab.vue";
 import ForeignTab from "@/components/table/foreignTab.vue";
 import UniqueTab from "@/components/table/uniqueTab.vue";
 import CheckTab from "@/components/table/checkTab.vue";
+import RuleTab from "@/components/table/ruleTab.vue";
+
 
 
 import { TabsPaneContext } from "element-plus";
@@ -141,6 +151,7 @@ import {
   ForeignKeyList,
   UniqueConstraintList,
   CheckList,
+  RuleList,
   TableDesignModel, SQLCreatePreview,
 } from "@/types";
 interface IState {
@@ -155,6 +166,7 @@ interface IState {
   oldObjectForeign: string;
   oldObjectUnique: string;
   oldObjectCheck: string;
+  oldObjectRule: string;
 
   oldComment: string;
 
@@ -163,6 +175,8 @@ interface IState {
   foreignKeyList: ForeignKeyList[];
   uniqueConstraintList: UniqueConstraintList[];
   checkList: CheckList[];
+  ruleList: RuleList[];
+
 
   comment: string;
 
@@ -171,6 +185,7 @@ interface IState {
   foreignVisible: boolean;
   uniqueVisible: boolean;
   checkVisible: boolean;
+  ruleVisible: boolean;
 
   isAdd: boolean; //新增还是修改
   tableSpaceList: string[];//表空间
@@ -186,6 +201,7 @@ export default defineComponent({
     ForeignTab,
     UniqueTab,
     CheckTab,
+    RuleTab,
     TableNameDialog,
   },
   props: {
@@ -226,8 +242,9 @@ export default defineComponent({
       oldObjectField: "", //修改时用的FieldList
       oldObjectIndex: "", //修改时用的IndexList
       oldObjectForeign: "", //foreignKeyList
-      oldObjectUnique: "",
-      oldObjectCheck: "",
+      oldObjectUnique: "",//唯一键
+      oldObjectCheck: "",//检查
+      oldObjectRule: "",//规则
 
       oldComment: '',
 
@@ -240,6 +257,7 @@ export default defineComponent({
       foreignKeyList: [],//外键列表--foreignKeyList
       uniqueConstraintList: [],//唯一列表--uniqueConstraintList
       checkList: [],//检查列表--checkList
+      ruleList: [],//规则列表--checkList
 
       comment: '',
 
@@ -248,6 +266,7 @@ export default defineComponent({
       foreignVisible: false,//添加外键
       uniqueVisible: false,//添加外键
       checkVisible: false,//添加外键
+      ruleVisible: false,//添加外键
 
       sqlpreview: "",
     });
@@ -285,6 +304,7 @@ export default defineComponent({
         foreignKeyList: state.foreignKeyList,
         uniqueConstraintList: state.uniqueConstraintList,
         checkList: state.checkList,
+        ruleList: state.ruleList,
 
         name: name,
         comment: state.comment,
@@ -300,6 +320,8 @@ export default defineComponent({
       state.treeData!.object.foreignKeyList = state.foreignKeyList;
       state.treeData!.object.uniqueConstraintList = state.uniqueConstraintList;
       state.treeData!.object.checkList = state.checkList;
+      state.treeData!.object.ruleList = state.ruleList;
+
       state.treeData!.object.comment = state.comment;
 
       //oldObject
@@ -311,6 +333,8 @@ export default defineComponent({
       oldData.object.foreignKeyList = JSON.parse(state.oldObjectForeign);
       oldData.object.uniqueConstraintList = JSON.parse(state.oldObjectUnique);
       oldData.object.checkList = JSON.parse(state.oldObjectCheck);
+      oldData.object.ruleList = JSON.parse(state.oldObjectRule);
+
       oldData.object.comment = state.oldComment;
 
       const data: TableEditForm = {
@@ -354,6 +378,8 @@ export default defineComponent({
       state.foreignKeyList = resp.object.foreignKeyList;
       state.uniqueConstraintList = resp.object.uniqueConstraintList;
       state.checkList = resp.object.checkList;
+      state.ruleList = resp.object.ruleList;
+
       state.comment = resp.object.comment;
 
       //保存old数据，用于修改
@@ -362,6 +388,7 @@ export default defineComponent({
       state.oldObjectForeign = JSON.stringify(resp.object.foreignKeyList);
       state.oldObjectUnique = JSON.stringify(resp.object.uniqueConstraintList);
       state.oldObjectCheck = JSON.stringify(resp.object.checkList);
+      state.oldObjectRule = JSON.stringify(resp.object.ruleList);
 
       state.comment = resp.object.comment;
 
@@ -371,6 +398,7 @@ export default defineComponent({
       resp.object.foreignKeyList = [];
       resp.object.uniqueConstraintList = [];
       resp.object.checkList = [];
+      resp.object.ruleList = [];
 
       resp.object.comment = '';
 
@@ -574,7 +602,34 @@ export default defineComponent({
         state.checkList.splice(index, 1);
       }
       console.log("removeCheck state.checkList", state.checkList);
-    };    
+    };
+
+    //=========================规则=====================
+    const appendRuleVis = (flag: boolean) => {
+      state.ruleVisible = flag;
+    };
+    const appendRule = (form: RuleList) => {
+      console.log("appendRule form", form);
+      //判断新增还是修改
+      const index = state.ruleList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        const item = state.ruleList[index];
+        state.ruleList.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.ruleList.push(form);
+      }
+      appendRuleVis(false);
+    };
+    const removeRule = (form: RuleList) => {
+      const index = state.ruleList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        state.ruleList.splice(index, 1);
+      }
+      console.log("removeRule state.ruleList", state.ruleList);
+    };
     return {
       state,
       handleTabClick,
@@ -599,7 +654,11 @@ export default defineComponent({
 
       appendCheckVis,
       appendCheck,
-      removeCheck      
+      removeCheck,
+
+      appendRuleVis,
+      appendRule,
+      removeRule
     };
   },
   data() {

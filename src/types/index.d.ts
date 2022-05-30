@@ -230,8 +230,8 @@ export interface TableDesignModel {
   hastriggers?: boolean,//false
   foreignTableOptions?: [];
   primaryConstraintName?: string;//c1_pkey
-  ruleList?: [];//[]
-  indexList: IndexList[];//[]
+  ruleList: RuleList[];//规则RuleList
+  indexList: IndexList[];//索引
   acl?: string,
   hasPartition?: boolean,
   oid?: number,
@@ -254,8 +254,8 @@ export interface TableDesignModel {
   roleList?: [],
   hasrules?: boolean,
   partitionType?: string,
-  foreignKeyList: foreignKeyList[],
-  uniqueConstraintList: UniqueConstraintList[],
+  foreignKeyList: foreignKeyList[],//外键
+  uniqueConstraintList: UniqueConstraintList[],//唯一键
   isRoleLeaf?: boolean,
   tableSpace?: string,
   foreignServerOption?: string,
@@ -338,5 +338,19 @@ export interface CheckList {
   isNoInherit: boolean,//没有继承
   comment: string,//注释
 }
+
+//表-规则
+export interface RuleList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbRule"
+  oid: number,
+  name: string,//检查约束名 "fl2_check_1"
+  ruleEvent: string,//事件INSERT
+  isInstead: boolean,//代替运行
+  isEnabled: boolean,//启用
+  comment: string,//注释
+  whereCondition: string,//条件 "(1 = 1)"
+  command: string,//定义
+}
+
 
 
