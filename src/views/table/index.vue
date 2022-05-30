@@ -52,6 +52,13 @@
             </el-icon>添加唯一键
           </el-button>
         </el-button-group>
+        <el-button-group v-if="state.tabsActive == 'check'">
+          <el-button size="small" color="#f2f2f2" @click="appendCheckVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>添加检查
+          </el-button>
+        </el-button-group>        
         <el-button-group v-if="state.tabsActive == 'comment'" />
       </div>
     </div>
@@ -80,7 +87,8 @@
             v-if="state.tabsActive == 'unique'" />
         </el-tab-pane>
         <el-tab-pane label="检查" name="check" style="margin: 0.5rem">
-          <div>检查</div>
+          <CheckTab :tableData="state.checkList" :visible="state.checkVisible" @saveModal="appendCheck"
+            @removeRow="removeCheck" @visableFlag="appendCheckVis" v-if="state.tabsActive == 'check'" />
         </el-tab-pane>
         <el-tab-pane label="排除" name="exclude" style="margin: 0.5rem">
           <div>排除</div>
@@ -121,6 +129,8 @@ import ColumnTab from "@/components/table/columnTab.vue";
 import IndexTab from "@/components/table/indexTab.vue";
 import ForeignTab from "@/components/table/foreignTab.vue";
 import UniqueTab from "@/components/table/uniqueTab.vue";
+import CheckTab from "@/components/table/checkTab.vue";
+
 
 import { TabsPaneContext } from "element-plus";
 import {
@@ -130,7 +140,8 @@ import {
   IndexList,
   ForeignKeyList,
   UniqueConstraintList,
-  TableDesignModel, SQLCreatePreview, SQLAlterPreview
+  CheckList,
+  TableDesignModel, SQLCreatePreview,
 } from "@/types";
 interface IState {
   tabId: string;
@@ -143,18 +154,23 @@ interface IState {
   oldObjectIndex: string;
   oldObjectForeign: string;
   oldObjectUnique: string;
+  oldObjectCheck: string;
+
   oldComment: string;
 
   fieldList: FieldList[];
   indexList: IndexList[];
   foreignKeyList: ForeignKeyList[];
   uniqueConstraintList: UniqueConstraintList[];
+  checkList: CheckList[];
+
   comment: string;
 
   columnVisible: boolean;
   indexVisible: boolean;
   foreignVisible: boolean;
   uniqueVisible: boolean;
+  checkVisible: boolean;
 
   isAdd: boolean; //新增还是修改
   tableSpaceList: string[];//表空间
@@ -169,6 +185,7 @@ export default defineComponent({
     IndexTab,
     ForeignTab,
     UniqueTab,
+    CheckTab,
     TableNameDialog,
   },
   props: {
@@ -210,6 +227,8 @@ export default defineComponent({
       oldObjectIndex: "", //修改时用的IndexList
       oldObjectForeign: "", //foreignKeyList
       oldObjectUnique: "",
+      oldObjectCheck: "",
+
       oldComment: '',
 
       treeData: undefined, //树形菜单值
@@ -220,12 +239,15 @@ export default defineComponent({
       indexList: [], //索引列表--indexList
       foreignKeyList: [],//外键列表--foreignKeyList
       uniqueConstraintList: [],//唯一列表--uniqueConstraintList
+      checkList: [],//检查列表--checkList
+
       comment: '',
 
       columnVisible: false, //添加字段
       indexVisible: false, //添加索引
       foreignVisible: false,//添加外键
       uniqueVisible: false,//添加外键
+      checkVisible: false,//添加外键
 
       sqlpreview: "",
     });
@@ -262,6 +284,8 @@ export default defineComponent({
         indexList: state.indexList,
         foreignKeyList: state.foreignKeyList,
         uniqueConstraintList: state.uniqueConstraintList,
+        checkList: state.checkList,
+
         name: name,
         comment: state.comment,
       };
@@ -275,6 +299,7 @@ export default defineComponent({
       state.treeData!.object.indexList = state.indexList;
       state.treeData!.object.foreignKeyList = state.foreignKeyList;
       state.treeData!.object.uniqueConstraintList = state.uniqueConstraintList;
+      state.treeData!.object.checkList = state.checkList;
       state.treeData!.object.comment = state.comment;
 
       //oldObject
@@ -285,6 +310,7 @@ export default defineComponent({
       oldData.object.indexList = JSON.parse(state.oldObjectIndex);
       oldData.object.foreignKeyList = JSON.parse(state.oldObjectForeign);
       oldData.object.uniqueConstraintList = JSON.parse(state.oldObjectUnique);
+      oldData.object.checkList = JSON.parse(state.oldObjectCheck);
       oldData.object.comment = state.oldComment;
 
       const data: TableEditForm = {
@@ -327,6 +353,7 @@ export default defineComponent({
       state.indexList = resp.object.indexList;
       state.foreignKeyList = resp.object.foreignKeyList;
       state.uniqueConstraintList = resp.object.uniqueConstraintList;
+      state.checkList = resp.object.checkList;
       state.comment = resp.object.comment;
 
       //保存old数据，用于修改
@@ -334,12 +361,17 @@ export default defineComponent({
       state.oldObjectIndex = JSON.stringify(resp.object.indexList);
       state.oldObjectForeign = JSON.stringify(resp.object.foreignKeyList);
       state.oldObjectUnique = JSON.stringify(resp.object.uniqueConstraintList);
+      state.oldObjectCheck = JSON.stringify(resp.object.checkList);
+
       state.comment = resp.object.comment;
 
       //清空无用字段，最小化保存字符串
       resp.object.fieldList = [];
       resp.object.indexList = [];
       resp.object.foreignKeyList = [];
+      resp.object.uniqueConstraintList = [];
+      resp.object.checkList = [];
+
       resp.object.comment = '';
 
 
@@ -514,8 +546,35 @@ export default defineComponent({
       if (index > -1) {
         state.uniqueConstraintList.splice(index, 1);
       }
-      console.log("removeForeign state.uniqueConstraintList", state.uniqueConstraintList);
+      console.log("removeUnique state.uniqueConstraintList", state.uniqueConstraintList);
     };
+
+    //=========================检查=====================
+    const appendCheckVis = (flag: boolean) => {
+      state.checkVisible = flag;
+    };
+    const appendCheck = (form: CheckList) => {
+      console.log("appendCheck form", form);
+      //判断新增还是修改
+      const index = state.checkList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        const item = state.checkList[index];
+        state.checkList.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.checkList.push(form);
+      }
+      appendCheckVis(false);
+    };
+    const removeCheck = (form: CheckList) => {
+      const index = state.checkList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        state.checkList.splice(index, 1);
+      }
+      console.log("removeCheck state.checkList", state.checkList);
+    };    
     return {
       state,
       handleTabClick,
@@ -536,7 +595,11 @@ export default defineComponent({
 
       appendUniqueVis,
       appendUnique,
-      removeUnique
+      removeUnique,
+
+      appendCheckVis,
+      appendCheck,
+      removeCheck      
     };
   },
   data() {

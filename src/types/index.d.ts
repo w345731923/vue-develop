@@ -263,7 +263,7 @@ export interface TableDesignModel {
   tableOwner?: string,//"postgres"
   childrenModel?: [],
   tableSpaceList?: string,
-  checkList?: [],
+  checkList: checkList[],
   name: string,//表名
   comment: string,//表注释
   partitionDef?: string,
@@ -312,8 +312,8 @@ export interface ForeignKeyList {
 
   confkeys?: string[],
   referencesFieldsTemp?: string[],
-  isDeferrableTemp?:string,
-  isDeferredTemp?:string,
+  isDeferrableTemp?: string,
+  isDeferredTemp?: string,
 }
 //表-唯一
 export interface UniqueConstraintList {
@@ -322,14 +322,21 @@ export interface UniqueConstraintList {
   name: string,//唯一键约束名 "index_a2_t1"
   includeFieldNames: string[],//字段["fl1_id"]
   comment: string,//注释
-  tableSpaceName:string,//表空间
-  fillFactor:number,//填充系数 -1
-  isDeferrable:boolean,//可搁置
-  isDeferred:boolean,//搁置
-  isDeferrableTemp?:string,//临时存储可搁置
-  isDeferredTemp?:string,  //临时存储搁置
+  tableSpaceName: string,//表空间
+  fillFactor: number,//填充系数 -1
+  isDeferrable: boolean,//可搁置
+  isDeferred: boolean,//搁置
+  isDeferrableTemp?: string,//临时存储可搁置
+  isDeferredTemp?: string,  //临时存储搁置
 }
-
-
+//表-检查
+export interface CheckList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbCheck"
+  oid: number,
+  name: string,//检查约束名 "fl2_check_1"
+  checkExpression: string,//表达式(1 = 1)
+  isNoInherit: boolean,//没有继承
+  comment: string,//注释
+}
 
 
