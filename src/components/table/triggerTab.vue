@@ -7,20 +7,14 @@
     -->
     <el-table :data="state.tableData" border :highlight-current-row="true" size="small" style="width: 100%"
       :max-height="state.tableHieght">
-      <el-table-column prop="name" label="索引名" align="center" />
-      <el-table-column prop="columns" label="字段" align="center" />
-      <el-table-column prop="indexType" label="索引方法" align="center" />
-      <el-table-column prop="isUnique" label="唯一键" align="center">
+      <el-table-column prop="name" label="触发器列名" align="center" />
+      <el-table-column prop="forEach" label="给每个" align="center" />
+      <el-table-column prop="fireTime" label="触发" align="center" />
+      <el-table-column prop="updateColumns" label="更新字段" align="center" />
+      <el-table-column prop="isEnabled" label="启用" align="center">
         <template #default="scope">
-          <el-checkbox disabled v-if="scope.row.isUnique == true" :checked="true" />
-          <el-checkbox disabled v-if="scope.row.isUnique != true" />
-        </template>
-      </el-table-column>
-
-      <el-table-column prop="isClustered" label="并发" align="center">
-        <template #default="scope">
-          <el-checkbox disabled v-if="scope.row.isClustered == true" :checked="true" />
-          <el-checkbox disabled v-if="scope.row.isClustered != true" />
+          <el-checkbox disabled v-if="scope.row.isEnabled == true" :checked="true" />
+          <el-checkbox disabled v-if="scope.row.isEnabled != true" />
         </template>
       </el-table-column>
       <el-table-column prop="comment" label="注释" align="center" />
@@ -32,41 +26,75 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加索引" :destroy-on-close="false"
+    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加外键" :destroy-on-close="false"
       @closed="onClose(formRef)">
-      <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="90px">
-        <el-form-item label="索引名" prop="name">
+      <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="100px">
+        <el-form-item label="触发器名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
-        <el-form-item label="字段">
-          <el-select v-model="state.form.columnsT" multiple placeholder=" " style="width: 240px">
+        <el-form-item label="给每个" prop="forEach">
+          <el-select v-model="state.form.forEach" placeholder=" " style="width: 240px">
+            <el-option key="ROW" label="ROW" value="ROW" />
+            <el-option key="STATEMENT" label="STATEMENT" value="STATEMENT" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="触发" prop="fireTime">
+          <el-select v-model="state.form.fireTime" placeholder=" " style="width: 240px">
+            <el-option key="AFTER" label="AFTER" value="AFTER" />
+            <el-option key="BEFORE" label="BEFORE" value="BEFORE" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="更新字段" prop="updateColumns">
+          <el-select v-model="state.form.updateColumns" multiple placeholder=" " style="width: 240px">
             <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
           </el-select>
         </el-form-item>
-        <el-form-item label="索引方法" prop="indexType">
-          <el-select v-model="state.form.indexType" placeholder=" ">
-            <el-option v-for="item in indexType" :key="item" :label="item" :value="item" />
-          </el-select>
+        <el-form-item label="启用">
+          <el-switch v-model="state.form.isEnabled" />
         </el-form-item>
-        <el-form-item label="唯一键" prop="isUnique">
-          <el-switch v-model="state.form.isUnique" />
-        </el-form-item>
-        <el-form-item label="并发" prop="isClustered">
-          <el-switch v-model="state.form.isClustered" />
-        </el-form-item>
-        <el-form-item label="注释" prop="comment">
+        <el-form-item label="注释">
           <el-input v-model="state.form.comment"></el-input>
         </el-form-item>
-        <el-form-item label="表空间" prop="tablespaceName">
-          <el-select v-model="state.form.tablespaceName" placeholder=" ">
-            <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
+        <el-form-item label="当">
+          <el-input v-model="state.form.condition"></el-input>
+        </el-form-item>
+        <el-form-item label="触发函数">
+          <el-select v-model="state.form.functionSchema" placeholder=" " @change="triggerFunChange">
+            <el-option v-for="item in state.func1" :key="item" :label="item" :value="item">
+            </el-option>
+          </el-select>
+          <el-select v-model="state.form.functionName" placeholder=" ">
+            <el-option v-for="item in state.func2" :key="item" :label="item" :value="item">
+            </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="填充系数(%)" prop="reloptions">
-          <el-input-number v-model="state.form.reloptions" />
+        <el-form-item label="引数">
+          <el-input v-model="state.form.functionParams"></el-input>
         </el-form-item>
-        <el-form-item label="条件" prop="constraint">
-          <el-input v-model="state.form.constraint"></el-input>
+        <el-form-item label="约束">
+          <el-switch v-model="state.form.hasConstraint" @change="constraintChange" />
+        </el-form-item>
+        <el-form-item label="可搁置">
+          <el-select v-model="state.form.isDeferrableTemp" placeholder=" " @change="isDeferrableChange"
+            :disabled="state.constraintDisabled">
+            <el-option v-for="item in a1" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="搁置">
+          <el-select v-model="state.form.isDeferredTemp" placeholder=" " :disabled="state.isDeferredDisabled">
+            <el-option v-for="item in a2" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="参考表">
+          <el-select v-model="state.form.referencedTableSchema" placeholder=" " @change="tableChange"
+            :disabled="state.constraintDisabled">
+            <el-option v-for="item in state.table1" :key="item" :label="item" :value="item">
+            </el-option>
+          </el-select>
+          <el-select v-model="state.form.referencedTable" placeholder=" " :disabled="state.constraintDisabled">
+            <el-option v-for="item in state.table2" :key="item" :label="item" :value="item">
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -80,36 +108,56 @@
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, ref, onMounted } from "vue";
 import type { FormInstance } from "element-plus";
+import { getCurrentInstance } from 'vue'
+import { findTriggerFunctionMap, findReferTableMap } from "@/api/treeNode";
+
 import {
   TreeNode,
   FieldList,
-  IndexList,
+  TriggerList,
 } from "@/types";
 const formRef = ref<FormInstance>();
-const demo: IndexList = {
-  "@clazz": "com.highgo.developer.model.HgdbIndex",
+const demo: TriggerList = {
+  "@clazz": "com.highgo.developer.model.HgdbTrigger",
   oid: -new Date().getTime(),
   name: "",
-  columns: "",
-  indexType: "",
-  isUnique: false,
-  isClustered: false,
-  comment: "",
-  tablespaceName: "",
-  reloptions: -1,//填充系数，api是string，填入是number的百分比
-  constraint: "",
-  expression: "" //表达式
+  forEach: "",//给每个 "ROW"
+  fireTime: '',//触发 "AFTER"
+  triggerEvents: [],
+  updateColumns: "",//"fl1_id,id"
+  isEnabled: true,//启用
+  comment: "",//注释
+  condition: "",//当
+  functionSchema: "",//触发函数1 "pg_catalog"
+  functionName: "",//触发函数2 RI_FKey_check_ins
+  functionParams: "",//引数
+  hasConstraint: false,//约束
+  isDeferrable: false,//可搁置
+  isDeferred: true,//搁置
+  referencedTableSchema: "",//参考表1
+  referencedTable: "",//参考表2
+
 };
 
 interface IState {
   visible: boolean;
   treeData: TreeNode<any>;
-  tableData: IndexList[];
+  tableData: TriggerList[];
   tableHieght: number;
-  form: IndexList;
+  form: TriggerList;
   isAdd: boolean; //add or update
   tableSpaceList: string[];
   fieldList: FieldList[];
+
+  constraintDisabled: boolean;//禁用约束
+  funcMap: Map<string, string>;
+  func1: string[];//触发函数1列表
+  func2: string[];//触发函数2列表
+  tableMap: Map<string, string>;
+  table1: string[];//参考表1列表
+  table2: string[];//参考表2列表
+  isDeferredDisabled: boolean;//搁置启用
+
 }
 export default defineComponent({
   name: "triggertab",
@@ -129,7 +177,26 @@ export default defineComponent({
   emits: ["visableFlag", "saveModal", "removeRow"],
   setup(props, { emit }) {
     onMounted(() => {
+      findTriggerFunctionMap(state.treeData).then((responseData) => {
+        console.log("findTriggerFunctionMap ResponseData", responseData);
+        state.funcMap = responseData.data;
+        const map = new Map(Object.entries(responseData.data));
+        for (let [key, value] of map) {
+          state.func1.push(key);
+        }
+      });
+      findReferTableMap(state.treeData).then((responseData) => {
+        console.log("findReferTableMap ResponseData", responseData);
+        state.tableMap = responseData.data;
+        const map = new Map(Object.entries(responseData.data));
+        for (let [key, value] of map) {
+          state.table1.push(key);
+        }
+      });
+
     });
+    const datab = getCurrentInstance();
+
     const rules = reactive({
       name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
       indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
@@ -138,13 +205,22 @@ export default defineComponent({
     const state: IState = reactive({
       visible: visible.value,
       treeData: treeData.value as TreeNode<any>,
-      tableData: tableData.value as IndexList[],
+      tableData: tableData.value as TriggerList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
-      form: {} as IndexList,
+      form: {} as TriggerList,
       dataTypeList: [],
       isAdd: true,
       tableSpaceList: tableSpaceList.value as string[],
       fieldList: fieldList.value as FieldList[],
+
+      constraintDisabled: true,
+      funcMap: new Map(),
+      func1: [],
+      func2: [],
+      tableMap: new Map(),
+      table1: [],
+      table2: [],
+      isDeferredDisabled: false
     });
     watch(
       visible,
@@ -154,8 +230,7 @@ export default defineComponent({
           demo.oid = -new Date().getTime();
           //如果是新建，清空上一次页面缓存值
           resetFields(demo);
-          state.form.columns = "";
-          state.form.columnsT = [];
+          resetDefer(demo)
         }
       },
       { immediate: true }
@@ -163,7 +238,7 @@ export default defineComponent({
     watch(
       tableData,
       (newValue) => {
-        state.tableData = newValue as IndexList[];
+        state.tableData = newValue as TriggerList[];
       },
       { immediate: true }
     );
@@ -189,27 +264,39 @@ export default defineComponent({
       { immediate: true }
     );
     //对象拷贝
-    const createVal = (src: IndexList) => {
-      const target = {} as IndexList;
+    const createVal = (src: TriggerList) => {
+      const target = {} as TriggerList;
       Object.assign(target, src);
       return target;
     };
     //重置row初始值
-    const resetFields = (resetVal: IndexList) => {
+    const resetFields = (resetVal: TriggerList) => {
       Object.assign(state.form, resetVal);
     };
-    //修改按钮
-    const columnUpdateClick = (row: IndexList) => {
-      console.log("columnUpdateButtonClick row ", row);
-      resetFields(row);
+    const resetDefer = (row: TriggerList) => {
       //解析索引字段
-      state.form.columnsT = splitColumns(row.columns);
-      emit("visableFlag", true);
+      const a1 = datab!.data.a1 as string[];
+      const a2 = datab!.data.a2 as string[];
+      if (row.isDeferrable) {//DEFERRABLE
+        state.form.isDeferrableTemp = a1[0];
+        state.isDeferredDisabled = false
+      } else {//NOT DEFERRABLE
+        state.form.isDeferrableTemp = a1[1];
+        state.isDeferredDisabled = true
+      }
+      state.form.isDeferredTemp = row.isDeferred ? a2[0] : a2[1];
+    }
+    //修改按钮
+    const columnUpdateClick = (row: TriggerList) => {
+      console.log("columnUpdateButtonClick row ", row);
       state.isAdd = false;
+      resetFields(row);
+      resetDefer(row);
+      emit("visableFlag", true);
     };
 
     //删除按钮
-    const removeColumnClick = (row: IndexList) => {
+    const removeColumnClick = (row: TriggerList) => {
       emit("removeRow", row);
     };
     //关闭
@@ -224,50 +311,57 @@ export default defineComponent({
       formEl.validate((valid) => {
         if (valid) {
           const data = createVal(state.form);
-          data.columns = mergeColumn(state.form.columnsT!)
+          const a1 = datab!.data.a1 as string[];
+          const a2 = datab!.data.a2 as string[];
+          data.isDeferrable = data.isDeferrableTemp == a1[0] ? true : false;
+          data.isDeferred = data.isDeferredTemp == a2[0] ? true : false;
+          data.updateColumns = '';
           emit("saveModal", data);
         }
       });
     };
-    //合并column字段值
-    const mergeColumn = (selected: string[]) => {
-      let columns = '';
-      state.form.columnsT?.forEach(item => {
-        columns += '"' + item + '",'
-      })
-      // columns = ""444","1","
-      columns = columns.length > 0 ? columns.substring(0, columns.length - 1) : columns;
-      return columns;
+    const isDeferrableChange = (val: string) => {
+      console.log('datab', datab)
+      const a1 = datab!.data.a1 as string[];
+      if (a1[0] == val) {
+        //DEFERRABLE 启用
+        state.isDeferredDisabled = false;
+      } else {
+        //NOT DEFERRABLE 禁用
+        state.isDeferredDisabled = true;
+      }
     }
-    //拆分选择的column值本方法源于后台方法
-    const splitColumns = (val: string) => {
-      let result: string[] = [];
-      let count: number = 0;
-      let sb: string[] = [];
-      for (var i = 0; i < val.length; i++) {
-        const c = val.charAt(i)
-        if (c == '"') {
-          count++;
-          if (i < val.length - 1 && val.charAt(i + 1) == '"') {
-            count++;
-            i = i + 1;
-            sb.push(c)
-          }
-          continue;
-        }
-        if (c == ',' && count % 2 == 0) {
-          result.push(sb.join(''));
-          sb = [];
+    //约束滑块事件
+    const constraintChange = (val: boolean) => {
+      //true 开启，和constraintDisabled正好相反
+      state.constraintDisabled = !val;
+      if (!val) {
+        //禁用组件
+        state.isDeferredDisabled = true;
+      } else {
+        const a1 = datab!.data.a1 as string[];
+        if (a1[0] == state.form.isDeferrableTemp) {
+          //DEFERRABLE 启用
+          state.isDeferredDisabled = false;
         } else {
-          sb.push(c)
+          //NOT DEFERRABLE 禁用
+          state.isDeferredDisabled = true;
         }
       }
-      if (sb.length > 0) {
-        result.push(sb.join(''))
-      }
-      console.log('result', result)
-      return result;
-    }
+    };
+
+    //触发函数下拉框事件
+    const triggerFunChange = (val: string) => {
+      console.log("triggerFunChange val ", val,);
+      state.func2 = [];
+      state.func2 = state.funcMap[val] as string[];
+    };
+    //参考表下拉框事件
+    const tableChange = (val: string) => {
+      console.log("tableChange val ", val,);
+      state.table2 = [];
+      state.table2 = state.tableMap[val] as string[];
+    };
     return {
       state,
       formRef,
@@ -276,12 +370,17 @@ export default defineComponent({
       removeColumnClick,
       submitForm,
       onClose,
+      isDeferrableChange,
+      constraintChange,
+      triggerFunChange,
+      tableChange
     };
   },
 
   data() {
     return {
-      indexType: ['btree', 'hash', 'gist', 'gin', 'spgist', 'brin']
+      a1: ['DEFERRABLE', 'NOT DEFERRABLE'],
+      a2: ['INITIALLY IMMEDIATE', 'INITIALLY DEFERRED']
     };
   },
   methods: {},

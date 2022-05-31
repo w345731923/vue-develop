@@ -353,33 +353,30 @@ export interface RuleList {
 }
 //表-规则
 export interface TriggerList {
-  '@clazz': string;//"com.highgo.developer.model.HgdbRule"
+  '@clazz': string;//"com.highgo.developer.model.HgdbTrigger"
   oid: number,
-  name: string,//
-  test: string
+  name: string,
+  forEach: string,//给每个 "ROW"
+  fireTime: string,//触发 "AFTER"
+  triggerEvents: string[],// ["INSERT", "TRUNCATE"]  插入INSERT 更新UPDATE 删除DELETE 截断TRUNCATE 
+  updateColumns: string,//更新字段"fl1_id,id"
+  isEnabled: boolean,//启用
+  comment: string,//注释
+  condition: string,//当
+  functionSchema: string,//触发函数1 "pg_catalog"
+  functionName: string,//触发函数2 RI_FKey_check_ins
+  functionParams: string,//引数
+  hasConstraint: boolean,//约束
+  isDeferrable: boolean,//可搁置
+  isDeferred: boolean,//搁置
+  referencedTableSchema: string,//参考表1
+  referencedTable: string,//参考表2
+
+  isDeferrableTemp?: string,//可搁置临时变量
+  isDeferredTemp?: string,//搁置临时变量
 }
 
 
-// isDeferrable: false
-// referencedTable: ""
 // functionParams: ""
-// @clazz: "com.highgo.developer.model.HgdbTrigger"
-// updateColumns: ""
-// functionName: "RI_FKey_check_ins"
-// roleChildrenModel: []
-// forEach: "ROW"
-// fireTime: "AFTER"
-// hasConstraint: false
-// oid: 20675
-// functionSchema: "pg_catalog"
-// isLeaf: true
-// isRoleLeaf: false
 // isInternal: true
-// referencedTableSchema: ""
 // condition: ""
-// childrenModel: null
-// triggerEvents: [{DELETE: "DELETE", @clazz: "com.highgo.developer.common.utils.TableObjectOptions.TriggerEvent",…}]
-// isEnabled: true
-// name: "fl2_tri_1"
-// comment: ""
-// isDeferred: false

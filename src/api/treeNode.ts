@@ -281,3 +281,17 @@ export async function tableEdit(data: TableEditForm) {
  export async function findField(data: TreeNode<any>) {
     return await http.request<ResponseData<string[]>>('/dbinfo/findField', { method: 'POST', data });
 }
+/**
+ * 设计表-触发器-触发函数
+ * @returns 
+ */
+ export async function findTriggerFunctionMap(data: TreeNode<any>) {
+    return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findTriggerFunctionMap', { method: 'POST', data });
+}
+/**
+ * 设计表-触发器-参考表
+ * @returns 
+ */
+ export async function findReferTableMap(data: TreeNode<any>) {
+    return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findReferTableMap', { method: 'POST', data });
+}

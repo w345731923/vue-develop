@@ -112,7 +112,9 @@
             @removeRow="removeRule" @visableFlag="appendRuleVis" v-if="state.tabsActive == 'rule'" />
         </el-tab-pane>
         <el-tab-pane label="触发器" name="trigger" style="margin: 0.5rem">
-          <div>触发器</div>
+          <TriggerTab :treeData="state.treeData" :tableData="state.triggerList" :visible="state.triggerVisible"
+            :fieldList="state.fieldList" @saveModal="appendTrigger" @removeRow="removeTrigger"
+            @visableFlag="appendTriggerVis" v-if="state.tabsActive == 'trigger'" />
         </el-tab-pane>
         <el-tab-pane label="选项" name="options" style="margin: 0.5rem">
           <div>选项</div>
@@ -146,6 +148,7 @@ import ForeignTab from "@/components/table/foreignTab.vue";
 import UniqueTab from "@/components/table/uniqueTab.vue";
 import CheckTab from "@/components/table/checkTab.vue";
 import RuleTab from "@/components/table/ruleTab.vue";
+import TriggerTab from "@/components/table/triggerTab.vue";
 
 
 
@@ -211,6 +214,7 @@ export default defineComponent({
     UniqueTab,
     CheckTab,
     RuleTab,
+    TriggerTab,
     TableNameDialog,
   },
   props: {
@@ -650,7 +654,7 @@ export default defineComponent({
     };
     //========================触发器=====================
     const appendTriggerVis = (flag: boolean) => {
-      state.ruleVisible = flag;
+      state.triggerVisible = flag;
     };
     const appendTrigger = (form: TriggerList) => {
       console.log("appendTrigger form", form);
