@@ -239,7 +239,7 @@ export interface TableDesignModel {
   partitionList?: [],//[]
   foreignServerType?: [],//null
   isLeaf?: boolean,//false
-  triggerList?: [],//触发器
+  triggerList: TriggerList[],//触发器
   custerList?: string,
   hasindexes?: boolean,
   inheritNames?: string,
@@ -351,6 +351,35 @@ export interface RuleList {
   whereCondition: string,//条件 "(1 = 1)"
   command: string,//定义
 }
+//表-规则
+export interface TriggerList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbRule"
+  oid: number,
+  name: string,//
+  test: string
+}
 
 
-
+// isDeferrable: false
+// referencedTable: ""
+// functionParams: ""
+// @clazz: "com.highgo.developer.model.HgdbTrigger"
+// updateColumns: ""
+// functionName: "RI_FKey_check_ins"
+// roleChildrenModel: []
+// forEach: "ROW"
+// fireTime: "AFTER"
+// hasConstraint: false
+// oid: 20675
+// functionSchema: "pg_catalog"
+// isLeaf: true
+// isRoleLeaf: false
+// isInternal: true
+// referencedTableSchema: ""
+// condition: ""
+// childrenModel: null
+// triggerEvents: [{DELETE: "DELETE", @clazz: "com.highgo.developer.common.utils.TableObjectOptions.TriggerEvent",…}]
+// isEnabled: true
+// name: "fl2_tri_1"
+// comment: ""
+// isDeferred: false

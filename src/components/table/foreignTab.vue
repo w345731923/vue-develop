@@ -278,9 +278,11 @@ export default defineComponent({
       }
     }
     const schemaChange = (val: string) => {
+      console.log('schemaChange state.treeData!.nodePath', state.treeData!.nodePath)
       const index = state.treeData!.nodePath.indexOf('schemaName');
       const str = state.treeData!.nodePath.substring(0, index);
       const nodePath = str + 'schemaName/' + val;
+      console.log('nodePath', nodePath)
       const temp = {
         type: "Schema",
         object: null,
@@ -293,9 +295,16 @@ export default defineComponent({
       })
     }
     const tableChange = (val: string) => {
+      console.log('tableChange state.treeData!.nodePath', state.treeData!.nodePath)
+
       const index = state.treeData!.nodePath.indexOf('tableName');
-      const str = state.treeData!.nodePath.substring(0, index);
+      let str = state.treeData!.nodePath+'/';
+      if (index > -1) {
+        str = state.treeData!.nodePath.substring(0, index);
+      }
       const nodePath = str + 'tableName/' + val;
+      console.log('nodePath', nodePath)
+
       const temp = {
         type: "Table",
         object: null,

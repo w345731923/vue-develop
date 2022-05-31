@@ -65,7 +65,14 @@
               <Avatar />
             </el-icon>添加规则
           </el-button>
-        </el-button-group>        
+        </el-button-group>
+        <el-button-group v-if="state.tabsActive == 'trigger'">
+          <el-button size="small" color="#f2f2f2" @click="appendTriggerVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>添加触发器
+          </el-button>
+        </el-button-group>
         <el-button-group v-if="state.tabsActive == 'comment'" />
       </div>
     </div>
@@ -152,6 +159,7 @@ import {
   UniqueConstraintList,
   CheckList,
   RuleList,
+  TriggerList,
   TableDesignModel, SQLCreatePreview,
 } from "@/types";
 interface IState {
@@ -167,7 +175,7 @@ interface IState {
   oldObjectUnique: string;
   oldObjectCheck: string;
   oldObjectRule: string;
-
+  oldObjectTrigger: string;
   oldComment: string;
 
   fieldList: FieldList[];
@@ -176,7 +184,7 @@ interface IState {
   uniqueConstraintList: UniqueConstraintList[];
   checkList: CheckList[];
   ruleList: RuleList[];
-
+  triggerList: TriggerList[];
 
   comment: string;
 
@@ -186,6 +194,7 @@ interface IState {
   uniqueVisible: boolean;
   checkVisible: boolean;
   ruleVisible: boolean;
+  triggerVisible: boolean;
 
   isAdd: boolean; //新增还是修改
   tableSpaceList: string[];//表空间
@@ -245,6 +254,7 @@ export default defineComponent({
       oldObjectUnique: "",//唯一键
       oldObjectCheck: "",//检查
       oldObjectRule: "",//规则
+      oldObjectTrigger: "",//触发器
 
       oldComment: '',
 
@@ -258,15 +268,17 @@ export default defineComponent({
       uniqueConstraintList: [],//唯一列表--uniqueConstraintList
       checkList: [],//检查列表--checkList
       ruleList: [],//规则列表--checkList
+      triggerList: [],//触发器列表--triggerList
 
       comment: '',
 
       columnVisible: false, //添加字段
       indexVisible: false, //添加索引
       foreignVisible: false,//添加外键
-      uniqueVisible: false,//添加外键
-      checkVisible: false,//添加外键
-      ruleVisible: false,//添加外键
+      uniqueVisible: false,//添加唯一
+      checkVisible: false,//添加检查
+      ruleVisible: false,//添加规则
+      triggerVisible: false,//添加触发器
 
       sqlpreview: "",
     });
@@ -305,6 +317,7 @@ export default defineComponent({
         uniqueConstraintList: state.uniqueConstraintList,
         checkList: state.checkList,
         ruleList: state.ruleList,
+        triggerList: state.triggerList,
 
         name: name,
         comment: state.comment,
@@ -321,6 +334,7 @@ export default defineComponent({
       state.treeData!.object.uniqueConstraintList = state.uniqueConstraintList;
       state.treeData!.object.checkList = state.checkList;
       state.treeData!.object.ruleList = state.ruleList;
+      state.treeData!.object.triggerList = state.triggerList;
 
       state.treeData!.object.comment = state.comment;
 
@@ -334,6 +348,7 @@ export default defineComponent({
       oldData.object.uniqueConstraintList = JSON.parse(state.oldObjectUnique);
       oldData.object.checkList = JSON.parse(state.oldObjectCheck);
       oldData.object.ruleList = JSON.parse(state.oldObjectRule);
+      oldData.object.triggerList = JSON.parse(state.oldObjectTrigger);
 
       oldData.object.comment = state.oldComment;
 
@@ -379,6 +394,7 @@ export default defineComponent({
       state.uniqueConstraintList = resp.object.uniqueConstraintList;
       state.checkList = resp.object.checkList;
       state.ruleList = resp.object.ruleList;
+      state.triggerList = resp.object.triggerList;
 
       state.comment = resp.object.comment;
 
@@ -389,6 +405,7 @@ export default defineComponent({
       state.oldObjectUnique = JSON.stringify(resp.object.uniqueConstraintList);
       state.oldObjectCheck = JSON.stringify(resp.object.checkList);
       state.oldObjectRule = JSON.stringify(resp.object.ruleList);
+      state.oldObjectTrigger = JSON.stringify(resp.object.triggerList);
 
       state.comment = resp.object.comment;
 
@@ -399,6 +416,7 @@ export default defineComponent({
       resp.object.uniqueConstraintList = [];
       resp.object.checkList = [];
       resp.object.ruleList = [];
+      resp.object.triggerList = [];
 
       resp.object.comment = '';
 
@@ -630,6 +648,32 @@ export default defineComponent({
       }
       console.log("removeRule state.ruleList", state.ruleList);
     };
+    //========================触发器=====================
+    const appendTriggerVis = (flag: boolean) => {
+      state.ruleVisible = flag;
+    };
+    const appendTrigger = (form: TriggerList) => {
+      console.log("appendTrigger form", form);
+      //判断新增还是修改
+      const index = state.triggerList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        const item = state.triggerList[index];
+        state.triggerList.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.triggerList.push(form);
+      }
+      appendTriggerVis(false);
+    };
+    const removeTrigger = (form: TriggerList) => {
+      const index = state.triggerList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        state.triggerList.splice(index, 1);
+      }
+      console.log("removeTrigger state.triggerList", state.triggerList);
+    };
     return {
       state,
       handleTabClick,
@@ -658,7 +702,11 @@ export default defineComponent({
 
       appendRuleVis,
       appendRule,
-      removeRule
+      removeRule,
+
+      appendTriggerVis,
+      appendTrigger,
+      removeTrigger
     };
   },
   data() {
