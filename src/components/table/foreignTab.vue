@@ -9,11 +9,11 @@
       :max-height="state.tableHieght">
       <el-table-column prop="name" label="外键约束名" align="center" />
       <el-table-column prop="foreignKeyFields" label="字段" align="center" />
-      <el-table-column prop="referencesSchemaName" label="参考模式" align="center" />
-      <el-table-column prop="referencesTableName" label="参考表" align="center" />
+      <el-table-column prop="referencesSchemaName" label="参考模式" align="center" width="100"/>
+      <el-table-column prop="referencesTableName" label="参考表" align="center" width="100"/>
       <el-table-column prop="referencesFields" label="参考字段" align="center" />
-      <el-table-column prop="deleteStrategy" label="删除时" align="center" />
-      <el-table-column prop="updateStretegy" label="更新时" align="center" />
+      <el-table-column prop="deleteStrategy" label="删除时" align="center" width="90"/>
+      <el-table-column prop="updateStretegy" label="更新时" align="center" width="90"/>
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">

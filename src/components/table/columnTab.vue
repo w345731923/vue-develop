@@ -23,13 +23,13 @@
           return row.dataType.decimalNumber;
         }
       " />
-      <el-table-column prop="isNotNull_1" label="不是null" align="center">
+      <el-table-column prop="isNotNull_1" label="不是null" align="center" width="90">
         <template #default="scope">
           <el-checkbox disabled v-if="scope.row.isNotNull == true" :checked="true" />
           <el-checkbox disabled v-if="scope.row.isNotNull != true" />
         </template>
       </el-table-column>
-      <el-table-column prop="isPrimaryKey_1" label="主键" align="center">
+      <el-table-column prop="isPrimaryKey_1" label="主键" align="center" width="90">
         <template #default="scope">
           <el-checkbox disabled v-if="scope.row.isPrimaryKey == true" :checked="true" />
           <el-checkbox disabled v-if="scope.row.isPrimaryKey != true" />

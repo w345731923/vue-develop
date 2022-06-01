@@ -10,14 +10,14 @@
       <el-table-column prop="name" label="索引名" align="center" />
       <el-table-column prop="columns" label="字段" align="center" />
       <el-table-column prop="indexType" label="索引方法" align="center" />
-      <el-table-column prop="isUnique" label="唯一键" align="center">
+      <el-table-column prop="isUnique" label="唯一键" align="center" width="90">
         <template #default="scope">
           <el-checkbox disabled v-if="scope.row.isUnique == true" :checked="true" />
           <el-checkbox disabled v-if="scope.row.isUnique != true" />
         </template>
       </el-table-column>
 
-      <el-table-column prop="isClustered" label="并发" align="center">
+      <el-table-column prop="isClustered" label="并发" align="center" width="90">
         <template #default="scope">
           <el-checkbox disabled v-if="scope.row.isClustered == true" :checked="true" />
           <el-checkbox disabled v-if="scope.row.isClustered != true" />

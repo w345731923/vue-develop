@@ -8,8 +8,32 @@
     <el-table :data="state.tableData" border :highlight-current-row="true" size="small" style="width: 100%"
       :max-height="state.tableHieght">
       <el-table-column prop="name" label="触发器列名" align="center" />
-      <el-table-column prop="forEach" label="给每个" align="center" />
-      <el-table-column prop="fireTime" label="触发" align="center" />
+      <el-table-column prop="forEach" label="给每个" align="center" width="75"/>
+      <el-table-column prop="fireTime" label="触发" align="center" width="75"/>
+      <el-table-column prop="triggerEvents1" label="插入" align="center" width="60">
+        <template #default="scope">
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('INSERT') > -1" :checked="true" />
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('INSERT') == -1" />
+        </template>
+      </el-table-column>
+      <el-table-column prop="triggerEvents2" label="更新" align="center" width="60">
+        <template #default="scope">
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('UPDATE') > -1" :checked="true" />
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('UPDATE') == -1" />
+        </template>
+      </el-table-column>
+      <el-table-column prop="triggerEvents3" label="删除" align="center" width="60">
+        <template #default="scope">
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('DELETE') > -1" :checked="true" />
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('DELETE') == -1" />
+        </template>
+      </el-table-column>
+      <el-table-column prop="triggerEvents4" label="截断" align="center" width="60">
+        <template #default="scope">
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('TRUNCATE') > -1" :checked="true" />
+          <el-checkbox disabled v-if="scope.row.triggerEvents.indexOf('TRUNCATE') == -1" />
+        </template>
+      </el-table-column>                  
       <el-table-column prop="updateColumns" label="更新字段" align="center" />
       <el-table-column prop="isEnabled" label="启用" align="center">
         <template #default="scope">
