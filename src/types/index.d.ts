@@ -108,6 +108,7 @@ export interface Server {
   isHGSE: boolean,//是否安全版
   isShowTemplateDb: boolean,//显示范本数据库
   isShowSystemSchema: boolean,//显示系统模式
+  caseModel:string,//数据库默认大写 Uppper Lower
   useSSL: boolean,//开启ssl
   sslModel: string,//ssl模式
   sslKeyPath: string,//客户端密钥
@@ -121,7 +122,6 @@ export interface Server {
   defaultDatabase?: string,
   loginInfo?: string,
   sshInfo?: string,//当前版本不支持ssl
-  caseModel?: string;
   leaf?: boolean;
   database?: string;
   schema?: string;

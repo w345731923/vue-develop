@@ -1,21 +1,8 @@
 <template>
   <!-- :visible.sync="dialogFormVisible" -->
-  <el-dialog
-    title="新建连接"
-    width="600px"
-    :close-on-click-modal="false"
-    :destroy-on-close="true"
-    v-model="state.visible"
-    @closed="onClose(ruleFormRef)"
-    custom-class="server-dialog"
-  >
-    <el-form
-      :rules="rules"
-      ref="ruleFormRef"
-      :model="ruleForm"
-      status-icon
-      label-width="120px"
-    >
+  <el-dialog title="新建连接" width="600px" :close-on-click-modal="false" :destroy-on-close="true" v-model="state.visible"
+    @closed="onClose(ruleFormRef)" custom-class="server-dialog">
+    <el-form :rules="rules" ref="ruleFormRef" :model="ruleForm" status-icon label-width="120px">
       <!-- v-model="activeName" -->
       <el-tabs model-value="first" type="card">
         <el-tab-pane label="常规" name="first">
@@ -26,10 +13,7 @@
             <el-input v-model="ruleForm.hostAddress" />
           </el-form-item>
           <el-form-item label="端口" prop="port">
-            <el-input
-              v-model="ruleForm.port"
-              oninput="value=value.replace(/[^\d]/g,'')"
-            />
+            <el-input v-model="ruleForm.port" oninput="value=value.replace(/[^\d]/g,'')" />
           </el-form-item>
           <el-form-item label="数据库" prop="databaseName">
             <el-input v-model="ruleForm.databaseName" />
@@ -45,9 +29,7 @@
           </el-form-item>
           <el-form-item label="安全版数据库">
             <el-switch v-model="ruleForm.isHGSE" />
-            <span style="margin-left: 0.75rem; color: red"
-              >请确认数据库是否为安全版</span
-            >
+            <span style="margin-left: 0.75rem; color: red">请确认数据库是否为安全版</span>
           </el-form-item>
         </el-tab-pane>
         <el-tab-pane label="高级" name="second">
@@ -56,6 +38,9 @@
           </el-form-item>
           <el-form-item label="显示系统模式">
             <el-switch v-model="ruleForm.isShowSystemSchema" />
+          </el-form-item>
+          <el-form-item label="数据库默认大写">
+            <el-switch v-model="ruleForm.caseModel" active-value="Upper" inactive-value="Lower" />
           </el-form-item>
         </el-tab-pane>
         <el-tab-pane label="SSL" name="third">
@@ -70,22 +55,13 @@
             </el-select>
           </el-form-item>
           <el-form-item label="客户端密钥" prop="sslKeyPath">
-            <el-input
-              v-model="ruleForm.sslKeyPath"
-              :disabled="!ruleForm.useSSL"
-            />
+            <el-input v-model="ruleForm.sslKeyPath" :disabled="!ruleForm.useSSL" />
           </el-form-item>
           <el-form-item label="客户端证书" prop="sslCrtPath">
-            <el-input
-              v-model="ruleForm.sslCrtPath"
-              :disabled="!ruleForm.useSSL"
-            />
+            <el-input v-model="ruleForm.sslCrtPath" :disabled="!ruleForm.useSSL" />
           </el-form-item>
           <el-form-item label="根证书" prop="rootCrtPath">
-            <el-input
-              v-model="ruleForm.rootCrtPath"
-              :disabled="!ruleForm.useSSL"
-            />
+            <el-input v-model="ruleForm.rootCrtPath" :disabled="!ruleForm.useSSL" />
           </el-form-item>
         </el-tab-pane>
       </el-tabs>
@@ -124,6 +100,7 @@ const ruleForm: Server = reactive({
   isHGSE: false, //是否安全版
   isShowTemplateDb: false, //显示范本数据库
   isShowSystemSchema: false, //显示系统模式
+  caseModel: 'Lower',
   useSSL: false, //开启ssl
   sslModel: "require", //ssl模式
   sslKeyPath: "", //客户端密钥
@@ -212,7 +189,7 @@ export default defineComponent({
 
       formEl.validate((valid) => {
         if (valid) {
-          if(!ruleForm.isSavePassword){
+          if (!ruleForm.isSavePassword) {
             //没有记住密码，把密码清空
             ruleForm.password = "";
           }
@@ -245,6 +222,7 @@ export default defineComponent({
 .el-tab-pane {
   padding: 10px;
 }
+
 .el-dialog__footer {
   display: flex;
   justify-content: space-between;

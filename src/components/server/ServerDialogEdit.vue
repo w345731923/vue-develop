@@ -1,21 +1,8 @@
 <template>
   <!-- :visible.sync="dialogFormVisible" -->
-  <el-dialog
-    title="修改连接"
-    width="600px"
-    :close-on-click-modal="false"
-    :destroy-on-close="true"
-    v-model="state.visible"
-    @closed="onClose(ruleFormRef)"
-    custom-class="server-dialog"
-  >
-    <el-form
-      :rules="rules"
-      ref="ruleFormRef"
-      :model="state.ruleForm"
-      status-icon
-      label-width="120px"
-    >
+  <el-dialog title="修改连接" width="600px" :close-on-click-modal="false" :destroy-on-close="true" v-model="state.visible"
+    @closed="onClose(ruleFormRef)" custom-class="server-dialog">
+    <el-form :rules="rules" ref="ruleFormRef" :model="state.ruleForm" status-icon label-width="120px">
       <!-- v-model="activeName" -->
       <el-tabs model-value="first" type="card">
         <el-tab-pane label="常规" name="first">
@@ -26,10 +13,7 @@
             <el-input v-model="state.ruleForm.hostAddress" />
           </el-form-item>
           <el-form-item label="端口" prop="port">
-            <el-input
-              v-model="state.ruleForm.port"
-              oninput="value=value.replace(/[^\d]/g,'')"
-            />
+            <el-input v-model="state.ruleForm.port" oninput="value=value.replace(/[^\d]/g,'')" />
           </el-form-item>
           <el-form-item label="数据库" prop="databaseName">
             <el-input v-model="state.ruleForm.databaseName" />
@@ -45,9 +29,7 @@
           </el-form-item>
           <el-form-item label="安全版数据库">
             <el-switch v-model="state.ruleForm.isHGSE" />
-            <span style="margin-left: 0.75rem; color: red"
-              >请确认数据库是否为安全版</span
-            >
+            <span style="margin-left: 0.75rem; color: red">请确认数据库是否为安全版</span>
           </el-form-item>
         </el-tab-pane>
 
@@ -58,38 +40,29 @@
           <el-form-item label="显示系统模式">
             <el-switch v-model="state.ruleForm.isShowSystemSchema" />
           </el-form-item>
+          <el-form-item label="数据库默认大写">
+            <el-switch v-model="state.ruleForm.caseModel" active-value="Upper" inactive-value="Lower" />
+          </el-form-item>
         </el-tab-pane>
         <el-tab-pane label="SSL" name="third">
           <el-form-item label="使用SSL">
             <el-switch v-model="state.ruleForm.useSSL" />
           </el-form-item>
           <el-form-item label="SSL模式">
-            <el-select
-              v-model="state.ruleForm.sslModel"
-              :disabled="!state.ruleForm.useSSL"
-            >
+            <el-select v-model="state.ruleForm.sslModel" :disabled="!state.ruleForm.useSSL">
               <el-option label="require" value="require" />
               <el-option label="verify-ca" value="verify-ca" />
               <el-option label="verify-full" value="verify-full" />
             </el-select>
           </el-form-item>
           <el-form-item label="客户端密钥" prop="sslKeyPath">
-            <el-input
-              v-model="state.ruleForm.sslKeyPath"
-              :disabled="!state.ruleForm.useSSL"
-            />
+            <el-input v-model="state.ruleForm.sslKeyPath" :disabled="!state.ruleForm.useSSL" />
           </el-form-item>
           <el-form-item label="客户端证书" prop="sslCrtPath">
-            <el-input
-              v-model="state.ruleForm.sslCrtPath"
-              :disabled="!state.ruleForm.useSSL"
-            />
+            <el-input v-model="state.ruleForm.sslCrtPath" :disabled="!state.ruleForm.useSSL" />
           </el-form-item>
           <el-form-item label="根证书" prop="rootCrtPath">
-            <el-input
-              v-model="state.ruleForm.rootCrtPath"
-              :disabled="!state.ruleForm.useSSL"
-            />
+            <el-input v-model="state.ruleForm.rootCrtPath" :disabled="!state.ruleForm.useSSL" />
           </el-form-item>
         </el-tab-pane>
       </el-tabs>
@@ -235,10 +208,12 @@ export default defineComponent({
 .el-dialog.server-dialog {
   text-align: center;
 }
+
 .el-dialog.server-dialog .el-dialog__body {
   padding-bottom: 0;
   padding-top: 0;
 }
+
 .el-dialog.server-dialog .el-dialog__footer {
   padding-top: 0;
 }
