@@ -33,13 +33,13 @@
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
         <el-form-item label="给每个" prop="forEach">
-          <el-select v-model="state.form.forEach" placeholder=" " style="width: 240px">
+          <el-select v-model="state.form.forEach" placeholder=" " style="width: 200px" @change="eachChange">
             <el-option key="ROW" label="ROW" value="ROW" />
             <el-option key="STATEMENT" label="STATEMENT" value="STATEMENT" />
           </el-select>
         </el-form-item>
         <el-form-item label="触发" prop="fireTime">
-          <el-select v-model="state.form.fireTime" placeholder=" " style="width: 240px">
+          <el-select v-model="state.form.fireTime" placeholder=" " style="width: 200px" @change="fireTimeChange">
             <el-option key="AFTER" label="AFTER" value="AFTER" />
             <el-option key="BEFORE" label="BEFORE" value="BEFORE" />
           </el-select>
@@ -48,6 +48,14 @@
           <el-select v-model="state.form.updateColumns" multiple placeholder=" " style="width: 240px">
             <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
           </el-select>
+        </el-form-item>
+        <el-form-item label=" ">
+          <el-checkbox-group v-model="state.form.triggerEvents">
+            <el-checkbox label="插入" />
+            <el-checkbox label="更新" />
+            <el-checkbox label="删除" />
+            <el-checkbox label="截断" />
+          </el-checkbox-group>
         </el-form-item>
         <el-form-item label="启用">
           <el-switch v-model="state.form.isEnabled" />
@@ -72,7 +80,7 @@
           <el-input v-model="state.form.functionParams"></el-input>
         </el-form-item>
         <el-form-item label="约束">
-          <el-switch v-model="state.form.hasConstraint" @change="constraintChange" />
+          <el-switch v-model="state.form.hasConstraint" @change="constraintChange" :disabled="state.forEachDisabled" />
         </el-form-item>
         <el-form-item label="可搁置">
           <el-select v-model="state.form.isDeferrableTemp" placeholder=" " @change="isDeferrableChange"
@@ -124,7 +132,7 @@ const demo: TriggerList = {
   forEach: "",//给每个 "ROW"
   fireTime: '',//触发 "AFTER"
   triggerEvents: [],
-  updateColumns: "",//"fl1_id,id"
+  updateColumns: [],//["fl1_id,id"]
   isEnabled: true,//启用
   comment: "",//注释
   condition: "",//当
@@ -149,7 +157,8 @@ interface IState {
   tableSpaceList: string[];
   fieldList: FieldList[];
 
-  constraintDisabled: boolean;//禁用约束
+  forEachDisabled: boolean;//禁用约束组件
+  constraintDisabled: boolean;//禁用约束子组件
   funcMap: Map<string, string>;
   func1: string[];//触发函数1列表
   func2: string[];//触发函数2列表
@@ -157,7 +166,6 @@ interface IState {
   table1: string[];//参考表1列表
   table2: string[];//参考表2列表
   isDeferredDisabled: boolean;//搁置启用
-
 }
 export default defineComponent({
   name: "triggertab",
@@ -198,8 +206,9 @@ export default defineComponent({
     const datab = getCurrentInstance();
 
     const rules = reactive({
-      name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
-      indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
+      name: [{ required: true, message: "请输入触发器名称！", trigger: "blur" }],
+      forEach: [{ required: true, message: "请选择给每个！", trigger: "blur" }],
+      fireTime: [{ required: true, message: "请选择触发！", trigger: "blur" }],
     });
     const { visible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
     const state: IState = reactive({
@@ -208,11 +217,11 @@ export default defineComponent({
       tableData: tableData.value as TriggerList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
       form: {} as TriggerList,
-      dataTypeList: [],
       isAdd: true,
       tableSpaceList: tableSpaceList.value as string[],
       fieldList: fieldList.value as FieldList[],
 
+      forEachDisabled: false,
       constraintDisabled: true,
       funcMap: new Map(),
       func1: [],
@@ -220,7 +229,7 @@ export default defineComponent({
       tableMap: new Map(),
       table1: [],
       table2: [],
-      isDeferredDisabled: false
+      isDeferredDisabled: false,
     });
     watch(
       visible,
@@ -292,6 +301,7 @@ export default defineComponent({
       state.isAdd = false;
       resetFields(row);
       resetDefer(row);
+      state.form.triggerEvents = convertToChina(row.triggerEvents);
       emit("visableFlag", true);
     };
 
@@ -315,7 +325,8 @@ export default defineComponent({
           const a2 = datab!.data.a2 as string[];
           data.isDeferrable = data.isDeferrableTemp == a1[0] ? true : false;
           data.isDeferred = data.isDeferredTemp == a2[0] ? true : false;
-          data.updateColumns = '';
+          data.triggerEvents = convertToEnglish(data.triggerEvents);
+          debugger
           emit("saveModal", data);
         }
       });
@@ -362,6 +373,51 @@ export default defineComponent({
       state.table2 = [];
       state.table2 = state.tableMap[val] as string[];
     };
+    //<给每个>下拉事件
+    const eachChange = (val: string) => {
+      activeConstraint()
+    };
+    //<触发>下拉事件
+    const fireTimeChange = (val: string) => {
+      activeConstraint()
+    };
+    const convertToEnglish = (val: string[]) => {
+      let data: string[] = [];
+      val.forEach(element => {
+        if (element == '插入') {
+          data.push('INSERT')
+        } else if (element == '更新') {
+          data.push('UPDATE')
+        } else if (element == '删除') {
+          data.push('DELETE')
+        } else if (element == '截断') {
+          data.push('TRUNCATE')
+        }
+      });
+      return data;
+    }
+    const convertToChina = (val: string[]) => {
+      let data: string[] = [];
+      val.forEach(element => {
+        if (element == 'INSERT') {
+          data.push('插入')
+        } else if (element == 'UPDATE') {
+          data.push('更新')
+        } else if (element == 'DELETE') {
+          data.push('删除')
+        } else if (element == 'TRUNCATE') {
+          data.push('截断')
+        }
+      });
+      return data;
+    }
+    const activeConstraint = () => {
+      // if (state.form.forEach == 'ROW' && state.form.fireTime == 'AFTER') {
+      //   state.forEachDisabled = false;
+      // } else {
+      //   state.forEachDisabled = false;
+      // }
+    }
     return {
       state,
       formRef,
@@ -373,7 +429,8 @@ export default defineComponent({
       isDeferrableChange,
       constraintChange,
       triggerFunChange,
-      tableChange
+      tableChange,
+      eachChange, fireTimeChange, activeConstraint
     };
   },
 

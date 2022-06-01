@@ -359,7 +359,7 @@ export interface TriggerList {
   forEach: string,//给每个 "ROW"
   fireTime: string,//触发 "AFTER"
   triggerEvents: string[],// ["INSERT", "TRUNCATE"]  插入INSERT 更新UPDATE 删除DELETE 截断TRUNCATE 
-  updateColumns: string,//更新字段"fl1_id,id"
+  updateColumns: string[],//更新字段["fl1_id,id"]
   isEnabled: boolean,//启用
   comment: string,//注释
   condition: string,//当
@@ -372,6 +372,7 @@ export interface TriggerList {
   referencedTableSchema: string,//参考表1
   referencedTable: string,//参考表2
 
+  triggerEventsTemp?:string[],
   isDeferrableTemp?: string,//可搁置临时变量
   isDeferredTemp?: string,//搁置临时变量
 }
