@@ -326,7 +326,6 @@ export default defineComponent({
           data.isDeferrable = data.isDeferrableTemp == a1[0] ? true : false;
           data.isDeferred = data.isDeferredTemp == a2[0] ? true : false;
           data.triggerEvents = convertToEnglish(data.triggerEvents);
-          debugger
           emit("saveModal", data);
         }
       });
