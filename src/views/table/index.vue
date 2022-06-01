@@ -371,6 +371,7 @@ export default defineComponent({
           message: "保存成功！",
           type: "success",
         });
+        target.nodePath = target.nodePath + '/tableName/' + target.object.name;
         //刷新设计表数据
         refreshTableDesign(resp.data, target.connectionId!, target.nodePath);
         const names = target.nodePath.split("/");
