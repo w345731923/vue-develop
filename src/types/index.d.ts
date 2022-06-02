@@ -224,50 +224,52 @@ export interface FieldDataType {
 }
 
 export interface TableDesignModel {
-  cluster?: number,
   parent?: undefined;//{oid: 0, name: "public", isRoleLeaf: false, describe: null, rolname: null, displayName: "public",…}
   '@clazz': string;//"com.highgo.developer.model.HgdbTable"
+  name: string,//表名
+  comment: string,//表注释  
   hastriggers?: boolean,//false
   foreignTableOptions?: [];
   primaryConstraintName?: string;//c1_pkey
-  ruleList: RuleList[];//规则RuleList
+  fieldList: FieldList[],//字段列表
   indexList: IndexList[];//索引
+  foreignKeyList: foreignKeyList[],//外键
+  uniqueConstraintList: UniqueConstraintList[],//唯一键
+  checkList: checkList[],//检查list
+  ruleList: RuleList[];//规则RuleList
+  triggerList: TriggerList[],//触发器
+
   acl?: string,
-  hasPartition?: boolean,
+  hasPartition?: boolean,//是否分区
   oid?: number,
   reltuples?: number,//0
   partitionList?: [],//[]
   foreignServerType?: [],//null
-  isLeaf?: boolean,//false
-  triggerList: TriggerList[],//触发器
   custerList?: string,
   hasindexes?: boolean,
-  inheritNames?: string,
-  fieldList: FieldList[],//字段列表
   isForeignTable?: number,//是否外部表
   foreignTableOptionsShow?: string,
   roleChildrenModel?: [],
   partitionKeyList?: [],
   excludeConstraintList?: [],
-  hasOids?: boolean,
-  fillParam?: number,
   roleList?: [],
   hasrules?: boolean,
   partitionType?: string,
-  foreignKeyList: foreignKeyList[],//外键
-  uniqueConstraintList: UniqueConstraintList[],//唯一键
   isRoleLeaf?: boolean,
-  tableSpace?: string,
   foreignServerOption?: string,
-  unlogged?: boolean,
-  tableOwner?: string,//"postgres"
   childrenModel?: [],
   tableSpaceList?: string,
-  checkList: checkList[],
-  name: string,//表名
-  comment: string,//表注释
+ 
   partitionDef?: string,
   foreignServerName?: string,
+  //选项
+  unlogged: boolean,//不记录
+  tableOwner: string,//"postgres"
+  tableSpace: string,//表空间
+  inheritNames: string[],//继承自
+  hasOids: boolean,//有oids
+  fillParam: number,//填充系数 -1
+  cluster: string,//集群
 }
 /**
  * 修改Table

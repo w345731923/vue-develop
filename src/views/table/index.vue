@@ -180,6 +180,14 @@ interface IState {
   oldObjectRule: string;
   oldObjectTrigger: string;
   oldComment: string;
+  //选项
+  old_unlogged: boolean,//不记录
+  old_tableOwner: string,//"postgres"
+  old_tableSpace: string,//表空间
+  old_inheritNames: string[],//继承自
+  old_hasOids: boolean,//有oids
+  old_fillParam: number,//填充系数 -1
+  old_cluster: string,//集群   
 
   fieldList: FieldList[];
   indexList: IndexList[];
@@ -190,6 +198,14 @@ interface IState {
   triggerList: TriggerList[];
 
   comment: string;
+  //选项
+  unlogged: boolean,//不记录
+  tableOwner: string,//"postgres"
+  tableSpace: string,//表空间
+  inheritNames: string[],//继承自
+  hasOids: boolean,//有oids
+  fillParam: number,//填充系数 -1
+  cluster: string,//集群   
 
   columnVisible: boolean;
   indexVisible: boolean;
@@ -259,8 +275,15 @@ export default defineComponent({
       oldObjectCheck: "",//检查
       oldObjectRule: "",//规则
       oldObjectTrigger: "",//触发器
-
       oldComment: '',
+      //选项
+      old_unlogged: false,//不记录
+      old_tableOwner: '',//"postgres"
+      old_tableSpace: '',//表空间
+      old_inheritNames: [],//继承自
+      old_hasOids: false,//有oids
+      old_fillParam: -1,//填充系数 -1
+      old_cluster: '',//集群   
 
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
@@ -275,6 +298,14 @@ export default defineComponent({
       triggerList: [],//触发器列表--triggerList
 
       comment: '',
+      //选项
+      unlogged: false,//不记录
+      tableOwner: '',//"postgres"
+      tableSpace: '',//表空间
+      inheritNames: [],//继承自
+      hasOids: false,//有oids
+      fillParam: -1,//填充系数 -1
+      cluster: '',//集群   
 
       columnVisible: false, //添加字段
       indexVisible: false, //添加索引
@@ -325,6 +356,13 @@ export default defineComponent({
 
         name: name,
         comment: state.comment,
+        unlogged: false,//不记录
+        tableOwner: '',//"postgres"
+        tableSpace: '',//表空间
+        inheritNames: [],//继承自
+        hasOids: false,//有oids
+        fillParam: -1,//填充系数 -1
+        cluster: '',//集群   
       };
       target.type = "Table";
       target.object = data;
@@ -339,8 +377,15 @@ export default defineComponent({
       state.treeData!.object.checkList = state.checkList;
       state.treeData!.object.ruleList = state.ruleList;
       state.treeData!.object.triggerList = state.triggerList;
-
       state.treeData!.object.comment = state.comment;
+      //选项
+      state.treeData!.object.unlogged = state.unlogged;
+      state.treeData!.object.tableOwner = state.tableOwner;
+      state.treeData!.object.tableSpace = state.tableSpace;
+      state.treeData!.object.inheritNames = state.inheritNames;
+      state.treeData!.object.hasOids = state.hasOids;
+      state.treeData!.object.fillParam = state.fillParam;
+      state.treeData!.object.cluster = state.cluster;
 
       //oldObject
       const oldData = JSON.parse(
@@ -353,8 +398,15 @@ export default defineComponent({
       oldData.object.checkList = JSON.parse(state.oldObjectCheck);
       oldData.object.ruleList = JSON.parse(state.oldObjectRule);
       oldData.object.triggerList = JSON.parse(state.oldObjectTrigger);
-
       oldData.object.comment = state.oldComment;
+      //选项
+      oldData.object.unlogged = state.old_unlogged;
+      oldData.object.tableOwner = state.old_tableOwner;
+      oldData.object.tableSpace = state.old_tableSpace;
+      oldData.object.inheritNames = state.old_inheritNames;
+      oldData.object.hasOids = state.old_hasOids;
+      oldData.object.fillParam = state.old_fillParam;
+      oldData.object.cluster = state.old_cluster;
 
       const data: TableEditForm = {
         newObject: state.treeData!,
@@ -400,8 +452,15 @@ export default defineComponent({
       state.checkList = resp.object.checkList;
       state.ruleList = resp.object.ruleList;
       state.triggerList = resp.object.triggerList;
-
       state.comment = resp.object.comment;
+      //选项
+      state.unlogged = resp.object.unlogged;
+      state.tableOwner = resp.object.tableOwner;
+      state.tableSpace = resp.object.tableSpace;
+      state.inheritNames = resp.object.inheritNames;
+      state.hasOids = resp.object.hasOids;
+      state.fillParam = resp.object.fillParam;
+      state.cluster = resp.object.cluster;
 
       //保存old数据，用于修改
       state.oldObjectField = JSON.stringify(resp.object.fieldList);
@@ -411,8 +470,15 @@ export default defineComponent({
       state.oldObjectCheck = JSON.stringify(resp.object.checkList);
       state.oldObjectRule = JSON.stringify(resp.object.ruleList);
       state.oldObjectTrigger = JSON.stringify(resp.object.triggerList);
-
-      state.comment = resp.object.comment;
+      state.oldComment = resp.object.comment;
+      //选项
+      state.old_unlogged = resp.object.unlogged;
+      state.old_tableOwner = resp.object.tableOwner;
+      state.old_tableSpace = resp.object.tableSpace;
+      state.old_inheritNames = resp.object.inheritNames;
+      state.old_hasOids = resp.object.hasOids;
+      state.old_fillParam = resp.object.fillParam;
+      state.old_cluster = resp.object.cluster;
 
       //清空无用字段，最小化保存字符串
       resp.object.fieldList = [];
@@ -422,10 +488,6 @@ export default defineComponent({
       resp.object.checkList = [];
       resp.object.ruleList = [];
       resp.object.triggerList = [];
-
-      resp.object.comment = '';
-
-
       resp.object.childrenModel = [];
       state.oldObject = JSON.stringify(resp);
       //刷新设计表动态数据
