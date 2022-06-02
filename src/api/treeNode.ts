@@ -294,4 +294,18 @@ export async function tableEdit(data: TableEditForm) {
  */
  export async function findReferTableMap(data: TreeNode<any>) {
     return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findReferTableMap', { method: 'POST', data });
+} 
+/**
+ * 查询table下的集群
+ * @returns 
+ */
+ export async function findCusterList(data: TreeNode<any>) {
+    return await http.request<ResponseData<string[]>>('/dbinfo/findCusterList', { method: 'POST', data });
+}
+/**
+ * 查询table下的继承自
+ * @returns 
+ */
+ export async function findInheritedSourceTableList(data: TreeNode<any>) {
+    return await http.request<ResponseData<string[]>>('/dbinfo/findInheritedSourceTableList', { method: 'POST', data });
 }

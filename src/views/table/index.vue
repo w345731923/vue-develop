@@ -117,7 +117,41 @@
             @visableFlag="appendTriggerVis" v-if="state.tabsActive == 'trigger'" />
         </el-tab-pane>
         <el-tab-pane label="选项" name="options" style="margin: 0.5rem">
-          <div>选项</div>
+          <el-form label-width="120px">
+            <el-form-item>
+              <el-checkbox v-model="state.unlogged">无记录</el-checkbox>
+            </el-form-item>
+            <el-form-item>
+              拥有者：<el-select v-model="state.tableOwner" placeholder=" ">
+                <el-option v-for="item in state.databaseOwner" :key="item" :label="item" :value="item">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              表空间：<el-select v-model="state.tableSpace" placeholder=" ">
+                <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              继承自：<el-select v-model="state.inheritNames" placeholder=" ">
+                <el-option v-for="item in state.inheritNamesList" :key="item" :label="item" :value="item">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-checkbox v-model="state.hasOids">有Oids</el-checkbox>
+            </el-form-item>
+            <el-form-item>
+              填充系数：
+              <el-input-number v-model="state.fillParam" />
+            </el-form-item>
+            <el-form-item>集群：<el-select v-model="state.cluster" placeholder=" ">
+                <el-option v-for="item in state.clusterList" :key="item" :label="item" :value="item">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
         </el-tab-pane>
         <el-tab-pane label="注释" name="comment" style="margin: 0.5rem">
           <el-input v-model="state.comment" type="textarea" :rows="20" />
@@ -137,7 +171,10 @@
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 import TableNameDialog from "./tableName.vue";
-import { getDataType, getDatabaseTableSpace, showCreateSQL, showAlterSQL } from "@/api/treeNode";
+import {
+  getDataType, getDatabaseTableSpace, showCreateSQL, showAlterSQL,
+  findCusterList, findInheritedSourceTableList, getDatabaseRole
+} from "@/api/treeNode";
 
 import { ElMessage } from "element-plus";
 import { tableAdd, tableEdit } from "@/api/treeNode";
@@ -216,8 +253,10 @@ interface IState {
   triggerVisible: boolean;
 
   isAdd: boolean; //新增还是修改
+  databaseOwner: string[];//表空间
   tableSpaceList: string[];//表空间
-
+  inheritNamesList: string[];//继承自列表
+  clusterList: string[];//集群列表
   sqlpreview: string;//sql预览
 }
 export default defineComponent({
@@ -257,10 +296,25 @@ export default defineComponent({
         sessionStorage.setItem("table-design-session", "");
         refreshTableDesign(data, data.connectionId!, data.nodePath);
       }
+      //查询拥有者
+      getDatabaseRole(state.treeData!.connectionId!).then((responseData) => {
+        console.log("getDatabaseRole ResponseData", responseData);
+        state.databaseOwner = responseData.data;
+      })
       //查询表空间
       getDatabaseTableSpace(state.treeData!.connectionId!).then((responseData) => {
         console.log("getDatabaseTableSpace ResponseData", responseData);
         state.tableSpaceList = responseData.data;
+      })
+      //查询继承自
+      findInheritedSourceTableList(state.treeData!).then((responseData) => {
+        console.log("findInheritedSourceTableList ResponseData", responseData);
+        state.inheritNamesList = responseData.data;
+      })
+      //查询表集群
+      findCusterList(state.treeData!).then((responseData) => {
+        console.log("findCusterList ResponseData", responseData);
+        state.clusterList = responseData.data;
       })
     });
     const state: IState = reactive({
@@ -287,7 +341,10 @@ export default defineComponent({
 
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
+      databaseOwner:[],
       tableSpaceList: [],
+      inheritNamesList: [],
+      clusterList: [],
 
       fieldList: [], //字段列表--fieldList
       indexList: [], //索引列表--indexList
