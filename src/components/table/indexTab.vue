@@ -57,8 +57,8 @@
         <el-form-item label="注释" prop="comment">
           <el-input v-model="state.form.comment"></el-input>
         </el-form-item>
-        <el-form-item label="表空间" prop="tablespaceName">
-          <el-select v-model="state.form.tablespaceName" placeholder=" ">
+        <el-form-item label="表空间" prop="tableSpaceName">
+          <el-select v-model="state.form.tableSpaceName" placeholder=" ">
             <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
@@ -95,7 +95,7 @@ const demo: IndexList = {
   isUnique: false,
   isClustered: false,
   comment: "",
-  tablespaceName: "",
+  tableSpaceName: "",
   reloptions: -1,//填充系数，api是string，填入是number的百分比
   constraint: "",
   expression: "" //表达式

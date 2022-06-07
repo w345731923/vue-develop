@@ -7,8 +7,9 @@
     -->
     <el-table :data="state.tableData" border :highlight-current-row="true" size="small" style="width: 100%"
       :max-height="state.tableHieght">
-      <el-table-column prop="name" label="唯一键约束名" align="center" />
-      <el-table-column prop="includeFieldNames" label="字段" align="center" />
+      <el-table-column prop="name" label="排除约束名" align="center" />
+      <el-table-column prop="forEach" label="索引方法" align="center" />
+      <el-table-column prop="fireTime" label="元素" align="center" />
       <el-table-column prop="comment" label="注释" align="center" />
       <el-table-column prop="operate" label="操作" align="center">
         <template #default="scope">
@@ -18,27 +19,35 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加唯一键" :destroy-on-close="false"
+    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加排除" :destroy-on-close="false"
       @closed="onClose(formRef)">
       <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="100px">
-        <el-form-item label="唯一约束名" prop="name">
+        <el-form-item label="排出约束名" prop="name">
           <el-input v-model="state.form.name"></el-input>
         </el-form-item>
-        <el-form-item label="字段" prop="includeFieldNames">
-          <el-select v-model="state.form.includeFieldNames" multiple placeholder=" " style="width: 240px">
-            <el-option v-for="item in state.fieldList" :key="item.oid" :label="item.name" :value="item.name" />
+        <el-form-item label="索引方法" prop="indexType">
+          <el-select v-model="state.form.indexType" placeholder=" ">
+            <el-option v-for="item in indexType" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
-        <el-form-item label="注释">
+        <el-form-item label="注释" prop="comment">
           <el-input v-model="state.form.comment"></el-input>
         </el-form-item>
         <el-form-item label="表空间" prop="tableSpaceName">
-          <el-select v-model="state.form.tableSpaceName" placeholder=" ">
+          <el-select v-model="state.form.tableSpace" placeholder=" ">
             <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="填充系数(%)" prop="fillFactor">
           <el-input-number v-model="state.form.fillFactor" />
+        </el-form-item>
+        <el-form-item label="缓存" prop="buffering">
+          <el-select v-model="state.form.buffering" placeholder=" ">
+            <el-option v-for="item in buffer" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="条件" prop="wherePredicate">
+          <el-input v-model="state.form.wherePredicate"></el-input>
         </el-form-item>
         <el-form-item label="可搁置">
           <el-select v-model="state.form.isDeferrableTemp" placeholder=" " @change="isDeferrableChange">
@@ -61,41 +70,43 @@
 
 <script lang='ts'>
 import { defineComponent, reactive, toRefs, watch, ref, onMounted } from "vue";
-import type { FormInstance, TabsPaneContext } from "element-plus";
+import type { FormInstance } from "element-plus";
+import { getCurrentInstance } from 'vue'
+import { findIndexTypeToOpClassSchema, findOpClassName, findSchemaToOperatorMap } from "@/api/treeNode";
+
 import {
   TreeNode,
-  FieldList,
-  UniqueConstraintList,
+  ExcludeConstraintList,
 } from "@/types";
-import { getCurrentInstance } from 'vue'
-
 const formRef = ref<FormInstance>();
-const demo: UniqueConstraintList = {
-  "@clazz": "com.highgo.developer.model.HgdbUniqueConstraint",
+const demo: ExcludeConstraintList = {
+  "@clazz": "com.highgo.developer.model.HgdbTrigger",
   oid: -new Date().getTime(),
-  name: '',//唯一键约束名 "index_a2_t1"
-  includeFieldNames: [],//字段["fl1_id"]
-  comment: '',//注释
-  tableSpaceName: '',//表空间
-  fillFactor: -1,//填充系数 -1
-  isDeferrable: false,//可搁置
-  isDeferred: false,//搁置  
+  name: "",
+  indexType: "",
+  tableSpace: "",
+  fillFactor: -1,//填充系数
+  buffering: "",//缓存
+  wherePredicate: "",//条件
+  excludeConstraintElements: [],
+  comment: '',
+  isDeferrable: false,//可搁置  false-NOT DEFERRABLE true-DEFERRABLE 
+  isDeferred: true,//搁置 false-INITIALLY IMMEDIATE  true-INITIALLY DEFERRED
 };
 
 interface IState {
   visible: boolean;
   treeData: TreeNode<any>;
-  tableData: UniqueConstraintList[];
+  tableData: ExcludeConstraintList[];
   tableHieght: number;
-  form: UniqueConstraintList;
+  form: ExcludeConstraintList;
   isAdd: boolean; //add or update
   tableSpaceList: string[];
-  fieldList: FieldList[];
 
-  isDeferredDisabled: boolean;
+  isDeferredDisabled: boolean;//搁置启用
 }
 export default defineComponent({
-  name: "uniquetab",
+  name: "excludetab",
   props: {
     visible: {
       type: Boolean,
@@ -112,26 +123,35 @@ export default defineComponent({
   emits: ["visableFlag", "saveModal", "removeRow"],
   setup(props, { emit }) {
     onMounted(() => {
+      findIndexTypeToOpClassSchema(state.treeData).then((responseData) => {
+        console.log('findIndexTypeToOpClassSchema responseData ', responseData)
+      });
+      findOpClassName(state.treeData).then((responseData) => {
+        console.log('findOpClassName responseData ', responseData)
+      });
+      findSchemaToOperatorMap(state.treeData).then((responseData) => {
+        console.log('findSchemaToOperatorMap responseData ', responseData)
+      });
     });
     const datab = getCurrentInstance();
-    const rules = reactive({
-      name: [{ required: true, message: "请输入字段名！", trigger: "blur" }],
-      includeFieldNames: [{ required: true, message: "请选择字段！", trigger: "blur" }],
-    });
 
+    const rules = reactive({
+      name: [{ required: true, message: "请输入触发器名称！", trigger: "blur" }],
+      indexType: [{ required: true, message: "请选择索引方法！", trigger: "blur" }],
+
+    });
     const { visible, treeData, tableData, tableSpaceList, fieldList } = toRefs(props);
     const state: IState = reactive({
       visible: visible.value,
       treeData: treeData.value as TreeNode<any>,
-      tableData: tableData.value as UniqueConstraintList[],
+      tableData: tableData.value as ExcludeConstraintList[],
       tableHieght: window.innerHeight - 190, //60header,40tabs,40buttons,40tabheader
-      form: {} as UniqueConstraintList,
-      dataTypeList: [],
+      form: {} as ExcludeConstraintList,
       isAdd: true,
       tableSpaceList: tableSpaceList.value as string[],
-      fieldList: fieldList.value as FieldList[],
 
-      isDeferredDisabled: true,//禁用搁置
+
+      isDeferredDisabled: false,
     });
     watch(
       visible,
@@ -149,7 +169,7 @@ export default defineComponent({
     watch(
       tableData,
       (newValue) => {
-        state.tableData = newValue as UniqueConstraintList[];
+        state.tableData = newValue as ExcludeConstraintList[];
       },
       { immediate: true }
     );
@@ -167,25 +187,31 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    watch(
-      fieldList,
-      (newValue) => {
-        state.fieldList = newValue as FieldList[];
-      },
-      { immediate: true }
-    );
     //对象拷贝
-    const createVal = (src: UniqueConstraintList) => {
-      const target = {} as UniqueConstraintList;
+    const createVal = (src: ExcludeConstraintList) => {
+      const target = {} as ExcludeConstraintList;
       Object.assign(target, src);
       return target;
     };
     //重置row初始值
-    const resetFields = (resetVal: UniqueConstraintList) => {
+    const resetFields = (resetVal: ExcludeConstraintList) => {
       Object.assign(state.form, resetVal);
     };
+    const resetDefer = (row: ExcludeConstraintList) => {
+      //解析索引字段
+      const a1 = datab!.data.a1 as string[];
+      const a2 = datab!.data.a2 as string[];
+      if (row.isDeferrable) {//DEFERRABLE
+        state.form.isDeferrableTemp = a1[0];
+        state.isDeferredDisabled = false
+      } else {//NOT DEFERRABLE
+        state.form.isDeferrableTemp = a1[1];
+        state.isDeferredDisabled = true
+      }
+      state.form.isDeferredTemp = row.isDeferred ? a2[0] : a2[1];
+    }
     //修改按钮
-    const columnUpdateClick = (row: UniqueConstraintList) => {
+    const columnUpdateClick = (row: ExcludeConstraintList) => {
       console.log("columnUpdateButtonClick row ", row);
       state.isAdd = false;
       resetFields(row);
@@ -194,7 +220,7 @@ export default defineComponent({
     };
 
     //删除按钮
-    const removeColumnClick = (row: UniqueConstraintList) => {
+    const removeColumnClick = (row: ExcludeConstraintList) => {
       emit("removeRow", row);
     };
     //关闭
@@ -217,19 +243,6 @@ export default defineComponent({
         }
       });
     };
-    const resetDefer = (row: UniqueConstraintList) => {
-      //解析索引字段
-      const a1 = datab!.data.a1 as string[];
-      const a2 = datab!.data.a2 as string[];
-      if (row.isDeferrable) {//DEFERRABLE
-        state.form.isDeferrableTemp = a1[0];
-        state.isDeferredDisabled = false
-      } else {//NOT DEFERRABLE
-        state.form.isDeferrableTemp = a1[1];
-        state.isDeferredDisabled = true
-      }
-      state.form.isDeferredTemp = row.isDeferred ? a2[0] : a2[1];
-    }
     const isDeferrableChange = (val: string) => {
       console.log('datab', datab)
       const a1 = datab!.data.a1 as string[];
@@ -249,13 +262,14 @@ export default defineComponent({
       removeColumnClick,
       submitForm,
       onClose,
-      isDeferrableChange
+      isDeferrableChange,
     };
   },
 
   data() {
     return {
-      time: ['RESTRICT', 'NO ACTION', 'CASCADE', 'SET NULL', 'SET DEFAULT'],
+      indexType: ['btree', 'hash', 'gist', 'gin', 'spgist', 'brin'],
+      buffer: ['ON', 'OFF', 'AUTO'],
       a1: ['DEFERRABLE', 'NOT DEFERRABLE'],
       a2: ['INITIALLY IMMEDIATE', 'INITIALLY DEFERRED']
     };

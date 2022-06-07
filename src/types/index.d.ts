@@ -108,7 +108,7 @@ export interface Server {
   isHGSE: boolean,//是否安全版
   isShowTemplateDb: boolean,//显示范本数据库
   isShowSystemSchema: boolean,//显示系统模式
-  caseModel:string,//数据库默认大写 Uppper Lower
+  caseModel: string,//数据库默认大写 Uppper Lower
   useSSL: boolean,//开启ssl
   sslModel: string,//ssl模式
   sslKeyPath: string,//客户端密钥
@@ -227,7 +227,6 @@ export interface TableDesignModel {
   parent?: undefined;//{oid: 0, name: "public", isRoleLeaf: false, describe: null, rolname: null, displayName: "public",…}
   '@clazz': string;//"com.highgo.developer.model.HgdbTable"
   name: string,//表名
-  comment: string,//表注释  
   hastriggers?: boolean,//false
   foreignTableOptions?: [];
   primaryConstraintName?: string;//c1_pkey
@@ -237,7 +236,17 @@ export interface TableDesignModel {
   uniqueConstraintList: UniqueConstraintList[],//唯一键
   checkList: checkList[],//检查list
   ruleList: RuleList[];//规则RuleList
+  excludeConstraintList: ExcludeConstraintList[],//排除list
   triggerList: TriggerList[],//触发器
+  //选项
+  unlogged: boolean,//不记录
+  tableOwner: string,//"postgres"
+  tableSpace: string,//表空间
+  inheritNames: string[],//继承自
+  hasOids: boolean,//有oids
+  fillParam: number,//填充系数 -1
+  cluster: string,//集群  
+  comment: string,//表注释  
 
   acl?: string,
   hasPartition?: boolean,//是否分区
@@ -251,7 +260,6 @@ export interface TableDesignModel {
   foreignTableOptionsShow?: string,
   roleChildrenModel?: [],
   partitionKeyList?: [],
-  excludeConstraintList?: [],
   roleList?: [],
   hasrules?: boolean,
   partitionType?: string,
@@ -259,17 +267,9 @@ export interface TableDesignModel {
   foreignServerOption?: string,
   childrenModel?: [],
   tableSpaceList?: string,
- 
+
   partitionDef?: string,
   foreignServerName?: string,
-  //选项
-  unlogged: boolean,//不记录
-  tableOwner: string,//"postgres"
-  tableSpace: string,//表空间
-  inheritNames: string[],//继承自
-  hasOids: boolean,//有oids
-  fillParam: number,//填充系数 -1
-  cluster: string,//集群
 }
 /**
  * 修改Table
@@ -289,7 +289,7 @@ export interface IndexList {
   isUnique: boolean,//唯一键
   isClustered: boolean,//并发
   comment: string,//注释
-  tablespaceName: string,//表空间 pg_default
+  tableSpaceName: string,//表空间 pg_default
   reloptions: number,//填充系数
   constraint: string,//条件 "1 = 1"
   expression?: string,//表达式
@@ -353,7 +353,41 @@ export interface RuleList {
   whereCondition: string,//条件 "(1 = 1)"
   command: string,//定义
 }
-//表-规则
+//表-排除
+export interface ExcludeConstraintList {
+  '@clazz': string;//"com.highgo.developer.model.HgdbExcludeConstraint"
+  oid: number,
+  name: string,//检查约束名 "fl2_check_1"
+  indexType: string,//索引方法  btree
+  tableSpace: string,//表空间
+  fillFactor: number,//填充系数 -1
+  buffering: string,//缓存
+  wherePredicate: string,//条件 "(1 = 1)"
+  isDeferrable: boolean,//可搁置
+  isDeferred: boolean,//搁置
+  comment: string,//注释
+
+  excludeConstraintElements: ExcludeConstraintElements[],
+  conindid?: number,
+  isDeferrableTemp?: string,
+  isDeferredTemp?: string,
+}
+//表-排除-元素
+export interface ExcludeConstraintElements {
+  '@clazz': string;//"com.highgo.developer.model.HgdbExcludeConstraint"
+  elementName: string,//字段 id
+  opsTypeSchema: string,//运算符类别模式 pg_catalog
+  opsType: string,//运算符类别 varchar_pattern_ops
+  sortType: string ,//排序 ASC DESC
+  sortNull: string ,//nulls排序 null first
+  opsSchema: string,//运算符模式 pg_catalog
+  ops:string,//运算符 =
+
+  isChoosed?:boolean,
+  cm?:string,
+}
+
+//表-触发器
 export interface TriggerList {
   '@clazz': string;//"com.highgo.developer.model.HgdbTrigger"
   oid: number,
@@ -374,7 +408,7 @@ export interface TriggerList {
   referencedTableSchema: string,//参考表1
   referencedTable: string,//参考表2
 
-  triggerEventsTemp?:string[],
+  triggerEventsTemp?: string[],
   isDeferrableTemp?: string,//可搁置临时变量
   isDeferredTemp?: string,//搁置临时变量
 }

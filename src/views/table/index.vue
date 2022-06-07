@@ -66,6 +66,13 @@
             </el-icon>添加规则
           </el-button>
         </el-button-group>
+        <el-button-group v-if="state.tabsActive == 'exclude'">
+          <el-button size="small" color="#f2f2f2" @click="appendExcludeConstraintVis(true)">
+            <el-icon>
+              <Avatar />
+            </el-icon>添加排除
+          </el-button>
+        </el-button-group>
         <el-button-group v-if="state.tabsActive == 'trigger'">
           <el-button size="small" color="#f2f2f2" @click="appendTriggerVis(true)">
             <el-icon>
@@ -105,7 +112,10 @@
             @removeRow="removeCheck" @visableFlag="appendCheckVis" v-if="state.tabsActive == 'check'" />
         </el-tab-pane>
         <el-tab-pane label="排除" name="exclude" style="margin: 0.5rem">
-          <div>排除</div>
+          <ExcludeTab :tableData="state.excludeConstraintList" :treeData="state.treeData"
+            :tableSpaceList="state.tableSpaceList" :visible="state.excludeConstraintVisible"
+            @saveModal="appendExcludeConstraint" @removeRow="removeExcludeConstraint"
+            @visableFlag="appendExcludeConstraintVis" v-if="state.tabsActive == 'exclude'" />
         </el-tab-pane>
         <el-tab-pane label="规则" name="rule" style="margin: 0.5rem">
           <RuleTab :tableData="state.ruleList" :visible="state.ruleVisible" @saveModal="appendRule"
@@ -185,6 +195,7 @@ import ForeignTab from "@/components/table/foreignTab.vue";
 import UniqueTab from "@/components/table/uniqueTab.vue";
 import CheckTab from "@/components/table/checkTab.vue";
 import RuleTab from "@/components/table/ruleTab.vue";
+import ExcludeTab from "@/components/table/excludeTab.vue";
 import TriggerTab from "@/components/table/triggerTab.vue";
 
 
@@ -199,6 +210,7 @@ import {
   UniqueConstraintList,
   CheckList,
   RuleList,
+  ExcludeConstraintList,
   TriggerList,
   TableDesignModel, SQLCreatePreview,
 } from "@/types";
@@ -216,6 +228,7 @@ interface IState {
   oldObjectCheck: string;
   oldObjectRule: string;
   oldObjectTrigger: string;
+  oldObjectExcludeConstraint: string;
   oldComment: string;
   //选项
   old_unlogged: boolean,//不记录
@@ -233,7 +246,7 @@ interface IState {
   checkList: CheckList[];
   ruleList: RuleList[];
   triggerList: TriggerList[];
-
+  excludeConstraintList: ExcludeConstraintList[];
   comment: string;
   //选项
   unlogged: boolean,//不记录
@@ -251,6 +264,7 @@ interface IState {
   checkVisible: boolean;
   ruleVisible: boolean;
   triggerVisible: boolean;
+  excludeConstraintVisible: boolean;
 
   isAdd: boolean; //新增还是修改
   databaseOwner: string[];//表空间
@@ -269,6 +283,7 @@ export default defineComponent({
     UniqueTab,
     CheckTab,
     RuleTab,
+    ExcludeTab,
     TriggerTab,
     TableNameDialog,
   },
@@ -328,6 +343,7 @@ export default defineComponent({
       oldObjectUnique: "",//唯一键
       oldObjectCheck: "",//检查
       oldObjectRule: "",//规则
+      oldObjectExcludeConstraint: "",//排除
       oldObjectTrigger: "",//触发器
       oldComment: '',
       //选项
@@ -341,7 +357,7 @@ export default defineComponent({
 
       treeData: undefined, //树形菜单值
       nameVisible: false, //输入表名称
-      databaseOwner:[],
+      databaseOwner: [],
       tableSpaceList: [],
       inheritNamesList: [],
       clusterList: [],
@@ -352,6 +368,7 @@ export default defineComponent({
       uniqueConstraintList: [],//唯一列表--uniqueConstraintList
       checkList: [],//检查列表--checkList
       ruleList: [],//规则列表--checkList
+      excludeConstraintList: [],//排除列表--excludeConstraintList
       triggerList: [],//触发器列表--triggerList
 
       comment: '',
@@ -370,6 +387,7 @@ export default defineComponent({
       uniqueVisible: false,//添加唯一
       checkVisible: false,//添加检查
       ruleVisible: false,//添加规则
+      excludeConstraintVisible: false,//排查触发器
       triggerVisible: false,//添加触发器
 
       sqlpreview: "",
@@ -409,6 +427,7 @@ export default defineComponent({
         uniqueConstraintList: state.uniqueConstraintList,
         checkList: state.checkList,
         ruleList: state.ruleList,
+        excludeConstraintList: state.excludeConstraintList,
         triggerList: state.triggerList,
 
         name: name,
@@ -433,6 +452,7 @@ export default defineComponent({
       state.treeData!.object.uniqueConstraintList = state.uniqueConstraintList;
       state.treeData!.object.checkList = state.checkList;
       state.treeData!.object.ruleList = state.ruleList;
+      state.treeData!.object.excludeConstraintList = state.excludeConstraintList;
       state.treeData!.object.triggerList = state.triggerList;
       state.treeData!.object.comment = state.comment;
       //选项
@@ -454,6 +474,7 @@ export default defineComponent({
       oldData.object.uniqueConstraintList = JSON.parse(state.oldObjectUnique);
       oldData.object.checkList = JSON.parse(state.oldObjectCheck);
       oldData.object.ruleList = JSON.parse(state.oldObjectRule);
+      oldData.object.excludeConstraintList = JSON.parse(state.oldObjectExcludeConstraint);
       oldData.object.triggerList = JSON.parse(state.oldObjectTrigger);
       oldData.object.comment = state.oldComment;
       //选项
@@ -508,6 +529,7 @@ export default defineComponent({
       state.uniqueConstraintList = resp.object.uniqueConstraintList;
       state.checkList = resp.object.checkList;
       state.ruleList = resp.object.ruleList;
+      state.excludeConstraintList = resp.object.excludeConstraintList;
       state.triggerList = resp.object.triggerList;
       state.comment = resp.object.comment;
       //选项
@@ -526,6 +548,7 @@ export default defineComponent({
       state.oldObjectUnique = JSON.stringify(resp.object.uniqueConstraintList);
       state.oldObjectCheck = JSON.stringify(resp.object.checkList);
       state.oldObjectRule = JSON.stringify(resp.object.ruleList);
+      state.oldObjectExcludeConstraint = JSON.stringify(resp.object.excludeConstraintList);
       state.oldObjectTrigger = JSON.stringify(resp.object.triggerList);
       state.oldComment = resp.object.comment;
       //选项
@@ -544,6 +567,7 @@ export default defineComponent({
       resp.object.uniqueConstraintList = [];
       resp.object.checkList = [];
       resp.object.ruleList = [];
+      resp.object.excludeConstraintList = [];
       resp.object.triggerList = [];
       resp.object.childrenModel = [];
       state.oldObject = JSON.stringify(resp);
@@ -745,7 +769,32 @@ export default defineComponent({
       }
       console.log("removeCheck state.checkList", state.checkList);
     };
-
+    //========================排除=====================
+    const appendExcludeConstraintVis = (flag: boolean) => {
+      state.excludeConstraintVisible = flag;
+    };
+    const appendExcludeConstraint = (form: ExcludeConstraintList) => {
+      console.log("appendExcludeConstraint form", form);
+      //判断新增还是修改
+      const index = state.excludeConstraintList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        const item = state.excludeConstraintList[index];
+        state.excludeConstraintList.splice(index, 1, {
+          ...item,
+          ...form,
+        });
+      } else {
+        state.excludeConstraintList.push(form);
+      }
+      appendTriggerVis(false);
+    };
+    const removeExcludeConstraint = (form: ExcludeConstraintList) => {
+      const index = state.excludeConstraintList.findIndex((item) => item.oid === form.oid);
+      if (index > -1) {
+        state.excludeConstraintList.splice(index, 1);
+      }
+      console.log("removeTrigger state.excludeConstraintList", state.excludeConstraintList);
+    };
     //=========================规则=====================
     const appendRuleVis = (flag: boolean) => {
       state.ruleVisible = flag;
@@ -823,6 +872,10 @@ export default defineComponent({
       appendCheckVis,
       appendCheck,
       removeCheck,
+
+      appendExcludeConstraintVis,
+      appendExcludeConstraint,
+      removeExcludeConstraint,
 
       appendRuleVis,
       appendRule,

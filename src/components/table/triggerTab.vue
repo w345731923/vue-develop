@@ -50,7 +50,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加外键" :destroy-on-close="false"
+    <el-dialog :close-on-click-modal="false" v-model="state.visible" title="添加触发器" :destroy-on-close="false"
       @closed="onClose(formRef)">
       <el-form :model="state.form" :rules="rules" ref="formRef" status-icon label-width="100px">
         <el-form-item label="触发器名" prop="name">
