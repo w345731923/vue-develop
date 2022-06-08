@@ -114,7 +114,7 @@
         <el-tab-pane label="排除" name="exclude" style="margin: 0.5rem">
           <ExcludeTab :tableData="state.excludeConstraintList" :treeData="state.treeData"
             :tableSpaceList="state.tableSpaceList" :visible="state.excludeConstraintVisible"
-            @saveModal="appendExcludeConstraint" @removeRow="removeExcludeConstraint"
+            :fieldList="state.fieldList" @saveModal="appendExcludeConstraint" @removeRow="removeExcludeConstraint"
             @visableFlag="appendExcludeConstraintVis" v-if="state.tabsActive == 'exclude'" />
         </el-tab-pane>
         <el-tab-pane label="规则" name="rule" style="margin: 0.5rem">

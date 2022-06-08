@@ -366,15 +366,16 @@ export interface ExcludeConstraintList {
   isDeferrable: boolean,//可搁置
   isDeferred: boolean,//搁置
   comment: string,//注释
-
   excludeConstraintElements: ExcludeConstraintElements[],
+
+  elements?:string,//存储元素临时变量
   conindid?: number,
   isDeferrableTemp?: string,
   isDeferredTemp?: string,
 }
 //表-排除-元素
 export interface ExcludeConstraintElements {
-  '@clazz': string;//"com.highgo.developer.model.HgdbExcludeConstraint"
+  '@clazz': string;//"com.highgo.developer.model.HgdbExcludeConstraintElement"
   elementName: string,//字段 id
   opsTypeSchema: string,//运算符类别模式 pg_catalog
   opsType: string,//运算符类别 varchar_pattern_ops
