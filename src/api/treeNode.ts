@@ -310,23 +310,23 @@ export async function tableEdit(data: TableEditForm) {
     return await http.request<ResponseData<string[]>>('/dbinfo/findInheritedSourceTableList', { method: 'POST', data });
 }
 /**
- * 设计表-排除约束-索引方法，不同的索引方法存在不同的运算符类别模式
+ * 设计表-排除约束-索引方法，不同的索引方法存在不同的运算符类别模式，key是索引方法，value是模式
  * @returns 
  */
  export async function findIndexTypeToOpClassSchema(data: TreeNode<any>) {
-    return await http.request<ResponseData<string[]>>('/dbinfo/findIndexTypeToOpClassSchema ', { method: 'POST', data });
+    return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findIndexTypeToOpClassSchema ', { method: 'POST', data });
 }
 /**
- * 设计表-排除-元素-运算符类别模式
+ * 设计表-排除-元素-运算符类别,key为schema，value是类别
  * @returns 
  */
  export async function findOpClassName(data: TreeNode<any>) {
-    return await http.request<ResponseData<string[]>>('/dbinfo/findOpClassName ', { method: 'POST', data });
+    return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findOpClassName ', { method: 'POST', data });
 }
 /**
- * 设计表-排除-元素-运算符模式
+ * 设计表-排除-元素-运算符，key是运算符模式，value是运算符
  * @returns 
  */
  export async function findSchemaToOperatorMap(data: TreeNode<any>) {
-    return await http.request<ResponseData<string[]>>('/dbinfo/findSchemaToOperatorMap ', { method: 'POST', data });
+    return await http.request<ResponseData<Map<string, string>>>('/dbinfo/findSchemaToOperatorMap ', { method: 'POST', data });
 }

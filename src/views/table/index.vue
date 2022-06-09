@@ -786,7 +786,7 @@ export default defineComponent({
       } else {
         state.excludeConstraintList.push(form);
       }
-      appendTriggerVis(false);
+      appendExcludeConstraintVis(false);
     };
     const removeExcludeConstraint = (form: ExcludeConstraintList) => {
       const index = state.excludeConstraintList.findIndex((item) => item.oid === form.oid);

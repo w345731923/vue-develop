@@ -384,6 +384,7 @@ export interface ExcludeConstraintElements {
   opsSchema: string,//运算符模式 pg_catalog
   ops:string,//运算符 =
 
+  id?:number;//标识列
   isChoosed?:boolean,
   cm?:string,
 }

@@ -110,13 +110,14 @@
           </el-select>
         </el-form-item>
         <el-form-item label="运算符类别模式" prop="opsTypeSchema">
-          <el-select v-model="state.elementForm.opsTypeSchema" placeholder=" ">
-            <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
+          <el-select v-model="state.elementForm.opsTypeSchema" placeholder=" " @change="opsTypeSchemaChange">
+            <el-option key="" label="" value="" />
+            <el-option v-for="item in state.opsTypeSchemaList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="运算符类别" prop="opsType">
           <el-select v-model="state.elementForm.opsType" placeholder=" ">
-            <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
+            <el-option v-for="item in state.opsTypeList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="排序" prop="sortType">
@@ -132,18 +133,19 @@
           </el-select>
         </el-form-item>
         <el-form-item label="运算符模式" prop="opsSchema">
-          <el-select v-model="state.elementForm.opsSchema" placeholder=" ">
-            <el-option v-for="item in state.tableSpaceList" :key="item" :label="item" :value="item" />
+          <el-select v-model="state.elementForm.opsSchema" placeholder=" " @change="opsSchemaChange">
+            <el-option key="" label="" value="" />
+            <el-option v-for="item in state.opsTypeSchemaList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
         <el-form-item label="运算符" prop="ops">
           <el-select v-model="state.elementForm.ops" placeholder=" ">
-            <el-option v-for="item in opsOptions" :key="item" :label="item" :value="item" />
+            <el-option v-for="item in state.opsList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="closeElementFrom">取消</el-button>
+        <el-button @click="closeElementFrom(eleFormRef)">取消</el-button>
         <el-button type="primary" @click="elementSubmitForm(eleFormRef)">保存</el-button>
       </template>
     </el-dialog>
@@ -205,6 +207,12 @@ interface IState {
   elementTableVis: boolean,//元素表格弹窗
   elementFormVis: boolean,//元素表格添加行弹窗
   elementForm: ExcludeConstraintElements,//元素的row
+  opsTypeSchemaMap: Map<string, string>;//运算符类别模式
+  opsTypeSchemaList: string[];
+  opsTypeMap: Map<string, string>;//运算符类别
+  opsTypeList: string[];
+  opsMap: Map<string, string>;//运算符
+  opsList: string[];
 }
 export default defineComponent({
   name: "excludetab",
@@ -229,12 +237,15 @@ export default defineComponent({
     onMounted(() => {
       findIndexTypeToOpClassSchema(state.treeData).then((responseData) => {
         console.log('findIndexTypeToOpClassSchema responseData ', responseData)
+        state.opsTypeSchemaMap = responseData.data;
       });
       findOpClassName(state.treeData).then((responseData) => {
         console.log('findOpClassName responseData ', responseData)
+        state.opsTypeMap = responseData.data;
       });
       findSchemaToOperatorMap(state.treeData).then((responseData) => {
         console.log('findSchemaToOperatorMap responseData ', responseData)
+        state.opsMap = responseData.data;
       });
     });
     const datab = getCurrentInstance();
@@ -268,6 +279,12 @@ export default defineComponent({
       elementTableVis: false,//元素表格弹窗
       elementFormVis: false,//元素表格添加行弹窗
       elementForm: {} as ExcludeConstraintElements,
+      opsTypeSchemaMap: new Map(),//索引，模式
+      opsTypeSchemaList: [],
+      opsTypeMap: new Map(),//模式，类别
+      opsTypeList: [],
+      opsMap: new Map(),//模式，运算符
+      opsList: [],
     });
     watch(
       visible,
@@ -380,13 +397,23 @@ export default defineComponent({
         state.isDeferredDisabled = true;
       }
     }
+    const formatter = (row: ExcludeConstraintList) => {
+      return elementConvertString(row.excludeConstraintElements)
+    }
     //打开元素table窗口
     const openElementsTable = () => {
       state.elementTableVis = true;
-      //给新的table传值
-      state.form.excludeConstraintElements.forEach(item => {
-        state.elementTable.push(item);
+      state.elementTable = []
+      state.opsTypeSchemaList = [];
+      state.opsTypeList = [];
+      state.opsList = [];
+
+      //给新的table传值，给模式传值
+      state.form.excludeConstraintElements.forEach((item, index) => {
+        state.elementTable.push({ id: index, ...item });
       })
+      state.opsTypeSchemaList = state.opsTypeSchemaMap[state.form.indexType] as string[];
+      console.log('openElementsTable state ', state)
     }
     //关闭元素table窗口
     const closeElementsTable = () => {
@@ -408,15 +435,34 @@ export default defineComponent({
       state.elementFormVis = true;
       //清空表单内历史数据
       Object.assign(state.elementForm, elementTemp);
+      state.elementForm.id = new Date().getTime();
     }
     //关闭新建元素窗口
-    const closeElementFrom = () => {
+    const closeElementFrom = (formEl: FormInstance | undefined) => {
       state.elementFormVis = false;
+      formEl?.resetFields()
     };
-
-    const formatter = (row: ExcludeConstraintList) => {
-      return elementConvertString(row.excludeConstraintElements)
+    //运算符类别模式下拉事件，得到运算符类别
+    const opsTypeSchemaChange = (val: string) => {
+      console.log('opsTypeSchemaChange val', val, state.opsTypeMap)
+      if ('' == val) {
+        state.opsTypeList = []
+        state.elementForm.opsType = '';
+      } else {
+        state.opsTypeList = state.opsTypeMap[val] as string[];
+      }
     }
+    //运算符模式下拉事件,得到运算符
+    const opsSchemaChange = (val: string) => {
+      console.log('opsTypeSchemaChange val', val, state.opsTypeMap)
+      if ('' == val) {
+        state.opsList = []
+        state.elementForm.ops = '';
+      } else {
+        state.opsList = state.opsMap[val] as string[];
+      }
+    }
+
     //element列表转成字符串
     const elementConvertString = (data: ExcludeConstraintElements[]) => {
       const list = data.map(element => {
@@ -433,17 +479,29 @@ export default defineComponent({
     //元素表格点击删除按钮
     const elementRemoveClick = (row: ExcludeConstraintElements) => {
       console.log("elementRemoveClick row ", row);
-      const index = state.elementTable.findIndex(item => item.elementName == row.elementName);
+      const index = state.elementTable.findIndex(item => item.id == row.id);
       state.elementTable.splice(index, 1);
     };
-    //添加元素保存
+    //新建元素弹窗保存
     const elementSubmitForm = (formEl: FormInstance | undefined) => {
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
           console.log('elementSubmitForm', state.elementForm)
-          state.elementTable.push(state.elementForm)
+          const index = state.elementTable.findIndex((item) => item.id === state.elementForm.id);
+          if (index > -1) {
+            //修改
+            const item = state.elementTable[index];
+            state.elementTable.splice(index, 1, {
+              ...item,
+              ...state.elementForm,
+            });
+          } else {
+            //新增
+            state.elementTable.push(state.elementForm)
+          }
           state.elementFormVis = false;
+          console.log('elementSubmitForm state',state)
         }
       });
     };
@@ -470,17 +528,19 @@ export default defineComponent({
       elementRules,
       elementSubmitForm,
       elementUpdateClick,
-      elementRemoveClick
+      elementRemoveClick,
+
+      opsTypeSchemaChange,
+      opsSchemaChange
     };
   },
 
   data() {
     return {
-      indexType: ['btree', 'hash', 'gist', 'gin', 'spgist', 'brin'],
+      indexType: ['B-Tree', 'Hash', 'GiST', 'GIN', 'SP-GiST', 'BRIN'],
       buffer: ['ON', 'OFF', 'AUTO'],
       a1: ['DEFERRABLE', 'NOT DEFERRABLE'],
       a2: ['INITIALLY IMMEDIATE', 'INITIALLY DEFERRED'],
-      opsOptions: ['=', '<>', '<', '<=', '>', '>=', '+', '-', '~<~', '~<=~', '~>=~', '~>~', '||', '!', '!!'],
 
     };
   },
