@@ -497,10 +497,7 @@ export default defineComponent({
       tableAdd(target).then((resp) => {
         console.log("tableAdd resp", resp);
         state.nameVisible = false;
-        ElMessage({
-          message: "保存成功！",
-          type: "success",
-        });
+        succElMessage()
         target.nodePath = target.nodePath + '/tableName/' + target.object.name;
         //刷新设计表数据
         refreshTableDesign(resp.data, target.connectionId!, target.nodePath);
@@ -583,10 +580,7 @@ export default defineComponent({
         state.nameVisible = true;
       } else {
         tableEdit(packageUpdateData()).then((resp) => {
-          ElMessage({
-            message: "保存成功！",
-            type: "success",
-          });
+          succElMessage()
           if (resp.data) {
             refreshTableDesign(
               resp.data,
@@ -847,6 +841,12 @@ export default defineComponent({
       }
       console.log("removeTrigger state.triggerList", state.triggerList);
     };
+    const succElMessage = (title = '保存成功') => {
+      ElMessage({
+        message: title,
+        type: "success",
+      });
+    }    
     return {
       state,
       handleTabClick,

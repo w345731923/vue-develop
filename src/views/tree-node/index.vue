@@ -138,6 +138,7 @@ interface Tree {
   leaf?: boolean;
   data: any;
 }
+import { ElMessage } from "element-plus";
 
 import {
   defineComponent,
@@ -574,15 +575,14 @@ export default defineComponent({
     const openRemoveNodeDialog = (node: Node) => {
       state.treeNode = node;
       state.removeDialogVisible = true;
+      const nodePath = getNodePath(state.treeNode!);
+      state.treeNode!.data.nodePath = nodePath;
     };
     /**
      * 删除节点提交
      */
     const handleRemoveNodeSubmit = (form: { isCascadeDelete: boolean }) => {
-      const nodePath = getNodePath(state.treeNode!);
       const delObject = state.treeNode?.data as TreeNode<any>;
-      delObject.nodePath = nodePath;
-
       const data: TreeNodeDel = {
         delObject: delObject, //删除对象
         deleteOptions: { isCascadeDelete: form.isCascadeDelete }, //是否级联
@@ -590,6 +590,7 @@ export default defineComponent({
       getTreeNodeDel(data).then(() => {
         state.removeDialogVisible = false;
         treeRef.value.remove(state.treeNode);
+        succElMessage('操作成功')
       });
     };
     /**
@@ -612,6 +613,7 @@ export default defineComponent({
       getTreeNodeRename(data).then((result: ResponseData<TreeNode<any>>) => {
         state.renameDialogVisible = false;
         state.treeNode!.data = result.data;
+        succElMessage()
       });
     };
     /**
@@ -665,6 +667,7 @@ export default defineComponent({
       addServer(serverObject).then((result: ResponseData) => {
         switchServerAddVisable(false);
         treeRef.value.append(result.data, state.treeNode);
+        succElMessage()
       });
     };
     //验证是否已连接
@@ -697,12 +700,14 @@ export default defineComponent({
           editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
             switchServerEditVisable(false);
             state.treeNode!.data = result.data;
+            succElMessage()
           });
         });
       } else {
         editServer(data).then((result: ResponseData<TreeNode<Server>>) => {
           switchServerEditVisable(false);
           state.treeNode!.data = result.data;
+          succElMessage()
         });
       }
     };
@@ -744,6 +749,7 @@ export default defineComponent({
       const oldObject = node.data as TreeNode<Server>;
       closeServer(oldObject).then(() => {
         handleCloseNode(node);
+        succElMessage('操作成功')
       });
     };
     /**
@@ -805,6 +811,7 @@ export default defineComponent({
         switchDBAddVisable(false);
         if (result.data != null)
           treeRef.value.append(result.data, state.treeNode);
+        succElMessage()
       });
     };
     //打开编辑数据库
@@ -832,6 +839,7 @@ export default defineComponent({
       editDatabase(data).then((result: ResponseData) => {
         switchDBEditVisable(false);
         state.treeNode!.data = result.data;
+        succElMessage()
       });
     };
     //打开数据库
@@ -850,6 +858,7 @@ export default defineComponent({
       data.nodePath = getNodePath(node);
       closeDatabase(data).then((result: ResponseData) => {
         handleCloseNode(node);
+        succElMessage('操作成功')
       });
     };
     //---------------schema---------------------
@@ -872,6 +881,7 @@ export default defineComponent({
         switchSchemaAddVisable(false);
         if (result.data != null) result.data.connectionId = server.connectionId;
         treeRef.value.append(result.data, state.treeNode);
+        succElMessage()
       });
     };
     const handleSchemaUpdate = (node: Node) => {
@@ -897,6 +907,7 @@ export default defineComponent({
       editSchema(data).then((result: ResponseData) => {
         switchSchemaEditVisable(false);
         state.treeNode!.data = result.data;
+        succElMessage()
       });
     };
 
@@ -1108,6 +1119,12 @@ export default defineComponent({
         }
       );
     };
+    const succElMessage = (title = '保存成功') => {
+      ElMessage({
+        message: title,
+        type: "success",
+      });
+    }
     return {
       treeRef,
       state,
