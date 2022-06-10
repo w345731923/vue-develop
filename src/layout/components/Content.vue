@@ -1,19 +1,10 @@
 <template>
   <div class="_content">
     <!-- <el-button @click="modifyTitle1"> 保存 </el-button> -->
-    <el-tabs v-model="state.tabActiveName" type="card" closable>
-      <!-- @tab-remove="handleRemoveTab" -->
-      <!-- @tab-click="handleClick" -->
-      <el-tab-pane
-        v-for="item in editableTabs"
-        :key="item.name"
-        :label="item.title"
-        :name="item.name"
-      >
-        <component
-          v-bind:is="item.currentView"
-          @modifyTitle="modifyTitle1"
-        ></component>
+    <el-tabs v-model="state.tabActiveName" type="card" closable @tab-click="handleTabClick"
+      @tab-remove="handleTabRemove">
+      <el-tab-pane v-for="item in editableTabs" :key="item.name" :label="item.title" :name="item.name">
+        <component v-bind:is="item.currentView" @modifyTitle="modifyTitle1" :tabId="item.name"></component>
         <!-- <component :is="item.currentView"></component> -->
       </el-tab-pane>
       <!-- <el-tab-pane
@@ -29,6 +20,7 @@
 </template>
 
 <script lang="ts">
+import { TabsPaneContext } from "element-plus";
 import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 
 export default defineComponent({
@@ -44,7 +36,7 @@ export default defineComponent({
     },
     modifyTitle: Function,
   },
-  emits: ["modifyTitle"],
+  emits: ["modifyTitle", 'modifyTabCurrent', 'closeTab'],
   setup(props, { emit }) {
     const { tabActiveName } = toRefs(props);
     const state = reactive({
@@ -57,17 +49,25 @@ export default defineComponent({
       },
       { immediate: true }
     );
-    const handleRemoveTab = (targetName) => {
-      console.log("handleRemoveTab targetName", targetName);
+    const handleTabRemove = (name: string) => {
+      emit("closeTab", name);
     };
+    const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
+      emit("modifyTabCurrent", pane.props.name);
+    }
     const modifyTitle1 = (tabId: string, title: string) => {
-      // const tabId = sessionStorage.getItem("tabId");
       emit("modifyTitle", tabId, title);
     };
+    const getTabId = (item: any) => {
+      console.log('getTabId item', item)
+      return item.name;
+    }
     return {
       state,
-      handleRemoveTab,
+      handleTabRemove,
+      handleTabClick,
       modifyTitle1,
+      getTabId
     };
   },
 });

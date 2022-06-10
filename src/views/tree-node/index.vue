@@ -551,8 +551,10 @@ export default defineComponent({
           const val = JSON.stringify(state.treeNode!.data);
           sessionStorage.setItem("create-table-session", val);
           const names = state.treeNode!.data.nodePath.split("/");
-          //表名@数据库名.模式名
-          emit("addTable", "newtable@" + names[7] + "." + names[5]);
+          const currentTime = new Date().getTime();
+          let tabId = "create-table" + currentTime;
+          //表名@数据库名.模式名(server名)
+          emit("addTable", tabId, "newtable@" + names[7] + "." + names[5] + '(' + names[3] + ')');
         });
       }
     };
@@ -763,7 +765,7 @@ export default defineComponent({
 
       serverConnect(nodeData).then(
         (resp: ResponseData<any>) => {
-          console.log("serverConnect succ respon ", resp);
+          // console.log("serverConnect succ respon ", resp);
           const connectionId = resp.data;
           nodeData.connectionId = connectionId;
           getDatabaseList(nodeData).then(
@@ -928,8 +930,8 @@ export default defineComponent({
         const val = JSON.stringify(responseData.data);
         sessionStorage.setItem("table-design-session", val);
         const names = responseData.data.nodePath.split("/");
-        //表名@数据库名.模式名
-        emit("addTable", names[9] + "@" + names[7] + "." + names[5]);
+        //id:oid, title:表名@数据库名.模式名
+        emit("addTable", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')');
       });
     };
 
@@ -987,7 +989,7 @@ export default defineComponent({
           treeData.nodePath = getNodePath(node);
           openDatabase(treeData).then(
             (respon: ResponseData<string>) => {
-              console.log("succ respon ", respon);
+              // console.log("succ respon ", respon);
               dbs.forEach((element) => {
                 element.connectionId = respon.data;
               });
@@ -1036,7 +1038,7 @@ export default defineComponent({
       let groupName = nodeData.object.name;
       getServerList(groupName).then(
         (respon: ResponseData<TreeNode<Server>[]>) => {
-          console.log("succ respon ", respon);
+          // console.log("succ respon ", respon);
           resolve(respon.data);
         },
         (err) => {
@@ -1060,12 +1062,12 @@ export default defineComponent({
       nodeData.nodePath = getNodePath(node);
       serverConnect(nodeData).then(
         (resp: ResponseData<any>) => {
-          console.log("serverConnect succ respon ", resp);
+          // console.log("serverConnect succ respon ", resp);
           const connectionId = resp.data;
           nodeData.connectionId = connectionId;
           getDatabaseList(nodeData).then(
             (resp2: ResponseData<any>) => {
-              console.log("getDatabaseList succ respon ", resp2, node, resp);
+              // console.log("getDatabaseList succ respon ", resp2, node, resp);
               resp2.data.forEach((element: TreeNode<Database>) => {
                 //赋值connectionId
                 if (element.object.name == nodeData.object.databaseName) {
@@ -1089,7 +1091,7 @@ export default defineComponent({
 
       getSchemaList(nodeData).then(
         (respon: ResponseData<TreeNode<any>[]>) => {
-          console.log("getSchemaList succ respon ", respon);
+          // console.log("getSchemaList succ respon ", respon);
           respon.data.forEach((element) => {
             element.connectionId = nodeData.connectionId;
           });
@@ -1107,7 +1109,7 @@ export default defineComponent({
 
       getTableList(nodeData).then(
         (respon: ResponseData<TreeNode<any>[]>) => {
-          console.log("getTableList succ respon ", respon);
+          // console.log("getTableList succ respon ", respon);
           respon.data.forEach((element) => {
             element.connectionId = nodeData.connectionId;
           });

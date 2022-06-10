@@ -289,11 +289,15 @@ export default defineComponent({
   },
   props: {
     modifyTitle: Function,
+    tabId: {
+      type: String,
+      default: '',
+    },
   },
   emits: ["modifyTitle"],
   setup(props, { emit }) {
     onMounted(() => {
-      console.log("table-design onMounted...");
+      console.log('table-design onMounted...');
       state.tabId = sessionStorage.getItem("tabId") as string;
 
       let createSession = sessionStorage.getItem("create-table-session");
@@ -313,27 +317,28 @@ export default defineComponent({
       }
       //查询拥有者
       getDatabaseRole(state.treeData!.connectionId!).then((responseData) => {
-        console.log("getDatabaseRole ResponseData", responseData);
+        // console.log("getDatabaseRole ResponseData", responseData);
         state.databaseOwner = responseData.data;
       })
       //查询表空间
       getDatabaseTableSpace(state.treeData!.connectionId!).then((responseData) => {
-        console.log("getDatabaseTableSpace ResponseData", responseData);
+        // console.log("getDatabaseTableSpace ResponseData", responseData);
         state.tableSpaceList = responseData.data;
       })
       //查询继承自
       findInheritedSourceTableList(state.treeData!).then((responseData) => {
-        console.log("findInheritedSourceTableList ResponseData", responseData);
+        // console.log("findInheritedSourceTableList ResponseData", responseData);
         state.inheritNamesList = responseData.data;
       })
       //查询表集群
       findCusterList(state.treeData!).then((responseData) => {
-        console.log("findCusterList ResponseData", responseData);
+        // console.log("findCusterList ResponseData", responseData);
         state.clusterList = responseData.data;
       })
     });
+    const { tabId } = toRefs(props);
     const state: IState = reactive({
-      tabId: "",
+      tabId: tabId.value,
       tabsActive: "columns",
       isAdd: true, //新增还是修改
       oldObject: "", //修改时用的oldObject
@@ -401,7 +406,6 @@ export default defineComponent({
             newObject: packageAddData('Untitled'),
             parent: null,
           };
-          debugger
           showCreateSQL(data).then((resp) => {
             state.sqlpreview = resp.data;
           });
@@ -495,7 +499,7 @@ export default defineComponent({
     const tableNameSubmit = (form: { name: string }) => {
       const target = packageAddData(form.name)
       tableAdd(target).then((resp) => {
-        console.log("tableAdd resp", resp);
+        console.log("新建table成功...", resp);
         state.nameVisible = false;
         succElMessage()
         target.nodePath = target.nodePath + '/tableName/' + target.object.name;
@@ -505,7 +509,7 @@ export default defineComponent({
         emit(
           "modifyTitle",
           state.tabId,
-          form.name + "@" + names[7] + "." + names[5]
+          form.name + "@" + names[7] + "." + names[5] + '(' + names[3] + ')'
         );
       });
     };
@@ -580,6 +584,7 @@ export default defineComponent({
         state.nameVisible = true;
       } else {
         tableEdit(packageUpdateData()).then((resp) => {
+          console.log("修改table成功...");
           succElMessage()
           if (resp.data) {
             refreshTableDesign(
@@ -632,25 +637,25 @@ export default defineComponent({
       console.log("removeColumn state.fieldList", state.fieldList);
     };
     const test1 = () => {
-      console.log("test1 state", state);
-      getDataType(state.treeData!).then((responseData) => {
-        console.log("getDataType ResponseData", responseData);
-        responseData.data.forEach((item, index) => {
-          const demo: FieldList = {
-            "@clazz": "com.highgo.developer.model.HgdbField",
-            oid: -new Date().getTime() - index,
-            name: "a" + index,
-            dataType: { name: item.formatName, length: 0, decimalNumber: 0 },
-            isNotNull: false,
-            isPrimaryKey: false,
-            comment: "",
-            defaultValue: "", //默认
-            collationSpaceName: "", //规则1-1
-            collationName: "", //规则1-2
-          };
-          state.fieldList.push(demo);
-        });
-      });
+      // console.log("test1 state", state);
+      // getDataType(state.treeData!).then((responseData) => {
+      //   console.log("getDataType ResponseData", responseData);
+      //   responseData.data.forEach((item, index) => {
+      //     const demo: FieldList = {
+      //       "@clazz": "com.highgo.developer.model.HgdbField",
+      //       oid: -new Date().getTime() - index,
+      //       name: "a" + index,
+      //       dataType: { name: item.formatName, length: 0, decimalNumber: 0 },
+      //       isNotNull: false,
+      //       isPrimaryKey: false,
+      //       comment: "",
+      //       defaultValue: "", //默认
+      //       collationSpaceName: "", //规则1-1
+      //       collationName: "", //规则1-2
+      //     };
+      //     state.fieldList.push(demo);
+      //   });
+      // });
     };
     //=========================索引=====================
     const appendIndexVis = (flag: boolean) => {
@@ -846,7 +851,7 @@ export default defineComponent({
         message: title,
         type: "success",
       });
-    }    
+    }
     return {
       state,
       handleTabClick,

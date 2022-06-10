@@ -167,7 +167,7 @@ const formRef = ref<FormInstance>();
 const eleFormRef = ref<FormInstance>();
 
 const demo: ExcludeConstraintList = {
-  "@clazz": "com.highgo.developer.model.HgdbTrigger",
+  "@clazz": "com.highgo.developer.model.HgdbExcludeConstraint",
   oid: -new Date().getTime(),
   name: "",
   indexType: "",

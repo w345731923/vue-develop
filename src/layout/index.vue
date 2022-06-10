@@ -4,20 +4,11 @@
       <v-header @addTreeNode="addTreeNode" @addTable="addTable" />
     </el-header>
     <div class="split_flex_row">
-      <vSidebar
-        class="pane_flex left home"
-        :treeData="state.treeData"
-        @addTreeNode="addTreeNode"
-        @addTable="addTable"
-        ref="ruleFormRef"
-      />
+      <vSidebar class="pane_flex left home" :treeData="state.treeData" @addTreeNode="addTreeNode" @addTable="addTable"
+        ref="ruleFormRef" />
       <div class="resizer_controls" @mousedown="drag($event)"></div>
-      <vContent
-        class="pane_flex right home"
-        :tabActiveName="state.tabActiveName"
-        :editableTabs="state.editableTabs"
-        @modifyTitle="modifyTitle"
-      />
+      <vContent class="pane_flex right home" :tabActiveName="state.tabActiveName" :editableTabs="state.editableTabs"
+        @modifyTitle="modifyTitle" @modifyTabCurrent="modifyTabCurrent" @closeTab="closeTab" />
       <!-- :removeTab="removeTab" -->
     </div>
   </div>
@@ -34,7 +25,7 @@ interface TreeNodeState {
   dialogGroupVisible: boolean; //group dialog
   dialogGroupStatus: string; //group create or edit
   dialogGroupObj: ServerGroupForm;
-  editableTabs: { title: string; name: string; currentView: any }[];
+  editableTabs: { name: string, title: string; currentView: any }[];
   tabActiveName: string;
 }
 import vHeader from "@/layout/components/Header.vue";
@@ -89,18 +80,45 @@ export default defineComponent({
       }
       console.log(state.treeData);
     };
-    const addTable = (title: string) => {
-      // console.log("LayoutIndex addTable", addTable);
-      const currentTime = new Date().getTime();
-      let tabId = "";
-      tabId = "create-table" + currentTime;
-      sessionStorage.setItem("tabId", tabId);
-      state.editableTabs.push({
-        title: title,
-        name: tabId,
-        currentView: "table-create",
-      });
+    //添加tabs页
+    const addTable = (id: string, title: string) => {
+      console.log("LayoutIndex addTable state.editableTabs = ", title, state.editableTabs);
+      const index = state.editableTabs.findIndex((item) => (item.title == title));
+      console.log("LayoutIndex addTable index = ", index);
+
+      if (index > -1 && title.indexOf('newtable@') == -1) {
+        //不是新建表，并且设计表已经打开过
+        state.tabActiveName = state.editableTabs[index].name;
+      } else {
+        //首次打开
+        sessionStorage.setItem("tabId", id);
+        state.editableTabs.push({
+          title: title,
+          name: id,
+          currentView: "table-create",
+        });
+        state.tabActiveName = id;
+      }
+      console.log("LayoutIndex addTable state.tabActiveName = ", state.tabActiveName);
+    };
+    //修改tab标题
+    const modifyTitle = (tabId: string, title: string) => {
+      console.log("LayoutIndex 修改tab标题 tabId，title = ", tabId, title);
+      const index = state.editableTabs.findIndex((item) => (item.name == tabId));
+      console.log("LayoutIndex 修改tab标题 index = ", index);
+      state.editableTabs[index].title = title;
+    };
+    //切换tab选中页
+    const modifyTabCurrent = (tabId) => {
       state.tabActiveName = tabId;
+    };
+    //关闭tab页
+    const closeTab = (tabId: string) => {
+      const index = state.editableTabs.findIndex((item) => (item.name = tabId));
+      state.editableTabs.splice(index, 1)
+    };
+    const test1 = () => {
+      state.editableTabs[0].title = "123";
     };
     onMounted(() => {
       queryRoot();
@@ -204,15 +222,7 @@ export default defineComponent({
       //   };
       // }
     };
-    const modifyTitle = (tabId: string, title: string) => {
-      console.log("LayoutIndex modifyTitle", tabId, title);
-      const index = state.editableTabs.findIndex((item) => (item.name = tabId));
-      state.editableTabs[index].title = title;
-    };
-    const test1 = () => {
-      console.log("state.editableTabs", state.editableTabs);
-      state.editableTabs[0].title = "123";
-    };
+
     return {
       state,
       queryRoot,
@@ -221,6 +231,8 @@ export default defineComponent({
       drag,
       ruleFormRef,
       modifyTitle,
+      modifyTabCurrent,
+      closeTab,
       test1,
     };
   },
@@ -343,10 +355,12 @@ export default defineComponent({
   color: white;
   text-align: center;
 }
+
 .split_flex_row .home:first-child {
   position: relative;
   flex: 0 1 auto;
 }
+
 .split_flex_row .home:last-child {
   overflow: hidden;
 }

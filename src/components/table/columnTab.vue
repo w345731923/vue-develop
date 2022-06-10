@@ -163,12 +163,12 @@ export default defineComponent({
       if (state.treeData != null && state.dataTypeList.length == 0) {
         getDataType(state.treeData).then(
           (responseData: ResponseData<DataType[]>) => {
-            console.log("getDataType ResponseData", responseData);
+            // console.log("getDataType ResponseData", responseData);
             state.dataTypeList = responseData.data;
           }
         );
         getCollation(state.treeData).then((responseData) => {
-          console.log("getCollation ResponseData", responseData);
+          // console.log("getCollation ResponseData", responseData);
           state.collationMap = responseData.data;
           const map = new Map(Object.entries(responseData.data));
           for (let [key, value] of map) {
