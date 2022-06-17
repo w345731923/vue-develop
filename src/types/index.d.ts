@@ -46,6 +46,8 @@ export interface TreeNode<T> {
   connectionId: string | null;
   defConnectionId?: string;
   children?: TreeNode[];
+  expanded?: boolean;//是否展开
+  ex?:boolean;//是否存在，刷新时，old与new对比使用
 }
 //create SQL预览
 export interface SQLCreatePreview<T = any, S = any> {
@@ -368,7 +370,7 @@ export interface ExcludeConstraintList {
   comment: string,//注释
   excludeConstraintElements: ExcludeConstraintElements[],
 
-  elements?:string,//存储元素临时变量
+  elements?: string,//存储元素临时变量
   conindid?: number,
   isDeferrableTemp?: string,
   isDeferredTemp?: string,
@@ -379,14 +381,14 @@ export interface ExcludeConstraintElements {
   elementName: string,//字段 id
   opsTypeSchema: string,//运算符类别模式 pg_catalog
   opsType: string,//运算符类别 varchar_pattern_ops
-  sortType: string ,//排序 ASC DESC
-  sortNull: string ,//nulls排序 null first
+  sortType: string,//排序 ASC DESC
+  sortNull: string,//nulls排序 null first
   opsSchema: string,//运算符模式 pg_catalog
-  ops:string,//运算符 =
+  ops: string,//运算符 =
 
-  id?:number;//标识列
-  isChoosed?:boolean,
-  cm?:string,
+  id?: number;//标识列
+  isChoosed?: boolean,
+  cm?: string,
 }
 
 //表-触发器

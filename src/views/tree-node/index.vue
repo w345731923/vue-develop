@@ -234,7 +234,6 @@ interface TreeNodeState {
   schemaAddVisible: boolean;
   schemaEditVisible: boolean;
 }
-
 export default defineComponent({
   name: "treeNode",
   components: {
@@ -255,10 +254,17 @@ export default defineComponent({
   setup(props, { emit }) {
     const treeRef: Ref = ref(null); //树形结果对象
     const buttonDropdown = ref(); //节点扩展按钮下拉对象
+
+    // Props	说明	类型	可选值	默认值
+    // label	指定节点标签为节点对象的某个属性值	string, function(data, node)	—	—
+    // children	指定子树为节点对象的某个属性值	string	—	—
+    // disabled	指定节点选择框是否禁用为节点对象的某个属性值	string, function(data, node)	—	—
+    // isLeaf	指定节点是否为叶子节点，仅在指定了 lazy 属性的情况下生效	string, function(data, node)	—	—
+    // class	自定义节点类名	string, function(data, node)	—	—    
     const treeProps = {
-      label: "name",
-      children: "zones",
-      isLeaf: "leaf",
+      // label: "",
+      // children: "",
+      // isLeaf: "",
     };
     const state = reactive<TreeNodeState>({
       dropdownMenu: [],
@@ -325,8 +331,8 @@ export default defineComponent({
       const refreshMenu = {
         key: 2,
         text: "刷新",
-        disabled: true,
-        onClick: openRenameNodeDialog,
+        disabled: false,
+        onClick: refreshNode,
       };
       const treeNode = node.data as TreeNode<any>;
       if (treeNode.type == "ServerGroup") {
@@ -479,6 +485,207 @@ export default defineComponent({
     const handleCommand = (row: { menu: DropDownMenu; node: Node }) => {
       row.menu.onClick(row.node);
     };
+
+    const getPath = (child: Node) => {
+      if (child.data.type == 'ServerGroup') {
+        return 'ServerGroup/' + child.data.object.name
+      } else if (child.data.type == 'Server') {
+        return 'Server/' + child.data.object.id
+      } else if (child.data.type == 'Database') {
+        return 'Database/' + child.data.object.oid
+      } else if (child.data.type == 'SchemaGroup') {
+        return 'SchemaGroup/' + child.data.object.oid;
+      } else if (child.data.type == 'Schema') {
+        return 'Schema/' + child.data.object.oid
+      } else if (child.data.type == 'TableGroup') {
+        return 'TableGroup/' + child.data.object.oid
+      } else if (child.data.type == 'Table') {
+        return 'Table/' + child.data.object.oid
+      }
+      return '';
+    }
+    const queryChildrenExpand = async (child: Node, path: string[], allPath: string[]) => {
+      // console.log('test1 child', child.data.type, child.data.object.name)
+      //添加自己
+      if (child.expanded) {
+        path.push(getPath(child))
+      }
+      let isChildrenExpand = false;
+      // child.childNodes.forEach(child => {
+      //   if (child.expanded) {
+      //     queryChildrenExpand(child, path, allPath)
+      //     isChildrenExpand = true;
+      //   }
+      // })
+      for (let i = 0; i < child.childNodes.length; i++) {
+        if (child.childNodes[i].expanded) {
+          await queryChildrenExpand(child.childNodes[i], path, allPath)
+          isChildrenExpand = true;
+        }
+      }
+      if (!isChildrenExpand && child.childNodes.length > 0) {
+        // console.log('push content ', path)
+        allPath.push(path.join(','))
+        //移除最后一个元素，下次递归还会添加同级元素
+        path = path.splice(path.length - 1, 1)
+      }
+    }
+    const getExpandList = async (node: Node) => {
+      let allPath: string[] = [];
+      //添加刷新的节点
+      let selfPath = getPath(node);
+      //获取节点展开数组
+      // node.childNodes.forEach(child => {
+      //   const childPath: string[] = [];
+      //   childPath.push(selfPath)
+      //   queryChildrenExpand(child, childPath, allPath);
+      // })
+      for (let i = 0; i < node.childNodes.length; i++) {
+        console.log('node.childNodes forEach', node.childNodes[i])
+        const childPath: string[] = [];
+        childPath.push(selfPath)
+        await queryChildrenExpand(node.childNodes[i], childPath, allPath);
+      }
+
+      // 如果子节点都没有展开（暂时不添加自己）
+      if (allPath.length == 0) {
+        allPath.push(selfPath)
+      }
+      return allPath;
+    }
+    //当前节点刷新操作
+    const refreshNode = async (node: Node) => {
+      console.log('refreshNode1 start.. Node', node.data.type, node.data.object.name)
+      /**
+       * a)记录展开节点
+       */
+      const expandList = getExpandList(node);
+      console.log('refreshNode expandList', expandList)
+
+      node.expanded = false;
+      startRefresh(await expandList, node)
+    }
+    const startRefresh = async (expandList: string[], node: Node) => {
+      console.log('ff expandList', expandList)
+      for (let i = 0; i < expandList.length; i++) {
+        console.log('ff expandList forEach', expandList[i])
+        const paths = expandList[i].split(',');
+        await f1(node, 0, paths)
+      }
+    }
+    /**
+     * 递归核心方法
+     */
+    const f1 = async (child: Node, index: number, paths: string[]) => {
+      console.log('f1>>>>>> type=', child.data.type + ', path=' + paths[index] + ', oid=' + child.data.object.oid)
+
+      console.log('查询节点是否展开，expanded =', child.expanded)
+      if (!child.expanded) {
+        let result = await queryNodeChildrenData(child)
+        console.log('子节点查询成功，result =', result)
+        //没有展开节点
+        await noExpand(child, result)
+      }
+      /**
+        * 查询子元素是否需要展开
+        * n=0,0是当前自己，所以从1开始
+        */
+      if (index + 1 >= paths.length) {
+        //是最后一个，不操作
+        console.log('当前path是最后一个,index=' + index + ',paths.length=', paths.length)
+      } else {
+        console.log('查询子元素是否需要展开,index=' + index + ',paths.length=', paths.length + 'children length = ' + child.childNodes.length)
+        for (let i = 0; i < child.childNodes.length; i++) {
+          await switchDbobject(child.childNodes[i], index + 1, paths)
+        }
+      }
+    }
+    /**
+     * 切换进入不同的对象，进行递归
+     */
+    const switchDbobject = async (next: Node, index: number, paths: string[]) => {
+      console.log('switchDbobject type=', next.data.type + ', path=' + paths[index] + ', oid=' + next.data.object.oid)
+      if (next.data.type == 'Server' && paths[index].indexOf(next.data.object.id) > -1) {
+        console.log('Server enter,', next)
+        await f1(next, index, paths)
+      } else if (next.data.type == 'Database' && paths[index].indexOf(next.data.object.oid) > -1) {
+        console.log('Database enter,', next)
+        await f1(next, index, paths)
+      } else if (next.data.type == 'SchemaGroup' && paths[index].indexOf(next.data.object.oid) > -1) {
+        console.log('SchemaGroup enter,', next)
+        await f1(next, index, paths)
+      } else if (next.data.type == 'Schema' && paths[index].indexOf(next.data.object.oid) > -1) {
+        console.log('Schema enter,', next)
+        await f1(next, index, paths)
+      } else if (next.data.type == 'TableGroup' && paths[index].indexOf(next.data.object.oid) > -1) {
+        console.log('TableGroup enter,', next)
+        await f1(next, index, paths)
+      }
+    }
+    /**
+     * 没有展开节点的处理，移除元素和添加元素
+     */
+    const noExpand = (child: Node, result: any) => {
+      /**
+      * a)移除节点的子节点
+      */
+      const length = child.childNodes.length;
+      console.log('开始移除old节点 childNodes length =', length)
+      for (let i = 0; i < length;) {
+        child.removeChild(child.childNodes[i])
+        if (child.childNodes.length == 0) break;
+      }
+      /**
+       * b)给刷新节点添加获取的新元素
+       */
+      console.log('移除old节点成功，添加子节点 respon!.data length =', result!.data.length)
+      for (let i = 0; i < result!.data.length; i++) {
+        treeRef.value.append(result!.data[i], child);
+      }
+      child.expanded = true;
+    }
+    //递归查询
+    const queryNodeChildrenData = async (node: Node) => {
+      console.log('queryChildren node', node)
+      const nodeData = node.data as TreeNode<any>;
+      node.data.nodePath = getNodePath(node);
+      if (nodeData.type == 'ServerGroup') {
+        let groupName = nodeData.object.name;
+        return await getServerList(groupName);
+      } else if (nodeData.type == 'Server') {
+        return await getDatabaseList(nodeData);
+      } else if (nodeData.type == 'SchemaGroup') {
+        return await getSchemaList(nodeData)
+      } else if (nodeData.type == 'TableGroup') {
+        return await getTableList(nodeData)
+      } else if (nodeData.type == 'Database') {
+        const result: ResponseData<TreeNode<any>[]> = {} as ResponseData<TreeNode<any>[]>;
+        const data = [] as TreeNode<any>[];
+        data.push({
+          type: "SchemaGroup",
+          contextId: "",
+          nodePath: "",
+          connectionId: nodeData.connectionId,
+          object: nodeData.object,
+          text: "模式",
+        });
+        result.data = data;
+        return result;
+      } else if (nodeData.type == 'Schema') {
+        const result: ResponseData<TreeNode<any>[]> = {} as ResponseData<TreeNode<any>[]>;
+        const data = [] as TreeNode<any>[];
+        data.push({
+          type: "TableGroup",
+          contextId: "",
+          nodePath: "",
+          connectionId: nodeData.connectionId,
+          object: nodeData.object,
+          text: "表",
+        });
+        result.data = data;
+        return result;
+      }
+    }
 
     /**
      * 新建菜单对象
@@ -940,6 +1147,7 @@ export default defineComponent({
      */
     const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
       console.log("loadNode node", node);
+      node.data.expanded = true;
       if (node.level === 0) {
         /**
          * ROOT节点，为了实现懒加载
@@ -964,23 +1172,23 @@ export default defineComponent({
           object: treeData.object,
           text: "模式",
         });
-        dbs.push({
-          type: "RoleGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "角色",
-        });
-        dbs.push({
-          type: "TableSpaceGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "表空间",
-          index: 2,
-        });
+        // dbs.push({
+        //   type: "RoleGroup",
+        //   contextId: "",
+        //   nodePath: "",
+        //   connectionId: treeData.connectionId,
+        //   object: treeData.object,
+        //   text: "角色",
+        // });
+        // dbs.push({
+        //   type: "TableSpaceGroup",
+        //   contextId: "",
+        //   nodePath: "",
+        //   connectionId: treeData.connectionId,
+        //   object: treeData.object,
+        //   text: "表空间",
+        //   index: 2,
+        // });
 
         //a)首先判断是否有connectionId
         if (treeData.connectionId) {
@@ -1017,14 +1225,14 @@ export default defineComponent({
           object: treeData.object,
           text: "表",
         });
-        schemas.push({
-          type: "ViewsGroup",
-          contextId: "",
-          nodePath: "",
-          connectionId: treeData.connectionId,
-          object: treeData.object,
-          text: "视图",
-        });
+        // schemas.push({
+        //   type: "ViewsGroup",
+        //   contextId: "",
+        //   nodePath: "",
+        //   connectionId: treeData.connectionId,
+        //   object: treeData.object,
+        //   text: "视图",
+        // });
         return resolve(schemas);
       } else if (node.data.type == "TableGroup") {
         return getTableNode(node, resolve);

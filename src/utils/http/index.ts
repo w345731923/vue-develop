@@ -9,11 +9,11 @@ import {
   PureHttpRequestConfig
 } from "./types.d";
 import { getToken } from "@/utils/auth";
-
+import { router } from '@/router/index'
 
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
-  baseURL:'/api/v2',
+  baseURL: '/api/v2',
   // baseURL: "http://192.168.110.117:8088",
   // baseURL: "http://192.168.8.75:8088",
   timeout: 10000,
@@ -22,7 +22,7 @@ const defaultConfig: AxiosRequestConfig = {
     "Content-Type": "application/json",
     "X-Requested-With": "XMLHttpRequest"
   },
-  withCredentials:true,
+  withCredentials: true,
   // 数组格式参数序列化
   // paramsSerializer: params => qs.stringify(params, { indices: false })
 };
@@ -114,25 +114,21 @@ class PureHttp {
         //   return response.data;
         // }
         const result = response.data;
-        if (result.code !== 200) {
-          ElMessage({
-            message: result.message || 'Error',
-            type: 'error',
-            duration: 5 * 1000
-          })
-          // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
-          // if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
-          //     // to re-login
-          //     ElMessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
-          //         confirmButtonText: 'Re-Login',
-          //         cancelButtonText: 'Cancel',
-          //         type: 'warning'
-          //     }).then(() => {
-          //         // store.dispatch('user/resetToken').then(() => {
-          //         //     location.reload()
-          //         // })
-          //     })
-          // }
+        if (result.code != 200) {
+          if (result.code == 401) {
+            ElMessage({
+              message: result.message,
+              type: 'error',
+              duration: 5 * 1000
+            })
+            router.push('/login')
+          } else {
+            ElMessage({
+              message: result.message || 'Error',
+              type: 'error',
+              duration: 5 * 1000
+            })
+          }
           return Promise.reject(new Error(result.message || 'Error'))
         }
         return result;
