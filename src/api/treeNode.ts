@@ -226,6 +226,16 @@ export async function checkConnect(connectionID: string) {
 export async function getTableDesign(data: TreeNode<TableSimple>) {
     return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/designTable', { method: 'POST', data });
 }
+
+/**
+ * 清空表
+ * @param data 
+ * @returns 
+ */
+export async function apiEmptyTable(data: TreeNode<TableSimple>) {
+    return await http.request<ResponseData<TreeNode<TableDesignModel>>>('/table/empty', { method: 'POST', data } )
+}
+
 /**
  * 查询数据类型
  * @returns 

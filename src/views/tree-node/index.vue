@@ -173,6 +173,7 @@ import {
   openDatabase,
   getTableList,
   getTableDesign,
+  apiEmptyTable,
   checkConnect,
 } from "@/api/treeNode";
 import RemoveNodeDialog from "./removeNode.vue";
@@ -476,7 +477,7 @@ export default defineComponent({
           key: 63,
           text: "清空表",
           disabled: false,
-          onClick: openObjectAdd,
+          onClick: emptyTable,
         });
         menu.push(renameMenu);
         menu.push(refreshMenu);
@@ -1196,6 +1197,19 @@ export default defineComponent({
         emit("addTable", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')');
       });
     };
+
+    /**
+    * 清空表
+    */
+    const emptyTable = (node : Node) => {
+      console.log("empty table", node);
+      const data = node.data as TreeNode<TableSimple>;
+      data.nodePath = getNodePath(node);
+
+      apiEmptyTable(data).then((responseData) => {
+         succElMessage("操作成功");
+      });
+    }
 
     /**
      * 展开属性菜单 懒加载
