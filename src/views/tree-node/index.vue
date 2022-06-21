@@ -138,6 +138,10 @@ interface Tree {
   leaf?: boolean;
   data: any;
 }
+interface ExpandList {
+  database_conn: string[];
+  paths: string[]
+}
 import { ElMessage } from "element-plus";
 
 import {
@@ -505,53 +509,83 @@ export default defineComponent({
       return '';
     }
     const queryChildrenExpand = async (child: Node, path: string[], allPath: string[]) => {
-      // console.log('test1 child', child.data.type, child.data.object.name)
+      console.log('queryChildrenExpand child', getPath(child), path.toString())
+      const pathIndex = path.findIndex(item => item.indexOf(child.data.type + '/') > -1);
+      console.log('查询是否分叉', pathIndex, getPath(child))
+      if (pathIndex > -1) {
+        path.splice(pathIndex)
+      }
       //添加自己
       if (child.expanded) {
         path.push(getPath(child))
       }
+      console.log('查询子节点是否展开', path.toString(), child.childNodes.length)
+      //查询是否有展开的子节点，如果没有展开的子节点，那么添加到数组里，
       let isChildrenExpand = false;
-      // child.childNodes.forEach(child => {
-      //   if (child.expanded) {
-      //     queryChildrenExpand(child, path, allPath)
-      //     isChildrenExpand = true;
-      //   }
-      // })
       for (let i = 0; i < child.childNodes.length; i++) {
         if (child.childNodes[i].expanded) {
-          await queryChildrenExpand(child.childNodes[i], path, allPath)
           isChildrenExpand = true;
         }
       }
+      //子节点没有展开，并且子节点个数>0
       if (!isChildrenExpand && child.childNodes.length > 0) {
-        // console.log('push content ', path)
+        console.log('push content ', path.toString())
         allPath.push(path.join(','))
-        //移除最后一个元素，下次递归还会添加同级元素
-        path = path.splice(path.length - 1, 1)
+        path = []
+      } else {
+        console.log('子节点有展开，继续递归', path.toString(), child.childNodes.length)
+        for (let i = 0; i < child.childNodes.length; i++) {
+          if (child.childNodes[i].expanded) {
+            await queryChildrenExpand(child.childNodes[i], path, allPath)
+          }
+        }
+      }
+    }
+    const getParent = (node: Node, parent: string[]) => {
+      parent.push(getPath(node));
+      if (node.parent && node.parent.id != 0) {
+        //父节点不是id=0的隐藏节点，追加到数组中
+        getParent(node.parent, parent)
       }
     }
     const getExpandList = async (node: Node) => {
+      console.log('getExpandList start', node)
+      // [
+      //   {conn:{},paths:["server_group/1,server/2,coll-database/2,database/20225]},
+      //   {conn:{},paths:["server_group/1,server/3,coll-database/2,database/20225]}
+      // ]
+
+      const result: ExpandList[] = [];
+      let parent: string[] = [];
+
+      //查找选中节点的全部父节点
+      getParent(node, parent);
+      parent = parent.reverse();
+      console.log('parent', parent.toString())
+
       let allPath: string[] = [];
-      //添加刷新的节点
-      let selfPath = getPath(node);
-      //获取节点展开数组
-      // node.childNodes.forEach(child => {
-      //   const childPath: string[] = [];
-      //   childPath.push(selfPath)
-      //   queryChildrenExpand(child, childPath, allPath);
-      // })
       for (let i = 0; i < node.childNodes.length; i++) {
-        console.log('node.childNodes forEach', node.childNodes[i])
         const childPath: string[] = [];
-        childPath.push(selfPath)
+        Object.assign(childPath, parent)
+        console.log('node.childNodes forEach', node.childNodes[i], parent.toString())
         await queryChildrenExpand(node.childNodes[i], childPath, allPath);
+        if (node.data.type == 'ServerGroup' && allPath.length > 0) {
+          console.log('result for push ', allPath)
+          result.push({ database_conn: [], paths: allPath })
+          allPath = [];
+        }
+      }
+      //如果没有子节点
+      if (allPath.length == 0 && result.length == 0) {
+        allPath.push(parent.join(','))
+        result.push({ database_conn: [], paths: allPath })
+      }
+      if (node.data.type != 'ServerGroup' && allPath.length > 0) {
+        console.log('result.push ', allPath)
+        result.push({ database_conn: [], paths: allPath })
       }
 
-      // 如果子节点都没有展开（暂时不添加自己）
-      if (allPath.length == 0) {
-        allPath.push(selfPath)
-      }
-      return allPath;
+      return result;
     }
     //当前节点刷新操作
     const refreshNode = async (node: Node) => {
@@ -559,18 +593,39 @@ export default defineComponent({
       /**
        * a)记录展开节点
        */
-      const expandList = getExpandList(node);
-      console.log('refreshNode expandList', expandList)
+      const expandList = await getExpandList(node);
+      console.log('记录展开节点结束！ expandList', expandList)
 
+      /**
+       * b)刷新节点
+       */
       node.expanded = false;
       startRefresh(await expandList, node)
     }
-    const startRefresh = async (expandList: string[], node: Node) => {
-      console.log('ff expandList', expandList)
+    /**
+     * 开始刷新节点
+     * @param expandList 
+     * @param node 
+     */
+    const startRefresh = async (expandList: ExpandList[], node: Node) => {
+      console.log('ff expandList start...', expandList)
       for (let i = 0; i < expandList.length; i++) {
-        console.log('ff expandList forEach', expandList[i])
-        const paths = expandList[i].split(',');
-        await f1(node, 0, paths)
+        console.log('expandList foreach...', expandList[i])
+
+        /**
+         * expand数组元素代表有多少个server
+         */
+        // [
+        //   {conn:{},paths:["server_group/1,server/2,coll-database/2,database/20225]},
+        //   {conn:{},paths:["server_group/1,server/3,coll-database/2,database/20225]}
+        // ]        
+        //当前server的展开节点数组
+        const currentPaths = expandList[i].paths;
+        console.log('currentPaths', currentPaths)
+        for (let j = 0; j < currentPaths.length; j++) {
+          const paths = currentPaths[j].split(',');
+          await f1(node, 0, paths)
+        }
       }
     }
     /**
