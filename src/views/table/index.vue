@@ -8,6 +8,12 @@
           </el-icon>
           保存
         </el-button>
+        <el-button v-if="!state.isAdd" size="small" color="#f2f2f2" @click="refreshTableUI">
+          <el-icon>
+            <Avatar />
+          </el-icon>
+          刷新
+        </el-button>
         <el-button-group v-if="state.tabsActive == 'columns'">
           <el-button size="small" color="#f2f2f2" @click="appendColumnVis(true)">
             <el-icon>
@@ -183,7 +189,8 @@ import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
 import TableNameDialog from "./tableName.vue";
 import {
   getDataType, getDatabaseTableSpace, showCreateSQL, showAlterSQL,
-  findCusterList, findInheritedSourceTableList, getDatabaseRole
+  findCusterList, findInheritedSourceTableList, getDatabaseRole,
+  getTableDesign
 } from "@/api/treeNode";
 
 import { ElMessage } from "element-plus";
@@ -212,7 +219,7 @@ import {
   RuleList,
   ExcludeConstraintList,
   TriggerList,
-  TableDesignModel, SQLCreatePreview,
+  TableDesignModel, SQLCreatePreview, TableSimple,
 } from "@/types";
 interface IState {
   tabId: string;
@@ -596,6 +603,27 @@ export default defineComponent({
         });
       }
     };
+    /**
+     * 刷新页面
+     */
+    const refreshTableUI = () => {
+      console.log(state);
+      console.log(state.treeData);
+      // const data = state.treeData as TreeNode<any>;
+      const data = {} as TreeNode<TableSimple>;
+      Object.assign(data, state.treeData);
+      getTableDesign(data).then((responseData) => {
+        console.log("刷新table成功 ", responseData);
+        succElMessage('操作成功');
+        if (responseData.data) {
+            refreshTableDesign(
+              responseData.data,
+              state.treeData!.connectionId!,
+              state.treeData!.nodePath!
+            );
+        }
+     });
+    }
     //===============字段========================
     const appendColumnVis = (flag: boolean) => {
       state.columnVisible = flag;
@@ -859,6 +887,7 @@ export default defineComponent({
       appendColumn,
       removeColumn,
       saveTable,
+      refreshTableUI,
       tableNameSubmit,
       test1,
 
