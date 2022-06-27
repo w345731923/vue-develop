@@ -3,6 +3,7 @@
     :treeData="treeData"
     @addTreeNode="addTreeNode"
     @addTable="addTable"
+    @openTableView="openTableView"
   />
 </template>
 
@@ -19,6 +20,7 @@ export default defineComponent({
     treeData: Array,
     addTreeNode: Function,
     addTable: Function,
+    openTableView: Function,
   },
 });
 </script>

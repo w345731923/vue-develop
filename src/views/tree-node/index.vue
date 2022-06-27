@@ -251,7 +251,7 @@ export default defineComponent({
   props: {
     treeData: Array,
   },
-  emits: ["addTable", "modifyTabsTitle"],
+  emits: ["addTable", "modifyTabsTitle", "openTableView"],
   setup(props, { emit }) {
     const treeRef: Ref = ref(null); //树形结果对象
     const buttonDropdown = ref(); //节点扩展按钮下拉对象
@@ -454,7 +454,7 @@ export default defineComponent({
           key: 61,
           text: "打开表",
           disabled: false,
-          onClick: openObjectAdd,
+          onClick: openTable,
         });
         menu.push({
           key: 62,
@@ -1142,6 +1142,11 @@ export default defineComponent({
         emit("addTable", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')');
       });
     };
+
+    const openTable = () => {
+      console.log("open table");
+      emit("openTableView");
+    }
 
     /**
     * 清空表

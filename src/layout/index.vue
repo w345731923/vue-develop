@@ -1,15 +1,15 @@
 <template>
   <div class="theme_flex_column">
     <el-header>
-      <v-header @addTreeNode="addTreeNode" @addTable="addTable" />
+      <v-header @addTreeNode="addTreeNode" @addTable="addTable" @openTableView="openTableView" />
     </el-header>
     <div class="split_flex_row">
-      <vSidebar class="pane_flex left home" :treeData="state.treeData" @addTreeNode="addTreeNode" @addTable="addTable"
+      <vSidebar class="pane_flex left home" :treeData="state.treeData" @addTreeNode="addTreeNode" @addTable="addTable" @openTableView="openTableView"
         ref="ruleFormRef" />
       <div class="resizer_controls" @mousedown="drag($event)"></div>
       <vContent class="pane_flex right home" :tabActiveName="state.tabActiveName" :editableTabs="state.editableTabs"
         @modifyTitle="modifyTitle" @modifyTabCurrent="modifyTabCurrent" @closeTab="closeTab" />
-      <!-- :removeTab="removeTab" -->
+      <!-- :removeTab="removeTab" --> 
     </div>
   </div>
 </template>
@@ -80,6 +80,20 @@ export default defineComponent({
       }
       console.log(state.treeData);
     };
+    
+    // 打开表
+    const openTableView = () => {
+      console.log("layout open table");
+      const idt = "测试打开表";
+        sessionStorage.setItem("tabId", idt);
+        state.editableTabs.push({
+          title: "测试打开表",
+          name: idt,
+          currentView: "table-editor",
+        });
+        
+        state.tabActiveName = idt;
+    }
     //添加tabs页
     const addTable = (id: string, title: string) => {
       console.log("LayoutIndex addTable state.editableTabs = ", title, state.editableTabs);
@@ -228,6 +242,7 @@ export default defineComponent({
       queryRoot,
       addTreeNode,
       addTable,
+      openTableView,
       drag,
       ruleFormRef,
       modifyTitle,

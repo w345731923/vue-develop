@@ -6,6 +6,7 @@
       <el-button @click="switchServerVisable(true)">新建连接</el-button>
       <!-- <el-button>SQL编辑器</el-button> -->
       <el-button @click="addTable">新建表</el-button>
+      <el-button @click="openTableView">打开表</el-button>
     </div>
   </div>
   <GroupDialogAdd
@@ -49,7 +50,7 @@ export default {
       default: null,
     },
   },
-  emits: ["addTreeNode", "addTable"],
+  emits: ["addTreeNode", "addTable", "openTableView"],
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,
@@ -103,13 +104,17 @@ export default {
     const addTable = () => {
       emit("addTable");
     };
+    const openTableView = () => {
+      emit("openTableView");
+    };
     return {
       state,
       switchGroupVisable,
       saveGroup,
       switchServerVisable,
       saveServer,
-      addTable
+      addTable,
+      openTableView
     };
   },
   methods: {},
