@@ -282,7 +282,7 @@ export default defineComponent ({
     delRow() {
       console.log("delete row enter.")
       console.log(this.state.currentGrid)
-      this.state.currentGrid.rowId != null && this.tableData.splice(this.state.currentGrid.rowId, 1)
+      this.state.currentGrid.rowId != null && this.tableData.splice(this.state.currentGrid.rowId!, 1)
     },
     tableRowClassName ({row , rowIndex}) {
       console.log("tableRowClassName enter", row, rowIndex)

@@ -534,7 +534,7 @@ export default defineComponent({
           const paths = currentPaths[j].split(',');
           const pathIndex = getPathIndex(node);
           console.log('pathIndex', pathIndex)
-          await coreFun(node, pathIndex, paths, expandList[i].server_open, expandList[i].database_conn,treeRef)
+          await coreFun(node, pathIndex, paths, expandList[i].server_open, expandList[i].database_conn, treeRef)
         }
       }
     }
@@ -1007,7 +1007,7 @@ export default defineComponent({
       const data = node.data as TreeNode<TableSimple>;
       data.nodePath = getNodePath(node);
 
-      apiEmptyTable(data).then((responseData) => {
+      apiEmptyTable(data).then(() => {
         succElMessage("操作成功");
       });
     }

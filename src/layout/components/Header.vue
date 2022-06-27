@@ -4,21 +4,13 @@
     <div class="menu">
       <el-button @click="switchGroupVisable(true)">新建组</el-button>
       <el-button @click="switchServerVisable(true)">新建连接</el-button>
-      <!-- <el-button>SQL编辑器</el-button> -->
-      <el-button @click="addTable">新建表</el-button>
-      <el-button @click="openTableView">打开表</el-button>
+      <el-button @click="$emit('addTable')">新建表</el-button>
+      <el-button @click="$emit('openTableView')">打开表</el-button>
+      <el-button @click="$emit('addSQLEditor')">SQL编辑器</el-button>
     </div>
   </div>
-  <GroupDialogAdd
-    :visible="state.groupVisible"
-    @saveModal="saveGroup"
-    @closeModal="switchGroupVisable"
-  />
-  <ServerDialogAdd
-    :visible="state.serverVisible"
-    @saveModal="saveServer"
-    @closeModal="switchServerVisable"
-  />
+  <GroupDialogAdd :visible="state.groupVisible" @saveModal="saveGroup" @closeModal="switchGroupVisable" />
+  <ServerDialogAdd :visible="state.serverVisible" @saveModal="saveServer" @closeModal="switchServerVisable" />
 </template>
 
 <script lang="ts">
@@ -45,12 +37,12 @@ export default {
     return {};
   },
   props: {
-    addTreeNode: {
-      type: Function,
-      default: null,
-    },
+    addTreeNode: Function,
+    addTable: Function,
+    openTableView: Function,
+    addSQLEditor: Function
   },
-  emits: ["addTreeNode", "addTable", "openTableView"],
+  emits: ["addTreeNode", "addTable", "openTableView", 'addSQLEditor'],
   setup(props, { emit }) {
     const state = reactive({
       groupVisible: false,
@@ -101,20 +93,12 @@ export default {
         emit("addTreeNode", "Server", null, result.data);
       });
     };
-    const addTable = () => {
-      emit("addTable");
-    };
-    const openTableView = () => {
-      emit("openTableView");
-    };
     return {
       state,
       switchGroupVisable,
       saveGroup,
       switchServerVisable,
       saveServer,
-      addTable,
-      openTableView
     };
   },
   methods: {},
@@ -129,6 +113,7 @@ export default {
   line-height: 60px;
   z-index: 1;
 }
+
 .logo {
   height: 100%;
   width: 250px;
@@ -136,6 +121,7 @@ export default {
   margin-right: 16px;
   flex: 0 1 auto;
 }
+
 /* .menu {
   height: 100%;
   flex: 1 1;

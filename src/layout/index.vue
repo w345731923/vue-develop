@@ -1,15 +1,16 @@
 <template>
   <div class="theme_flex_column">
     <el-header>
-      <v-header @addTreeNode="addTreeNode" @addTable="addTable" @openTableView="openTableView" />
+      <v-header @addTreeNode="addTreeNode" @addTable="addTable" @addSQLEditor="addSQLEditor"
+        @openTableView="openTableView" />
     </el-header>
     <div class="split_flex_row">
-      <vSidebar class="pane_flex left home" :treeData="state.treeData" @addTreeNode="addTreeNode" @addTable="addTable" @openTableView="openTableView"
-        ref="ruleFormRef" />
+      <vSidebar class="pane_flex left home" :treeData="state.treeData" @addTreeNode="addTreeNode" @addTable="addTable"
+        @openTableView="openTableView" ref="ruleFormRef" />
       <div class="resizer_controls" @mousedown="drag($event)"></div>
       <vContent class="pane_flex right home" :tabActiveName="state.tabActiveName" :editableTabs="state.editableTabs"
         @modifyTitle="modifyTitle" @modifyTabCurrent="modifyTabCurrent" @closeTab="closeTab" />
-      <!-- :removeTab="removeTab" --> 
+      <!-- :removeTab="removeTab" -->
     </div>
   </div>
 </template>
@@ -31,7 +32,7 @@ interface TreeNodeState {
 import vHeader from "@/layout/components/Header.vue";
 import vSidebar from "@/layout/components/Sidebar.vue";
 import vContent from "@/layout/components/Content.vue";
-// import sqleditor from "../components/SQLEditor.vue";
+import sqleditor from "../components/SQLEditor.vue";
 // import CreateTable from "../components/table/index.vue";
 const ruleFormRef = ref<any>();
 
@@ -80,20 +81,37 @@ export default defineComponent({
       }
       console.log(state.treeData);
     };
-    
+
     // 打开表
     const openTableView = () => {
       console.log("layout open table");
       const idt = "测试打开表";
-        sessionStorage.setItem("tabId", idt);
-        state.editableTabs.push({
-          title: "测试打开表",
-          name: idt,
-          currentView: "table-editor",
-        });
-        
-        state.tabActiveName = idt;
+      sessionStorage.setItem("tabId", idt);
+      state.editableTabs.push({
+        title: "测试打开表",
+        name: idt,
+        currentView: "table-editor",
+      });
+
+      state.tabActiveName = idt;
     }
+    /**
+     * 添加tabs页
+     * 添加SQL编辑器
+     * @param id 
+     * @param title 
+     */
+    const addSQLEditor = () => {
+      console.log("LayoutIndex addSQLEditor");
+      const tabId = 'sql' + new Date().getTime();
+      const newTitle = `*<localhost>无标题`;
+      state.editableTabs.push({
+        title: newTitle,
+        name: tabId,
+        currentView: sqleditor,
+      });
+      state.tabActiveName = tabId;
+    };
     //添加tabs页
     const addTable = (id: string, title: string) => {
       console.log("LayoutIndex addTable state.editableTabs = ", title, state.editableTabs);
@@ -130,9 +148,6 @@ export default defineComponent({
     const closeTab = (tabId: string) => {
       const index = state.editableTabs.findIndex((item) => (item.name = tabId));
       state.editableTabs.splice(index, 1)
-    };
-    const test1 = () => {
-      state.editableTabs[0].title = "123";
     };
     onMounted(() => {
       queryRoot();
@@ -242,13 +257,13 @@ export default defineComponent({
       queryRoot,
       addTreeNode,
       addTable,
+      addSQLEditor,
       openTableView,
       drag,
       ruleFormRef,
       modifyTitle,
       modifyTabCurrent,
       closeTab,
-      test1,
     };
   },
 

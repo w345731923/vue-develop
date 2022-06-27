@@ -1,11 +1,9 @@
 <template>
   <div class="_content">
-    <!-- <el-button @click="modifyTitle1"> 保存 </el-button> -->
     <el-tabs v-model="state.tabActiveName" type="card" closable @tab-click="handleTabClick"
       @tab-remove="handleTabRemove">
-      <el-tab-pane v-for="item in editableTabs" :key="item.name" :label="item.title" :name="item.name">
-        <component v-bind:is="item.currentView" @modifyTitle="modifyTitle1" :tabId="item.name"></component>
-        <!-- <component :is="item.currentView"></component> -->
+      <el-tab-pane v-for="item in tabs" :key="item.name" :label="item.title" :name="item.name">
+        <component v-bind:is="item.currentView" @modifyTitle="modifyTabTitle" :tabId="item.name"></component>
       </el-tab-pane>
       <!-- <el-tab-pane
         v-for="item in editableTabs"
@@ -21,7 +19,7 @@
 
 <script lang="ts">
 import { TabsPaneContext } from "element-plus";
-import { defineComponent, reactive, toRefs, watch, onMounted } from "vue";
+import { defineComponent, reactive, toRefs, watch } from "vue";
 
 export default defineComponent({
   name: "vContent",
@@ -38,10 +36,11 @@ export default defineComponent({
   },
   emits: ["modifyTitle", 'modifyTabCurrent', 'closeTab'],
   setup(props, { emit }) {
-    const { tabActiveName } = toRefs(props);
+    const { tabActiveName, editableTabs } = toRefs(props);
     const state = reactive({
       tabActiveName: tabActiveName.value,
     });
+    const tabs = editableTabs.value as { name: string, title: string; currentView: any }[];
     watch(
       tabActiveName,
       (newValue) => {
@@ -49,13 +48,26 @@ export default defineComponent({
       },
       { immediate: true }
     );
+    /**
+     * 关闭tab
+     */
     const handleTabRemove = (name: string) => {
       emit("closeTab", name);
     };
+    /**
+     * tab点击事件
+     * @param pane 
+     * @param ev 
+     */
     const handleTabClick = (pane: TabsPaneContext, ev: Event) => {
       emit("modifyTabCurrent", pane.props.name);
     }
-    const modifyTitle1 = (tabId: string, title: string) => {
+    /**
+     * 修改tab标题
+     * @param tabId 
+     * @param title 
+     */
+    const modifyTabTitle = (tabId: string, title: string) => {
       emit("modifyTitle", tabId, title);
     };
     const getTabId = (item: any) => {
@@ -66,8 +78,9 @@ export default defineComponent({
       state,
       handleTabRemove,
       handleTabClick,
-      modifyTitle1,
-      getTabId
+      modifyTabTitle,
+      getTabId,
+      tabs
     };
   },
 });
