@@ -170,6 +170,7 @@ import {
   openDatabase,
   getTableList,
   getTableDesign,
+  getTableData,
   apiEmptyTable,
   checkConnect,
 } from "@/api/treeNode";
@@ -994,9 +995,14 @@ export default defineComponent({
       });
     };
 
-    const openTable = () => {
+    /**
+     * 打开表
+     */
+    const openTable = (node : Node) => {
       console.log("open table");
-      emit("openTableView");
+      
+      emit("openTableView", '111', '111', node);
+      
     }
 
     /**

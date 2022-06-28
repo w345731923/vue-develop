@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel, TableEditForm
+    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel, TableEditForm, FetchDataInfoForm
 } from '@/types'
 
 
@@ -219,6 +219,16 @@ export async function checkConnect(connectionID: string) {
         method: 'POST', headers
     });
 }
+
+/**
+ * 打开表
+ * @param data 
+ * @returns 
+ */
+export async function getTableData(data: FetchDataInfoForm) {
+    return await http.request<ResponseData>('/data/fetchData', {method : 'POST', data});
+}
+
 /**
  * 设计表
  * @returns 
@@ -260,6 +270,7 @@ export async function tableAdd(data: TreeNode<TableDesignModel>) {
         method: 'POST', data
     });
 }
+
 /**
  * 修改表
  * @returns 
