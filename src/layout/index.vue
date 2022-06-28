@@ -19,7 +19,7 @@
 import { defineComponent, computed, ref, watch, unref, watchEffect } from "vue";
 import { reactive, onMounted } from "vue";
 import { getRoot } from "@/api/treeNode";
-import { ResponseData, TreeNode, ServerGroupForm } from "@/types";
+import { ResponseData, TreeNode, ServerGroupForm, TableSimple } from "@/types";
 
 interface TreeNodeState {
   treeData: TreeNode<any>[]; //tree data
@@ -32,6 +32,8 @@ interface TreeNodeState {
 import vHeader from "@/layout/components/Header.vue";
 import vSidebar from "@/layout/components/Sidebar.vue";
 import vContent from "@/layout/components/Content.vue";
+import { getNodePath } from "@/utils/tree";
+import Node from "element-plus/es/components/tree/src/model/node";
 import sqleditor from "../components/SQLEditor.vue";
 // import CreateTable from "../components/table/index.vue";
 const ruleFormRef = ref<any>();
@@ -83,17 +85,29 @@ export default defineComponent({
     };
 
     // 打开表
-    const openTableView = () => {
+    const openTableView = (id: string, title: string, node : Node) => {
       console.log("layout open table");
-      const idt = "测试打开表";
-      sessionStorage.setItem("tabId", idt);
-      state.editableTabs.push({
-        title: "测试打开表",
-        name: idt,
-        currentView: "table-editor",
-      });
-
-      state.tabActiveName = idt;
+      const index = state.editableTabs.findIndex((item) => (item.title == title));
+      
+      console.log("LayoutIndex openTable index = ", index);
+      // TODO 除了index > -1，还应该检查Tab的类型，因为对同一张表的打开表与设计表目前的title一样
+      if(index > -1 && title.indexOf('newtable@') != -1) {
+        state.tabActiveName = state.editableTabs[index].name;
+      } else {
+        sessionStorage.setItem("tabId", id);
+        const nodePath = getNodePath(node);
+        const selectTableNode : TreeNode<TableSimple> = node.data as TreeNode<TableSimple>;
+        selectTableNode.nodePath = nodePath;
+        sessionStorage.setItem("openTableNode", JSON.stringify(selectTableNode)),
+        state.editableTabs.push({
+          title: title,
+          name: id,
+          currentView: "table-editor",
+        });
+        
+        state.tabActiveName = id;
+      }
+        
     }
     /**
      * 添加tabs页,SQL编辑器

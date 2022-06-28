@@ -421,3 +421,21 @@ export interface TriggerList {
 // functionParams: ""
 // isInternal: true
 // condition: ""
+
+// 打开表 
+// TODO 如果是打开视图/物化视图 未调查是否也使用该接口
+export interface FetchDataInfoForm {
+  // tableInfo : TreeNode<TableSimple>,    // 被选中要打开的Table对象
+  nodePath: string,                     //node整体路径
+  filterColumnList : string[],          // 过滤，用来显示的字段
+  condition : string,                // SQL where
+  limitNum : number,                    // SQL limit
+  offsetNum : number,                   // SQL offset
+}
+
+// DataModel,返回包括打开表、视图、物化视图 以及 SQLEditor可能返回的结果集
+export interface DataModel {
+  executeSQL: string,
+  columnNames: string[],
+  // dataTypes: 
+}
