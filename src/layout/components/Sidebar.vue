@@ -1,14 +1,10 @@
 <template>
-  <TreeNode
-    :treeData="treeData"
-    @addTreeNode="addTreeNode"
-    @addTable="addTable"
-    @openTableView="openTableView"
-  />
+  <TreeNode :treeData="treeData" @addTreeNode="addTreeNode" @addTable="$emit('addTable')"
+    @openTableView="$emit('openTableView')" />
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRefs } from "vue"; //
+import { defineComponent } from "vue"; //
 import TreeNode from "@/views/tree-node/index.vue";
 
 export default defineComponent({
