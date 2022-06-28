@@ -9,6 +9,7 @@ import { getToken } from "@/utils/auth";
 import { ElMessage } from 'element-plus'
 import TableCreate from '@/views/table/index.vue'
 import TableEditor from '@/views/open-table/index.vue'
+import SQLEditor from '@/views/sqleditor/index.vue'
 
 
 //  判断是否需要登录权限 以及是否登录
@@ -36,6 +37,7 @@ router.beforeEach((to, from, next) => {
 const app = createApp(App);
 app.component('table-create', TableCreate);
 app.component('table-editor', TableEditor);
+app.component('sqleditor', SQLEditor);
 app.use(router).use(ElementPlus).mount('#app');
 
 

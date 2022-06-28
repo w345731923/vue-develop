@@ -313,6 +313,9 @@ export default defineComponent({
      */
     const handleNodeClick = (event: any, data: any, node: any) => {
       console.log("handleNodeClick node", node);
+      node.data.nodePath = getNodePath(node);
+      const val = JSON.stringify(node.data);
+      sessionStorage.setItem("create-sqleditor", val);
       // console.log("handleNodeClick data", data);
       // console.log("handleNodeClick tree", treeRef.value);
     };

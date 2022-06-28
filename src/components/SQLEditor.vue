@@ -89,30 +89,32 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, computed, ref, watch, unref, watchEffect, reactive, onMounted } from "vue";
+import { } from "@/api/treeNode";
+import { ResponseData } from "@/types";
 // import CodeMirror from "./codemirror/CodeMirror.vue";
 // import { Avatar } from "@element-plus/icons-vue";
 // import TableEditor from "../components/TableEditor.vue";
 
-export default {
-  name: "sqleditor",
+export default defineComponent({
+  name: "SQLEditor",
   components: {
     // CodeMirror,
     // Avatar,
     // TableEditor,
   },
-  props: ["identity"],
+  // props: ["identity"],
   setup() {
     // const state = reactive({
     //   identity: props.identity,
     // });
-    // return {
-    //   ...toRefs(state),
-    // };
+    return {
+      // ...toRefs(state),
+    };
   },
   data() {
     return {
-      // name1: props.name,
       activeClass: "name",
       ip_option: [
         {
@@ -153,26 +155,7 @@ export default {
       schema_val: "0",
     };
   },
-  mounted() {},
-  created() {
-    this.fetchData();
-  },
-  methods: {
-    async fetchData() {
-      // const { obj } = await getList();
-      // console.log("data", obj);
-    },
-    handleClick() {
-      this.name1 = 333;
-    },
-  },
-  computed: {
-    //计算属性
-    reversedMessage() {
-      return "".split("").reverse().join("");
-    },
-  },
-};
+})
 </script>
 
 
@@ -187,21 +170,25 @@ export default {
   flex-direction: column;
   overflow: hidden;
 }
+
 .tool-buttons {
   padding: 4px 4px 8px 4px;
   background-color: #f2f2f2;
   flex: 0 0 auto;
   overflow: auto;
 }
+
 .split-content {
   flex: 1;
   display: flex;
   overflow: hidden;
   flex-direction: column;
 }
+
 .row-connect {
   padding-left: 1em;
 }
+
 .resizer-top-bottom {
   position: relative;
   flex: 0 1 auto;

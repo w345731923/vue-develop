@@ -96,10 +96,7 @@ export default defineComponent({
       state.tabActiveName = idt;
     }
     /**
-     * 添加tabs页
-     * 添加SQL编辑器
-     * @param id 
-     * @param title 
+     * 添加tabs页,SQL编辑器
      */
     const addSQLEditor = () => {
       console.log("LayoutIndex addSQLEditor");
@@ -108,7 +105,7 @@ export default defineComponent({
       state.editableTabs.push({
         title: newTitle,
         name: tabId,
-        currentView: sqleditor,
+        currentView: "sqleditor",
       });
       state.tabActiveName = tabId;
     };
