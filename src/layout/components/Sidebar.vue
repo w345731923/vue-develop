@@ -1,6 +1,5 @@
 <template>
-  <TreeNode :treeData="treeData" @addTreeNode="addTreeNode" @addTable="$emit('addTable')"
-    @openTableView="$emit('openTableView')" />
+  <TreeNode :treeData="treeData" @addTreeNode="addTreeNode" @addTable="addTable" @openTableView="openTableView" />
 </template>
 
 <script lang="ts">
