@@ -1,10 +1,15 @@
 <template>
-  <div class="_content">
+  <!-- <div class="_content"> -->
+    <div style="overflow:visible">
     <el-tabs v-model="state.tabActiveName" type="card" closable @tab-click="handleTabClick"
-      @tab-remove="handleTabRemove">
-      <el-tab-pane v-for="item in tabs" :key="item.name" :label="item.title" :name="item.name">
+      @tab-remove="handleTabRemove" style="height:100%">
+      <el-tab-pane v-for="item in tabs" :key="item.name" :label="item.title" :name="item.name"
+      style="height: calc(100% - 41px);">
         <component v-bind:is="item.currentView" @modifyTitle="modifyTabTitle" :tabId="item.name"></component>
       </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
       <!-- <el-tab-pane
         v-for="item in editableTabs"
         :key="item.name"
@@ -13,13 +18,10 @@
       >
         {{ item.currentView }}
       </el-tab-pane> -->
-    </el-tabs>
-  </div>
-</template>
-
 <script lang="ts">
 import { TabsPaneContext } from "element-plus";
 import { defineComponent, reactive, toRefs, watch } from "vue";
+import { EditableTabs } from "@/types";
 
 export default defineComponent({
   name: "vContent",
@@ -40,7 +42,7 @@ export default defineComponent({
     const state = reactive({
       tabActiveName: tabActiveName.value,
     });
-    const tabs = editableTabs.value as { name: string, title: string; currentView: any }[];
+    const tabs = editableTabs.value as EditableTabs[];
     watch(
       tabActiveName,
       (newValue) => {

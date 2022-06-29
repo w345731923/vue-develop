@@ -21,6 +21,9 @@ require("codemirror/addon/hint/sql-hint");
 
 export default {
   name: "codeMirror",
+  // props: {
+  //   sql: string
+  // },
   data() {
     return {
       code: "select * from user",
@@ -115,18 +118,21 @@ export default {
   position: relative;
   z-index: 0;
   flex: 1 1 auto;
-  /* height: 100%; */
+  height: 100%;
   display: flex;
   overflow: auto;
 }
+
 .sql-editor-code {
   flex: 1 1 auto;
   overflow: auto;
 }
+
 .CodeMirror {
   flex: 1 1 auto;
   height: 100%;
 }
+
 .codesql {
   text-align: left;
   font-size: 11pt;

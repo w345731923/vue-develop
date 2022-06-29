@@ -10,3 +10,6 @@ import {
 export async function initSQLEditor(data: TreeNode<any>) {
     return await http.request<ResponseData<string>>('/sqleditor/initSQLEditor', { method: 'POST', data });
 }
+export async function formatSQL(data: string) {
+    return await http.request<ResponseData<string>>('/sqleditor/formatSQL', { method: 'POST', data  });
+}

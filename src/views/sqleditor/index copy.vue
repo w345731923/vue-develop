@@ -77,11 +77,12 @@
         </div>
         <div class="split-content">
             <div class="codemirror pane_flex">
-                <CodeMirror />
+                <!-- <CodeMirror /> -->
             </div>
             <div class="resizer_controls resizer_controls_column" @mousedown="dragSQLEditor($event, codeRef)"></div>
             <div class="query-result pane_flex" ref="codeRef">
-                <el-tabs model-value="info" type="card">
+                123
+                <!-- <el-tabs model-value="info" type="card">
                     <el-tab-pane label="信息" name="info" style="margin: 0.5rem">
                         <p style="margin: 0.3rem">> SQL:select now()</p>
                         <p style="margin: 0.3rem">> SUCCESS:OK</p>
@@ -89,7 +90,7 @@
                     </el-tab-pane>
                     <el-tab-pane label="查询结果" name="result" style="margin: 0.5rem">
                     </el-tab-pane>
-                </el-tabs>
+                </el-tabs> -->
             </div>
         </div>
     </div>
@@ -185,10 +186,13 @@ export default defineComponent({
             const right = document.getElementsByClassName("right")[0];
             console.log('right clientHeight', right.clientHeight)
             const clientHeight = header.clientHeight + right.clientHeight;
+            // codeRef.style.flex = '0 1 500px'
             document.onmousemove = function (e) {
                 const moveY = e.clientY;
-                console.log("moveY", moveY, '屏幕总高=', clientHeight, '底部设置高度为=', (clientHeight - moveY - 10));
-                codeRef.style.flex = '0 1 ' + (clientHeight - moveY - 6) + 'px'
+                console.log("moveY", moveY, '屏幕总高=',clientHeight, '底部设置高度为=',(clientHeight - moveY - 10));
+                // left.style.minWidth = moveX + "px";
+                // left.style.maxWidth = "0px";
+                codeRef.style.flex = '0 1 ' + (clientHeight - moveY - 10) + 'px'
             };
             // 鼠标松开事件
             document.onmouseup = function () {

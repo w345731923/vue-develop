@@ -3,10 +3,21 @@ body{
     /* height: 100vh; */
 }
 .pane_flex {
-    display: flex;
-    flex: 1 1 0%;
+    /* display: flex; */
+    flex: 1 1 0%;/**flex-grow   flex-shrink    flex-basis
     /* z-index: 0; */
     overflow: auto;
+    height: auto;
+}
+._content{
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    /* overflow: hidden;    */
+    z-index: 0;
+}
+.planB{
+    flex: 1 1 0px;
 }
 .split_flex_row{
     display: flex;
