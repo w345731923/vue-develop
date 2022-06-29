@@ -1003,9 +1003,27 @@ export default defineComponent({
      */
     const openTable = (node : Node) => {
       console.log("open table");
+      const data = node.data as TreeNode<TableSimple>;
+      data.nodePath = getNodePath(node);
+      getTableDesign(data).then((responseData) => {
+        console.log("getTableDesign succ responseData ", responseData);
+
+        // responseData.data.object.childrenModel = [];
+        // //hgdbDeveloper://serverName/test1/databaseName/f1/schemaName/f2/tableName/t1
+        // responseData.data.nodePath = data.nodePath;
+        // responseData.data.connectionId = data.connectionId;
+        // const val = JSON.stringify(responseData.data);
+        // sessionStorage.setItem("table-design-session", val);
+        const names = data.nodePath.split("/");
+        //id:oid, title:表名@数据库名.模式名
+        emit("openTableView", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')', node);
+      });
+      // emit("openTableView", '111', '111', node);
       
-      emit("openTableView", '111', '111', node);
-      
+        // const names = data.nodePath.split("/");
+        // //id:oid, title:表名@数据库名.模式名
+        // emit("openTableView", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')', node);
+    
     }
 
     /**

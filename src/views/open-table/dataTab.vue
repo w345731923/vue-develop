@@ -24,6 +24,34 @@
       TODO
       @current-change="handleCurrentChange"
     </div> -->
+    {{state.data}}
+    <el-table style="width: 100%"
+      :data="state.data?.datas"
+      highlight-current-row
+
+      @cell-click="cellclick"
+      @cell-dblclick="celledit"
+      :row-class-name="tableRowClassName"
+      @row-click="setRowIndex"
+      >
+      <!-- 动态生成列名 -->
+      <el-table-column v-for="(item, index) in state.data?.columnNames" :key="index" :label="item" align="center">
+        <template #default="scope">
+          <span>{{scope.row}}</span>
+          <!-- <el-input v-if="scope.row.name.edit"
+                    ref="name"
+                    v-model="scope.row.name.value"
+                    style="width: 100%"
+                    @blur="scope.row.name.edit">
+          </el-input>
+          <span v-else>{{scope.row.name.value}}{{scope.$index}}</span> -->
+        </template>
+      </el-table-column>
+      
+      <!-- <el-table-column v-for="item in data.columnNames" :key="item.value" ></el-table-column> -->
+      <!-- <el-table-column v-if="dataModel.columnNames.length > 0" v-model="dataModel.co"></el-table-column> -->
+    </el-table>
+     
     <el-table style="width: 100%"
       :data="tableData"
       highlight-current-row
@@ -98,7 +126,8 @@
 
 <script lang='ts' >
 import { Timer } from '@element-plus/icons-vue'
-import { defineComponent, ref, reactive } from 'vue'
+import { defineComponent, ref, reactive, toRefs, PropType } from 'vue'
+import { DataModel } from "@/types";
 
 interface User {
   index : number
@@ -112,8 +141,8 @@ interface rowData {
   edit : boolean
 }
 
-interface DataModel {
-  
+interface IState {
+  data : DataModel | undefined,
   currentGrid : {
       rowId : null,     // 行ID
       colId : null,     // 列ID
@@ -127,8 +156,54 @@ interface DataModel {
 export default defineComponent ({
   name : "DataTabPageIndex",
   components : {},
-  setup() {
-
+  // props : {
+  //   dataModel : {
+  //     type: Object as PropType<DataModel>,
+  //     // dafault: () => [],
+  //   },
+  // } , //['dataModel']
+  props :['dataModel'],
+  watch : {
+    // 监听父控件中dataModel的变化
+    dataModel : {
+      immediate : true,
+      handler(newValue, oldValue) {
+        console.log("监听到父控件的数据变化", oldValue, newValue);
+        this.state.data = newValue as DataModel;
+        console.log(this.state.data)
+      }
+    }
+  },
+  setup(props) {
+    
+    // const dataModel = this.dataModel;
+    // const dataModels = dataModel.datas ;
+    // const dataModel : User[] = [
+    //   {
+    //     index: 0,
+    //     date: '2016-05-03',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   },
+    //   {
+    //     index: 1,
+    //     date: '2016-05-02',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   },
+    //   {
+    //     index: 2,
+    //     date: '2016-05-04',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   },
+    //   {
+    //     index: 3,
+    //     date: '2016-05-01',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   }
+    // ];
     const tableData : User[] = [
       {
         index: 0,
@@ -155,7 +230,8 @@ export default defineComponent ({
         address: 'No. 189, Grove St, Los Angeles',
       }
     ];
-    const state: DataModel = reactive({
+    const state: IState = reactive({
+      data :  undefined,
       currentGrid : {
         rowId : null,     // 行ID
         colId : null,     // 列ID
@@ -163,6 +239,11 @@ export default defineComponent ({
         isHead : undefined  // 是否为表头 
       }
     });
+
+    state.data = ref(props.dataModel!);
+    // const data : DataModel = ref(props.dataModel!);
+    // console.log("是我i", data);
+
     const getListHand = async () => {
       console.log("getListHand enter")
       tableData.forEach((item, index) => {
@@ -240,6 +321,7 @@ export default defineComponent ({
         Timer,
         state,
         tableData,
+        // data,
         cellclick,
         celledit,
         changeData,

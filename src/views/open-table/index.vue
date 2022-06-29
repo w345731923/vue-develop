@@ -1,10 +1,11 @@
 <template>
-<DataTab />
+<DataTab :dataModel="state.dataModel"/>
+<!-- <DataTab v-bind="state.dataModel"/> -->
 </template>
 
 <script lang='ts'>
 import { getTableData } from "@/api/treeNode";
-import { FetchDataInfoForm, TableDesignModel, TableSimple, TreeNode } from "@/types";
+import { DataModel, FetchDataInfoForm, TableDesignModel, TableSimple, TreeNode } from "@/types";
 import { getNodePath } from "@/utils/tree";
 import { assertConditional } from "@babel/types";
 import Node from "element-plus/es/components/tree/src/model/node";
@@ -12,11 +13,13 @@ import { defineComponent, onMounted, reactive } from "vue";
 import DataTab from "./dataTab.vue";
 
 interface IState {
-  treeNode : TreeNode<TableSimple> | undefined;
-  nodePath : string | undefined;
-  limitNum : number;
-  offsetNum : number;
-  condition : string | undefined;
+  treeNode : TreeNode<TableSimple> | undefined;   // 本页面对应的Node节点
+  nodePath : string | undefined;                  // node的路径
+  limitNum : number;                              // 限制每次查询获取多少行数据
+  offsetNum : number;                             // 当前页面最后一次查询的偏移量
+  condition : string | undefined;                 // 当前页面的查询条件
+
+  dataModel : DataModel | undefined;              // 当前页面操作的数据
 }
 
 export default defineComponent({
@@ -24,11 +27,13 @@ export default defineComponent({
   setup() {
 
     const state : IState = reactive({
-      treeNode : undefined,
-      nodePath : undefined,
-      limitNum : 20,
-      offsetNum : 0,
-      condition : undefined
+      treeNode : undefined,           
+      nodePath : undefined,           
+      limitNum : 20,                  
+      offsetNum : 0,                  
+      condition : undefined,           
+
+      dataModel : undefined
     });
 
 
@@ -56,9 +61,13 @@ export default defineComponent({
       } 
       getTableData(fetchDataInfo).then((responseData) => {
         console.log("getTableData", responseData);
-
-        
+        state.dataModel = responseData.data;
+        console.log("修改state", state);
       });
+    };
+
+    return {
+      state
     }
 
   },
