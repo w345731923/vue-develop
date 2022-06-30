@@ -1,6 +1,7 @@
 <template>
 <DataTab :dataModel="state.dataModel"/>
 <!-- <DataTab v-bind="state.dataModel"/> -->
+<DataTabTest />
 </template>
 
 <script lang='ts'>
@@ -11,6 +12,7 @@ import { assertConditional } from "@babel/types";
 import Node from "element-plus/es/components/tree/src/model/node";
 import { defineComponent, onMounted, reactive } from "vue";
 import DataTab from "./dataTab.vue";
+import DataTabTest from "./dataTabTest.vue";
 
 interface IState {
   treeNode : TreeNode<TableSimple> | undefined;   // 本页面对应的Node节点
@@ -73,6 +75,7 @@ export default defineComponent({
   },
   components: {
     DataTab,
+    DataTabTest,
   },
 });
 </script>

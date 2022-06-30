@@ -24,9 +24,8 @@
       TODO
       @current-change="handleCurrentChange"
     </div> -->
-    {{state.data}}
     <el-table style="width: 100%"
-      :data="state.data?.datas"
+      :data="tableData"
       highlight-current-row
 
       @cell-click="cellclick"
@@ -34,22 +33,34 @@
       :row-class-name="tableRowClassName"
       @row-click="setRowIndex"
       >
-      <!-- 动态生成列名 -->
-      <el-table-column v-for="(item, index) in state.data?.columnNames" :key="index" :label="item" :prop="item">
+      <el-table-column prop="index" type="index" width="180">
+
+      </el-table-column>
+      <el-table-column prop="date" label="date" width="180">
+
+      </el-table-column>
+      <el-table-column prop="name" label="name" width="180">
         <template #default="scope">
-          <!-- <span>{{scope.row[index]}}</span> -->
-          <el-input v-if="scope.row[index].edit"
-                    :ref="item"
-                    v-model="scope.row[index].value"
+          <el-input v-if="scope.row.name.edit"
+                    ref="name"
+                    v-model="scope.row.name.value"
+                    style="width: 100%"
+                    @blur="scope.row.name.edit">
+          </el-input>
+          <span v-else>{{scope.row.name.value}}{{scope.$index}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="address" label="address" >
+        <template #default="scope">
+          <el-input v-if="scope.row.address.edit"
+                    ref="address"
+                    v-model="scope.row.address.value"
                     style="width: 100%"
                     @blur="changeData(scope.row)">
           </el-input>
-          <span v-else>{{scope.row[index].value}}</span>
+          <span v-else>{{scope.row.address.value}}</span>
         </template>
       </el-table-column>
-      
-      <!-- <el-table-column v-for="item in data.columnNames" :key="item.value" ></el-table-column> -->
-      <!-- <el-table-column v-if="dataModel.columnNames.length > 0" v-model="dataModel.co"></el-table-column> -->
     </el-table>
   </div>  
   <div class="el-row toolbar bottomToolBar">
@@ -87,8 +98,7 @@
 
 <script lang='ts' >
 import { Timer } from '@element-plus/icons-vue'
-import { defineComponent, ref, reactive, toRefs, PropType } from 'vue'
-import { DataModel } from "@/types";
+import { defineComponent, ref, reactive } from 'vue'
 
 interface User {
   index : number
@@ -102,12 +112,12 @@ interface rowData {
   edit : boolean
 }
 
-interface IState {
-  data : DataModel | undefined,
+interface DataModel {
+  
   currentGrid : {
-      rowId : number,     // 行ID
-      colId : number,     // 列ID
-      val : any,       // 单元格的值
+      rowId : null,     // 行ID
+      colId : null,     // 列ID
+      val : null,       // 单元格的值
       isHead : boolean | undefined  // 是否为表头 
   }
 
@@ -117,71 +127,45 @@ interface IState {
 export default defineComponent ({
   name : "DataTabPageIndex",
   components : {},
-  // props : {
-  //   dataModel : {
-  //     type: Object as PropType<DataModel>,
-  //     // dafault: () => [],
-  //   },
-  // } , //['dataModel']
-  props :['dataModel'],
-  watch : {
-    // 监听父控件中dataModel的变化
-    dataModel : {
-      immediate : true,
-      handler(newValue, oldValue) {
-        console.log("监听到父控件的数据变化", oldValue, newValue);
-        this.state.data = newValue as DataModel;
-        this.getListHand();
+  setup() {
+
+    const tableData : User[] = [
+      {
+        index: 0,
+        date: '2016-05-03',
+        name: 'Tom',
+        address: 'No. 189, Grove St, Los Angeles',
+      },
+      {
+        index: 1,
+        date: '2016-05-02',
+        name: 'Tom',
+        address: 'No. 189, Grove St, Los Angeles',
+      },
+      {
+        index: 2,
+        date: '2016-05-04',
+        name: 'Tom',
+        address: 'No. 189, Grove St, Los Angeles',
+      },
+      {
+        index: 3,
+        date: '2016-05-01',
+        name: 'Tom',
+        address: 'No. 189, Grove St, Los Angeles',
       }
-    }
-  },
-  setup(props) {
-    
-    // const dataModel = this.dataModel;
-    // const dataModels = dataModel.datas ;
-    // const dataModel : User[] = [
-    //   {
-    //     index: 0,
-    //     date: '2016-05-03',
-    //     name: 'Tom',
-    //     address: 'No. 189, Grove St, Los Angeles',
-    //   },
-    //   {
-    //     index: 1,
-    //     date: '2016-05-02',
-    //     name: 'Tom',
-    //     address: 'No. 189, Grove St, Los Angeles',
-    //   },
-    //   {
-    //     index: 2,
-    //     date: '2016-05-04',
-    //     name: 'Tom',
-    //     address: 'No. 189, Grove St, Los Angeles',
-    //   },
-    //   {
-    //     index: 3,
-    //     date: '2016-05-01',
-    //     name: 'Tom',
-    //     address: 'No. 189, Grove St, Los Angeles',
-    //   }
-    // ];
-    const state: IState = reactive({
-      data :  undefined,
+    ];
+    const state: DataModel = reactive({
       currentGrid : {
-        rowId : 0,     // 行ID
-        colId : 0,     // 列ID
-        val : '',       // 单元格的值
+        rowId : null,     // 行ID
+        colId : null,     // 列ID
+        val : null,       // 单元格的值
         isHead : undefined  // 是否为表头 
       }
     });
-
-    state.data = ref(props.dataModel!);
-    // const data : DataModel = ref(props.dataModel!);
-    // console.log("是我i", data);
-
     const getListHand = async () => {
       console.log("封装单元格数据，嵌套添加edit属性");
-      state.data?.datas.forEach((item, index) => {
+      tableData.forEach((item, index) => {
         item.index = index + 1;
         for(let i in item) {
           item[i] = {
@@ -190,7 +174,7 @@ export default defineComponent ({
           }
         }
       });
-      console.log("create get table data.", state.data)
+      console.log("create get table data.", tableData)
     };
     const setRowIndex = (row : any, event : any, column : any) => {
       console.log("setRowIndex", row.row_index);
@@ -200,17 +184,17 @@ export default defineComponent ({
       console.log("单击单元格，进入", row, column)
       state.currentGrid = {
         rowId : row ? row.row_index : null,     
-        colId : column.no,
-        val : row ? row[column.no] : column.label,
+        colId : column.index,
+        val : row ? row[column.property] : column.label,
         isHead : !row
       }
       console.log("单击单元格，修改state的currentGrid状态", state)
     }
     const celledit = (row : any, column : any) => {
       console.log('双击单元格，进入', row, column)
-      if(row[column.no]){
+      if(row[column.property]){
         console.log('双击单元格，修改编辑状态')
-        row[column.no].edit = true;
+        row[column.property].edit = true;
         setTimeout(() => {
           // this.$refs[column.property].focus()
         }, 20);
@@ -218,9 +202,7 @@ export default defineComponent ({
     };
     const changeData = async (value : any) => {
         console.log("编辑的单元格失去焦点，触发编辑事件", value)
-        value.edit = false;
-        const colId = state.currentGrid.colId;
-        value[colId].edit=false;
+        value.address.edit =false;
         // TODO 设置数据，数据的持久化
         // const reg = /^[+-]?(0|([1-9]\d*))(\.\d+)?$/g
         // if(!reg.test(value.kpi.value)){
@@ -242,7 +224,12 @@ export default defineComponent ({
         //   value.address.edit =false;
         // }
     };
-    
+    const activeIndex = () => {
+      ref('1')
+    };
+    const handleSelect = (key, keyPath) => {
+      console.log(key, keyPath)
+    };
     // const handleCurrentChange = (val : any) => {
     //   console.log("handle Current Change enter")
     //   console.log(val)
@@ -252,7 +239,7 @@ export default defineComponent ({
     return {
         Timer,
         state,
-        // data,
+        tableData,
         cellclick,
         celledit,
         changeData,
@@ -262,7 +249,7 @@ export default defineComponent ({
     }
   },
   created () {
-    // this.getListHand();
+    this.getListHand();
   },
   // computed : {
   //   curColumn () {
@@ -271,34 +258,30 @@ export default defineComponent ({
   // },
   methods : {
     addRow() {
-      console.log("添加新行,enter")
-      const idx = this.state.data?.datas.length + 1;
-      let obj = {};
-      // 根据Type添加,为新增行添加初始数据
-      // this.state.data?.columnNames.forEach(p => obj[p.no] = '')
-      this.state.data?.dataTypes.forEach((item, index) => {
-        obj[index] = '';
-      });
+      console.log("addrow enter")
+      const idx = this.tableData.length + 1;
+      const obj : User = {
+        index : idx,
+        date: '2016-05-01',
+        name: 'Tom',
+        address: 'No. 189, Grove St, Los Angeles',
+      }
       // this.columnList.forEach(p => obj[p.prop] = '')
       // 在指定的行号上添加一行数据
-      this.state.data?.datas.splice(idx, 0, obj);
-
+      this.tableData.splice(idx, 0, obj)
       // 修改行的结构，使其添加edit属性，使新添加的列可以被编辑
-      for(let i in this.state.data?.datas) {
-        console.log("封装单元格数据，嵌套添加edit属性");
-        
-        this.state.data!.datas![idx - 1]![i] = {
-          value : this.state.data?.datas[idx - 1][i],
+      for(let i in this.tableData[idx - 1]) {
+        this.tableData[idx - 1][i] = {
+          value : this.tableData[idx - 1][i],
           edit: false
         }
       }
-      console.log("添加新行 ", obj)
+      console.log("addrow ", obj)
     },
     
     delRow() {
       console.log("删除被选中的行. rowID:", this.state.currentGrid.rowId)
-      console.log(this.state.currentGrid)
-      this.state.currentGrid.rowId != null && this.state.data?.datas.splice(this.state.currentGrid.rowId!, 1)
+      this.state.currentGrid.rowId != null && this.tableData.splice(this.state.currentGrid.rowId!, 1)
     },
     tableRowClassName ({row , rowIndex}) {
       console.log("tableRowClassName enter", row, rowIndex)
@@ -307,6 +290,13 @@ export default defineComponent ({
   }
   
 });
+
+// const handleEdit = (index: number, row: User) => {
+//   console.log(index, row)
+// }
+// const handleDelete = (index: number, row: User) => {
+//   console.log(index, row)
+// }
 
 
 </script>
