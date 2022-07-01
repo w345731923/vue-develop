@@ -77,10 +77,10 @@
         </div>
         <div class="split-content">
             <div class="codemirror pane_flex">
-                <CodeMirror />
+                <CodeMirror :sql="state.sql" ref="codeRef" @updateSql='updateSql' />
             </div>
-            <div class="resizer_controls resizer_controls_column" @mousedown="dragSQLEditor($event, codeRef)"></div>
-            <div class="query-result pane_flex" ref="codeRef">
+            <div class="resizer_controls resizer_controls_column" @mousedown="dragSQLEditor($event, resultRef)"></div>
+            <div class="query-result pane_flex" ref="resultRef">
                 <el-tabs model-value="info" type="card">
                     <el-tab-pane label="信息" name="info" style="margin: 0.5rem">
                         <p style="margin: 0.3rem">> SQL:select now()</p>
@@ -103,10 +103,10 @@ import CodeMirror from "@/components/codemirror/CodeMirror.vue";
 import { Avatar } from "@element-plus/icons-vue";
 import {
     TreeNode,
-
+    SQLEditorExec
 } from "@/types";
 import {
-    initSQLEditor, formatSQL
+    initSQLEditor, formatSQL, executeSQL
 } from "@/api/sqleditor";
 import { getNodePath } from "@/utils/tree";
 
@@ -139,12 +139,13 @@ export default defineComponent({
                 sessionStorage.setItem("create-sqleditor", "");
             }
             //初始化sql编辑器
-            // initSQLEditor(state.treeData!).then((resp) => {
-            //     console.log("getDatabaseRole resp", resp);
-            //     state.treeData!.contextId = resp.data;
-            // })
+            initSQLEditor(state.treeData!).then((resp) => {
+                console.log("getDatabaseRole resp", resp);
+                state.treeData!.contextId = resp.data;
+            })
         });
-        const codeRef: Ref = ref(null); //树形结果对象
+        const codeRef: Ref = ref(null); //sql对象
+        const resultRef: Ref = ref(null); //结果集对象
         const { tabId } = toRefs(props);
         const state: IState = reactive({
             tabId: tabId.value,
@@ -164,13 +165,24 @@ export default defineComponent({
             alert('导出')
         }
         const handleFormat = () => {
-            alert('格式化')
-            formatSQL('select * from public.aaa').then((resp) => {
+            const sql = codeRef.value.getSqlValue();
+            console.log('handleFormat getSqlValue', sql)
+
+            formatSQL(sql).then((resp) => {
                 console.log("formatSQL resp", resp);
+                codeRef.value.setSqlValue(resp.data);
             })
         }
         const handleExecute = () => {
-            alert('执行')
+            const sql = codeRef.value.getSqlValue();
+            console.log('handleExecute sql = ', sql)
+            const data = {} as SQLEditorExec;
+            data.sql = sql;
+            Object.assign(data, state.treeData);
+            console.log("request data", data);
+            executeSQL(data).then((resp) => {
+                console.log("executeSQL resp", resp);
+            })
         }
         const handleStop = () => {
             alert('停止')
@@ -200,6 +212,7 @@ export default defineComponent({
         return {
             // ...toRefs(state),
             codeRef,
+            resultRef,
             state,
             dragSQLEditor,
             handleSave,

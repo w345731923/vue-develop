@@ -19,7 +19,7 @@ require("codemirror/mode/sql/sql");
 require("codemirror/addon/hint/show-hint");
 require("codemirror/addon/hint/sql-hint");
 
-var editor;
+// var editor;
 export default {
   name: "codeMirror",
   props: {
@@ -29,6 +29,7 @@ export default {
   data() {
     return {
       code: this.sql,
+      editor:''
     };
   },
   methods: {
@@ -39,22 +40,22 @@ export default {
         this.$refs.myCm.codemirror.showHint({ completeSingle: false });
       }
     },
-    getSqlValue() {
-      return editor.getValue();
+    getSqlValue() {      
+      return this.editor.getValue();
     },
     setSqlValue(content) {
       console.log('setSqlValue content = ', content)
-      return editor.setValue(content);
+      return this.editor.setValue(content);
     }
   },
   mounted() {
-    // console.log('this.$refs', this.$refs)
+    console.log('this.$refs',this.$refs)
     /**
      * api：https://codemirror.net/doc/manual.html#api
      */
     let mime = "text/x-pgsql"; // For PostgreSQL - https://www.postgresql.org/docs/11/sql-keywords-appendix.html
     //let theme = 'ambiance'//设置主题，不设置的会使用默认主题
-    editor = CodeMirror.fromTextArea(this.$refs.mycode, {
+    let editor = CodeMirror.fromTextArea(this.$refs.mycode, {
       value: "", //编辑器的起始值
       mode: mime, //选择对应代码编辑器的语言，我这边选的是数据库，根据个人情况自行设置即可
       // lineSeparator: string|null 显式设置编辑器的行分隔符。默认情况下（值null）

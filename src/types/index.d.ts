@@ -44,7 +44,9 @@ export interface DropDownMenu {
   disabled: boolean;
   onClick: Function
 }
-
+/**
+ * 树形菜单
+ */
 export interface TreeNode<T> {
   text?: string;//工具栏显示名称
   type: string;//node类型
@@ -56,6 +58,14 @@ export interface TreeNode<T> {
   children?: TreeNode[];
   expanded?: boolean;//是否展开
   ex?: boolean;//是否存在，刷新时，old与new对比使用
+}
+/**
+ * SQL编辑器，执行对象
+ */
+export interface SQLEditorExec extends TreeNode {
+  sql: string,//SQL编辑器中传入的待执行SQL
+  isExplain?: boolean,//"true: 返回执行计划； false：直接执行SQL"
+  running?: boolean,//(true: 后端的SQL尚未执行结束； false:后端的SQL执行结束
 }
 //create SQL预览
 export interface SQLCreatePreview<T = any, S = any> {
@@ -443,20 +453,20 @@ export interface FetchDataInfoForm {
 
 // DataModel,返回包括打开表、视图、物化视图 以及 SQLEditor可能返回的结果集
 export interface DataModel {
-  executeSQL : string,
-  columnNames : string[],
-  dataTypes : BaseDataType[],
+  executeSQL: string,
+  columnNames: string[],
+  dataTypes: BaseDataType[],
   // datas : object[][],
-  datas : Array,
-  isNoMoreResult : boolean,
-  maxRows : number,
-  nowLastRows : number,
-  offsetSize : number,
+  datas: Array,
+  isNoMoreResult: boolean,
+  maxRows: number,
+  nowLastRows: number,
+  offsetSize: number,
 }
 
 export interface BaseDataType {
-  name : string
-  decimalNumber : number,
-  imageUrl : string,
-  length : number,
+  name: string
+  decimalNumber: number,
+  imageUrl: string,
+  length: number,
 }
