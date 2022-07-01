@@ -1,4 +1,5 @@
 <template>
+  
   <div>
   <div class="toolbar topToolBar">
     <el-row :gutter="20">
@@ -19,46 +20,23 @@
     <el-button type="primary" 
               :icon="Timer">导出</el-button>
   </div> -->
-  <div class="datatableDiv">
-    <!-- <div class="header" v-if="headTurn">
-      TODO
-      @current-change="handleCurrentChange"
-    </div> -->
-    {{state.data}}
-    <el-table ref="dataTable"
-      style="width: 100%"
-      :data="state.data?.datas"
-      highlight-current-row
-
-      @cell-click="cellclick"
-      @cell-dblclick="celledit"
-      :row-class-name="tableRowClassName"
-      @row-click="setRowIndex"
-      >
-      <!-- 动态生成列名 -->
-      <el-table-column v-for="(item, index) in state.data?.columnNames" :key="index" :label="item" :prop="item" >
-        <template #default="scope">
-          <!-- <span>{{scope.row[index]}}</span> -->
-          <el-input v-if="scope.row[index].edit"
-                    :ref="item"
-                    v-model="scope.row[index].value"
-                    style="width: 100%"
-                    @blur="changeData(scope.row)">
-          </el-input>
-          <span v-else>{{scope.row[index].value}}</span>
-        </template>
-      </el-table-column>
-      
-      <!-- <el-table-column v-for="item in data.columnNames" :key="item.value" ></el-table-column> -->
-      <!-- <el-table-column v-if="dataModel.columnNames.length > 0" v-model="dataModel.co"></el-table-column> -->
-    </el-table>
+  <div class="datatable">
+    ！！！Element-plus需要 2.2.0 以上
+  <el-table-v2 style="width: 100%"
+                
+                :columns="columns"
+                :data="datax"
+              :width="700"
+              :height="400"
+                fixed
+                />
   </div>  
   <div class="el-row toolbar bottomToolBar">
     <el-button @click="addRow">添加新行</el-button>
     <el-button @click="delRow">删除行</el-button>
-    <el-button @click="saveClick">保存</el-button>
-    <el-button @click="cancleClick">取消</el-button>
-    <el-button @click="$emit('refreshTableDataModel')">刷新</el-button>
+    <el-button>保存</el-button>
+    <el-button>取消</el-button>
+    <el-button>刷新</el-button>
   </div>
   <!-- <el-menu
     :default-active="activeIndex"
@@ -92,28 +70,15 @@ import { defineComponent, ref, reactive, toRefs, PropType } from 'vue'
 import { DataModel } from "@/types";
 
 interface IState {
+  data : DataModel | undefined,
   currentGrid : {
       rowId : number,     // 行ID
       colId : number,     // 列ID
       val : any,       // 单元格的值
       isHead : boolean | undefined  // 是否为表头 
   }
-  data : DataModel | undefined,
-  changeData : DataChangeInfo[] | undefined      // 页面中修改的数据
-}
 
-interface DataColumnInfo {
-  colId : number,                     // 列号
-  oldValue : object,                  // 旧值
-  newValue : object,                  // 新值
 }
-
-interface DataChangeInfo {
-  rowId: number,                      // 行号
-  changeType : number,                // 0 : default, 1 : 新增行, 2: 修改行，3:删除行
-  dataColumnInfo : DataColumnInfo[] | undefined,  // 该行修改的数据,列数据的对比的集合（新增行与删除行时该属性为空，其数据可通过state.data.datas去获取）
-}
-
 export default defineComponent ({
   name : "DataTabPageIndex",
   components : {},
@@ -123,12 +88,7 @@ export default defineComponent ({
   //     // dafault: () => [],
   //   },
   // } , //['dataModel']
-  // props :['dataModel'],
-  props : {
-    dataModel : Object,
-    refreshTableDataModel : Function,
-  },
-  emits : ["refreshTableDataModel"],
+  props :['dataModel'],
   watch : {
     // 监听父控件中dataModel的变化
     dataModel : {
@@ -142,9 +102,36 @@ export default defineComponent ({
   },
   setup(props) {
     
+    // const dataModel = this.dataModel;
+    // const dataModels = dataModel.datas ;
+    // const dataModel : User[] = [
+    //   {
+    //     index: 0,
+    //     date: '2016-05-03',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   },
+    //   {
+    //     index: 1,
+    //     date: '2016-05-02',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   },
+    //   {
+    //     index: 2,
+    //     date: '2016-05-04',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   },
+    //   {
+    //     index: 3,
+    //     date: '2016-05-01',
+    //     name: 'Tom',
+    //     address: 'No. 189, Grove St, Los Angeles',
+    //   }
+    // ];
     const state: IState = reactive({
       data :  undefined,
-      changeData : [],
       currentGrid : {
         rowId : 0,     // 行ID
         colId : 0,     // 列ID
@@ -153,9 +140,7 @@ export default defineComponent ({
       }
     });
 
-    state.data = ref(props.dataModel!).value as DataModel;
-    // const { dataModel } = toRefs(props);
-    // state.data = dataModel.value as DataModel;
+    state.data = ref(props.dataModel!);
     // const data : DataModel = ref(props.dataModel!);
     // console.log("是我i", data);
 
@@ -201,37 +186,7 @@ export default defineComponent ({
         value.edit = false;
         const colId = state.currentGrid.colId;
         value[colId].edit=false;
-        // 设置数据，数据的持久化
-
-        // 检查当前行是否已经在state.changeData中
-        let changeData = findChangeDataByRowId(value.row_index);
-        if (changeData) {
-          // 只修改新数据
-          for (let i = 0; i < value.length; i++) {
-            changeData.dataColumnInfo![i].newValue = value[i].value;
-          }
-        } else {
-          // 为state.changeData添加一个新的修改对象
-          let dataColumnInfo : DataColumnInfo[] = [];
-          console.log("xxxx", value, state.data?.datas)
-          value.forEach((element, index) => {
-            let changeColumnInfo : DataColumnInfo = {
-              colId: index,
-              oldValue: state.data?.datas[value.row_index][index].value,
-              newValue: element.value,
-            } 
-            dataColumnInfo.push(changeColumnInfo);
-          });
-          console.log(dataColumnInfo)
-          let updateRow : DataChangeInfo = {
-            rowId: value.row_index + 1,
-            changeType: 2,
-            dataColumnInfo: dataColumnInfo
-          }
-          console.log("修改行:", updateRow)
-          state.changeData?.push(updateRow);
-        }
-        
+        // TODO 设置数据，数据的持久化
         // const reg = /^[+-]?(0|([1-9]\d*))(\.\d+)?$/g
         // if(!reg.test(value.kpi.value)){
         //   return this.$message.error('只能输入数字')
@@ -253,14 +208,35 @@ export default defineComponent ({
         // }
     };
 
-    const findChangeDataByRowId = (rowId : number) => {
-      for (let i = 0; i < state.changeData!.length; i++) {
-        if(state.currentGrid.rowId == state.changeData![i].rowId) {
-          return state.changeData![i];
-        }
-      }
-    }
-    
+    const generateColumns = (length = 10, prefix = 'column-', props?: any) =>
+      Array.from({ length }).map((_, columnIndex) => ({
+        ...props,
+        key: `${prefix}${columnIndex}`,
+        dataKey: `${prefix}${columnIndex}`,
+        title: `Column ${columnIndex}`,
+        width: 150,
+      }))
+
+    const generateData = (
+      columns: ReturnType<typeof generateColumns>,
+      length = 200,
+      prefix = 'row-'
+    ) =>
+      Array.from({ length }).map((_, rowIndex) => {
+        return columns.reduce(
+          (rowData, column, columnIndex) => {
+            rowData[column.dataKey] = `Row ${rowIndex} - Col ${columnIndex}`
+            return rowData
+          },
+          {
+            id: `${prefix}${rowIndex}`,
+            parentId: null,
+          }
+        )
+      })
+
+    const columns = generateColumns(10)
+    const datax = generateData(columns, 200)
     // const handleCurrentChange = (val : any) => {
     //   console.log("handle Current Change enter")
     //   console.log(val)
@@ -277,6 +253,9 @@ export default defineComponent ({
         getListHand,
         setRowIndex,
         // handleCurrentChange,
+
+        datax,
+        columns,
     }
   },
   created () {
@@ -301,13 +280,6 @@ export default defineComponent ({
       // 在指定的行号上添加一行数据
       this.state.data?.datas.splice(idx, 0, obj);
 
-      let addRow : DataChangeInfo = {
-        rowId: idx,
-        changeType: 1,
-        dataColumnInfo: []
-      }
-      this.state.changeData?.push(addRow);
-
       // 修改行的结构，使其添加edit属性，使新添加的列可以被编辑
       for(let i in this.state.data?.datas) {
         console.log("封装单元格数据，嵌套添加edit属性");
@@ -317,68 +289,17 @@ export default defineComponent ({
           edit: false
         }
       }
-      // this.$refs.dataTable.toggleRowSelection(row);
       console.log("添加新行 ", obj)
     },
     
     delRow() {
       console.log("删除被选中的行. rowID:", this.state.currentGrid.rowId)
-      // console.log(this.state.currentGrid)
-      // this.state.currentGrid.rowId != null && this.state.data?.datas.splice(this.state.currentGrid.rowId!, 1)
-      let addRow : DataChangeInfo = {
-        rowId: this.state.currentGrid.rowId + 1,
-        changeType: 3,
-        dataColumnInfo: undefined
-      }
-      this.state.changeData?.push(addRow);
+      console.log(this.state.currentGrid)
+      this.state.currentGrid.rowId != null && this.state.data?.datas.splice(this.state.currentGrid.rowId!, 1)
     },
-
-    saveClick() {
-      // TODO 将修改的数据持久化到数据库中
-    },
-
-    cancleClick () {
-      console.log("点击取消操作，清空所有的临时数据", this.state)
-      // 如果是新增行，因为数据已经通过addRow添加到state.data.datas,因此需要将其删除
-      if (this.state.changeData) {
-        let changeData = this.state.changeData;
-        for (let i = changeData.length - 1; i >= 0; i--) {
-          // 如果是新增行，去掉state.data.datas中新增的数据
-          if (changeData[i].changeType == 1) {
-            this.state.data?.datas.splice(changeData[i].rowId - 1, 1)
-          } else if (changeData[i].changeType == 2) {
-            // 如果是修改行，将修改还原
-            console.log("还原旧的数据", changeData[i])
-            this.state.data?.datas[changeData[i].rowId - 1].forEach((element, index) => {
-              element.value = changeData[i].dataColumnInfo![index].oldValue;
-            });
-          }
-        }
-      }
-      // 清空changeData
-      this.state.changeData = []
-      console.log(this.state.changeData, this.state.data)
-    },
-
     tableRowClassName ({row , rowIndex}) {
       console.log("tableRowClassName enter", row, rowIndex)
       row.row_index = rowIndex;
-      // 设置行的className，从而修改其样式
-      let res = '';
-      this.state.changeData?.forEach((r, i) => {
-        if (rowIndex == r.rowId - 1) {
-          console.log("设置行的className", r, i)
-          if (r.changeType == 1) {
-            console.log("set add-row class");
-            res = 'add-row';
-          } else if (r.changeType == 2) {
-            res = 'update-row';
-          } else if (r.changeType == 3) {
-            res = 'delete-row';
-          }
-        }
-      });
-      return res;
     }
   }
   
@@ -388,13 +309,13 @@ export default defineComponent ({
 </script>
 <style>
 .el-table .update-row {
-  --el-table-tr-bg-color: yellow;
+  --el-table-tr-bg-color: var(--el-color-warning-light-9);
 }
 .el-table .add-row {
-  --el-table-tr-bg-color: pink;
+  --el-table-tr-bg-color: var(--el-color-warning-light-9);
 }
 .el-table .delete-row {
-  --el-table-tr-bg-color: red;
+  --el-table-tr-bg-color: var(--el-color-warning-light-9);
 }
 .el-row {
   /* margin-bottom: 20px; */
@@ -414,8 +335,8 @@ export default defineComponent ({
   min-height: 36px;
 }
 .bottomToolBar {
-  bottom: 0;
-  position: fixed;
+  /* bottom: 0;
+  position: fixed; */
 }
 .el-menu-demo {
   bottom: 0;

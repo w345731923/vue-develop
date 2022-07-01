@@ -1,7 +1,7 @@
 <template>
-<DataTab :dataModel="state.dataModel"/>
-<!-- <DataTab v-bind="state.dataModel"/> -->
-<DataTabTest />
+<!-- <DataTabV2 :dataModel="state.dataModel"/> -->
+<DataTab :dataModel="state.dataModel" @refreshTableDataModel="refreshTableDataModel"/>
+<!-- <DataTabTest /> -->
 </template>
 
 <script lang='ts'>
@@ -12,6 +12,7 @@ import { assertConditional } from "@babel/types";
 import Node from "element-plus/es/components/tree/src/model/node";
 import { defineComponent, onMounted, reactive } from "vue";
 import DataTab from "./dataTab.vue";
+import DataTabV2 from "./dataTabV2.vue";
 import DataTabTest from "./dataTabTest.vue";
 
 interface IState {
@@ -69,13 +70,15 @@ export default defineComponent({
     };
 
     return {
-      state
+      state,
+      refreshTableDataModel,
     }
 
   },
   components: {
     DataTab,
-    DataTabTest,
+    // DataTabV2,
+    // DataTabTest,
   },
 });
 </script>

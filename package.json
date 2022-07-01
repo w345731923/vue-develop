@@ -1,74 +1,74 @@
 {
-  "name": "develop-vue",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "start": "concurrently \"npm run mock\" \"npm run serve\"",
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "mock": "nodemon ./mock/index.js"
-  },
-  "dependencies": {
-    "@element-plus/icons-vue": "^0.2.4",
-    "@types/mockjs": "^1.0.6",
-    "axios": "^0.24.0",
-    "body-parser": "^1.19.1",
-    "codemirror": "^5.65.0",
-    "core-js": "^3.6.5",
-    "element-plus": "2.1.6",
-    "express": "^4.17.2",
-    "jshint": "^2.13.1",
-    "jsonlint": "^1.6.3",
-    "mockjs": "^1.1.0",
-    "nodemon": "^2.0.15",
-    "script-loader": "^0.7.2",
-    "serve": "^13.0.2",
-    "sql-formatter": "^4.0.2",
-    "vue": "^3.2.23",
-    "vue-class-component": "^8.0.0-0",
-    "vue-router": "^4.0.14"
-  },
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.18.0",
-    "@typescript-eslint/parser": "^4.18.0",
-    "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-plugin-typescript": "~4.5.0",
-    "@vue/cli-service": "~4.5.0",
-    "@vue/compiler-sfc": "^3.0.0",
-    "@vue/eslint-config-typescript": "^7.0.0",
-    "babel-eslint": "^10.1.0",
-    "concurrently": "^7.0.0",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^7.0.0",
-    "less": "^3.0.4",
-    "less-loader": "^5.0.0",
-    "sass": "^1.27.0",
-    "sass-loader": "^10.0.4",
-    "typescript": "~4.1.5"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
+    "name": "develop-vue",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "start": "concurrently \"npm run mock\" \"npm run serve\"",
+        "serve": "vue-cli-service serve",
+        "build": "vue-cli-service build",
+        "lint": "vue-cli-service lint",
+        "mock": "nodemon ./mock/index.js"
     },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended",
-      "@vue/typescript"
-    ],
-    "parserOptions": {
-      "parser": "@typescript-eslint/parser"
+    "dependencies": {
+        "@element-plus/icons-vue": "^0.2.4",
+        "@types/mockjs": "^1.0.6",
+        "axios": "^0.24.0",
+        "body-parser": "^1.19.1",
+        "codemirror": "^5.65.0",
+        "core-js": "^3.6.5",
+        "element-plus": "2.2.0",
+        "express": "^4.17.2",
+        "jshint": "^2.13.1",
+        "jsonlint": "^1.6.3",
+        "mockjs": "^1.1.0",
+        "nodemon": "^2.0.15",
+        "script-loader": "^0.7.2",
+        "serve": "^13.0.2",
+        "sql-formatter": "^4.0.2",
+        "vue": "^3.2.23",
+        "vue-class-component": "^8.0.0-0",
+        "vue-router": "^4.0.14"
     },
-    "rules": {
-      "no-unused-vars":0,
-      "no-debugger":0
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead"
-  ]
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^4.18.0",
+        "@typescript-eslint/parser": "^4.18.0",
+        "@vue/cli-plugin-babel": "~4.5.0",
+        "@vue/cli-plugin-eslint": "~4.5.0",
+        "@vue/cli-plugin-typescript": "~4.5.0",
+        "@vue/cli-service": "~4.5.0",
+        "@vue/compiler-sfc": "^3.0.0",
+        "@vue/eslint-config-typescript": "^7.0.0",
+        "babel-eslint": "^10.1.0",
+        "concurrently": "^7.0.0",
+        "eslint": "^6.7.2",
+        "eslint-plugin-vue": "^7.0.0",
+        "less": "^3.0.4",
+        "less-loader": "^5.0.0",
+        "sass": "^1.27.0",
+        "sass-loader": "^10.0.4",
+        "typescript": "~4.1.5"
+    },
+    "eslintConfig": {
+        "root": true,
+        "env": {
+            "node": true
+        },
+        "extends": [
+            "plugin:vue/vue3-essential",
+            "eslint:recommended",
+            "@vue/typescript"
+        ],
+        "parserOptions": {
+            "parser": "@typescript-eslint/parser"
+        },
+        "rules": {
+            "no-unused-vars": 0,
+            "no-debugger": 0
+        }
+    },
+    "browserslist": [
+        "> 1%",
+        "last 2 versions",
+        "not dead"
+    ]
 }
