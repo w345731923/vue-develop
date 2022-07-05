@@ -1,10 +1,10 @@
 <template>
   <!-- <div class="_content"> -->
-    <div style="overflow:visible">
+  <div style="overflow:visible">
     <el-tabs v-model="state.tabActiveName" type="card" closable @tab-click="handleTabClick"
       @tab-remove="handleTabRemove" style="height:100%">
       <el-tab-pane v-for="item in tabs" :key="item.name" :label="item.title" :name="item.name"
-      style="height: calc(100% - 41px);">
+        style="height: calc(100% - 41px);">
         <component v-bind:is="item.currentView" @modifyTitle="modifyTabTitle" :tabId="item.name"></component>
       </el-tab-pane>
     </el-tabs>

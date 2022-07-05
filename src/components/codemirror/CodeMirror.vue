@@ -2,7 +2,8 @@
   <div class="sql-editor">
     <!-- <div>123</div> -->
     <div class="sql-editor-code">
-      <textarea ref="mycode" class="codesql" v-model="code"></textarea>
+      <!-- <textarea ref="mycode" class="codesql" v-model="code"></textarea> -->
+      <textarea :id="key" class="codesql" v-model="code"></textarea>
     </div>
   </div>
 </template>
@@ -18,17 +19,20 @@ let CodeMirror = require("codemirror/lib/codemirror");
 require("codemirror/mode/sql/sql");
 require("codemirror/addon/hint/show-hint");
 require("codemirror/addon/hint/sql-hint");
+import { toRaw } from 'vue'
 
-var editor;
+// var editor;
 export default {
   name: "codeMirror",
   props: {
+    tabId: String,
     sql: String,
-    updateSql: Function
   },
   data() {
     return {
+      key: this.tabId,
       code: this.sql,
+      editor: {}
     };
   },
   methods: {
@@ -40,21 +44,23 @@ export default {
       }
     },
     getSqlValue() {
-      return editor.getValue();
+      return this.editor.getValue();
     },
     setSqlValue(content) {
       console.log('setSqlValue content = ', content)
-      return editor.setValue(content);
+      toRaw(this.editor).setValue(content);
     }
   },
   mounted() {
-    // console.log('this.$refs', this.$refs)
+    console.log('this.$refs', this.key, this.$refs)
     /**
      * api：https://codemirror.net/doc/manual.html#api
      */
     let mime = "text/x-pgsql"; // For PostgreSQL - https://www.postgresql.org/docs/11/sql-keywords-appendix.html
     //let theme = 'ambiance'//设置主题，不设置的会使用默认主题
-    editor = CodeMirror.fromTextArea(this.$refs.mycode, {
+    // editor = new CodeMirror.fromTextArea(this.$refs.mycode, {
+    this.editor = new CodeMirror.fromTextArea(document.getElementById(this.key), {
+
       value: "", //编辑器的起始值
       mode: mime, //选择对应代码编辑器的语言，我这边选的是数据库，根据个人情况自行设置即可
       // lineSeparator: string|null 显式设置编辑器的行分隔符。默认情况下（值null）
@@ -117,15 +123,13 @@ export default {
         // },
       },
     });
-    editor.on("keypress", (editor) => {
-      editor.showHint();
-    });
+    // editor.on("keypress", (editor1) => {
+    //   editor1.showHint();
+    // });
 
-    editor.on('change', cm => {
-      // console.log('cm = ', cm.getValue())
+    this.editor.on('change', cm => {
       cm.save();
       this.code = cm.getValue();
-      this.$emit('updateSql', cm.getValue())
     });
   },
 };

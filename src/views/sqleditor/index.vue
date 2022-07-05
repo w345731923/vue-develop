@@ -77,7 +77,7 @@
         </div>
         <div class="split-content">
             <div class="codemirror pane_flex">
-                <CodeMirror :sql="state.sql" ref="codeRef" @updateSql='updateSql' />
+                <CodeMirror :sql="state.sql" ref="codeRef" :tabId="state.tabId"/>
             </div>
             <div class="resizer_controls resizer_controls_column" @mousedown="dragSQLEditor($event, resultRef)"></div>
             <div class="query-result pane_flex" ref="resultRef">
@@ -131,7 +131,7 @@ export default defineComponent({
     setup(props, { emit }) {
         onMounted(() => {
             console.log('SQLEditor onMounted...');
-            state.tabId = sessionStorage.getItem("tabId") as string;
+            // state.tabId = sessionStorage.getItem("tabId") as string;
             let createSession = sessionStorage.getItem("create-sqleditor");
             if (createSession) {
                 state.treeData = JSON.parse(createSession!) as TreeNode<any>;
@@ -150,8 +150,9 @@ export default defineComponent({
         const state: IState = reactive({
             tabId: tabId.value,
             treeData: undefined, //树形菜单值
-            sql: ''
+            sql: 'select \n 123'
         })
+        console.log('state', state)
         // const state = reactive({
         //   identity: props.identity,
         // });
