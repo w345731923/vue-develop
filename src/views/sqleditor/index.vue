@@ -49,16 +49,18 @@
             </div>
             <div class="row-connect">
                 <el-space wrap>
-                    <el-select v-model="ip_val" placeholder="localhost" size="small">
-                        <el-option v-for="item in ip_option" :key="item.value" :label="item.label" :value="item.value">
+                    <el-select v-model="state.server_val" placeholder="localhost" size="small">
+                        <el-option v-for="item in state.server_option" :key="item.key" :label="item.label"
+                            :value="item.key">
                         </el-option>
                     </el-select>
-                    <el-select v-model="db_val" placeholder="postgres" size="small">
-                        <el-option v-for="item in db_option" :key="item.value" :label="item.label" :value="item.value">
+                    <el-select v-model="state.db_val" placeholder="postgres" size="small">
+                        <el-option v-for="item in state.db_option" :key="item.key" :label="item.label"
+                            :value="item.key">
                         </el-option>
                     </el-select>
-                    <el-select v-model="schema_val" size="small">
-                        <el-option v-for="item in schema_option" :key="item.value" :value="item.value"
+                    <el-select v-model="state.schema_val" size="small">
+                        <el-option v-for="item in state.schema_option" :key="item.key" :value="item.key"
                             :label="item.label">
                         </el-option>
                     </el-select>
@@ -77,7 +79,7 @@
         </div>
         <div class="split-content">
             <div class="codemirror pane_flex">
-                <CodeMirror :sql="state.sql" ref="codeRef" :tabId="state.tabId"/>
+                <CodeMirror :sql="state.sql" ref="codeRef" :tabId="state.tabId" />
             </div>
             <div class="resizer_controls resizer_controls_column" @mousedown="dragSQLEditor($event, resultRef)"></div>
             <div class="query-result pane_flex" ref="resultRef">
@@ -106,14 +108,23 @@ import {
     SQLEditorExec
 } from "@/types";
 import {
-    initSQLEditor, formatSQL, executeSQL
+    api_initSQLEditor, api_formatSQL, api_executeSQL, api_findAllServer, api_sqleditorStatus, api_sqleditorPoll
 } from "@/api/sqleditor";
 import { getNodePath } from "@/utils/tree";
-
+interface ISelect {
+    key: string;
+    label: string;
+}
 interface IState {
     tabId: string;
     treeData: TreeNode<any> | undefined;
     sql: string;
+    server_val: string;
+    server_option: ISelect[];
+    db_val: string;
+    db_option: ISelect[];
+    schema_val: string;
+    schema_option: ISelect[];
 }
 export default defineComponent({
     name: "SQLEditor",
@@ -139,10 +150,22 @@ export default defineComponent({
                 sessionStorage.setItem("create-sqleditor", "");
             }
             //初始化sql编辑器
-            initSQLEditor(state.treeData!).then((resp) => {
+            api_initSQLEditor(state.treeData!).then((resp) => {
                 console.log("getDatabaseRole resp", resp);
                 state.treeData!.contextId = resp.data;
             })
+            //查询全部Server
+            api_findAllServer().then((resp) => {
+                console.log("findAllServer resp", resp);
+                const all_server: ISelect[] = resp.data.map((item) => {
+                    const server = item.split('\r\n');
+                    if (server.length > 1) return { key: item, label: item[1] }
+                    return { key: item, label: item[0] }
+                })
+                console.log('all_server', all_server)
+                state.server_option = all_server;
+            })
+
         });
         const codeRef: Ref = ref(null); //sql对象
         const resultRef: Ref = ref(null); //结果集对象
@@ -150,7 +173,13 @@ export default defineComponent({
         const state: IState = reactive({
             tabId: tabId.value,
             treeData: undefined, //树形菜单值
-            sql: 'select \n 123'
+            sql: 'select \n 123',
+            server_val: '请选择服务',
+            server_option: [],
+            db_val: '请选择数据库',
+            db_option: [],
+            schema_val: '请选择模式',
+            schema_option: [],
         })
         console.log('state', state)
         // const state = reactive({
@@ -169,7 +198,7 @@ export default defineComponent({
             const sql = codeRef.value.getSqlValue();
             console.log('handleFormat getSqlValue', sql)
 
-            formatSQL(sql).then((resp) => {
+            api_formatSQL(sql).then((resp) => {
                 console.log("formatSQL resp", resp);
                 codeRef.value.setSqlValue(resp.data);
             })
@@ -181,8 +210,15 @@ export default defineComponent({
             data.sql = sql;
             Object.assign(data, state.treeData);
             console.log("request data", data);
-            executeSQL(data).then((resp) => {
-                console.log("executeSQL resp", resp);
+            api_executeSQL(data).then((resp1) => {
+                console.log("api_executeSQL resp1", resp1);
+                api_sqleditorStatus(state.treeData!.contextId).then((resp2) => {
+                    console.log("api_sqleditorStatus resp2", resp2);
+
+                    api_sqleditorPoll(state.treeData!.contextId).then((respPoll) => {
+                        console.log("api_sqleditorPoll respPoll", respPoll);
+                    })
+                })
             })
         }
         const handleStop = () => {
@@ -227,43 +263,6 @@ export default defineComponent({
     data() {
         return {
             activeClass: "name",
-            ip_option: [
-                {
-                    value: "localhost1",
-                    label: "localhost1",
-                },
-                {
-                    value: "localhost2",
-                    label: "localhost2",
-                },
-                {
-                    value: "localhost3",
-                    label: "localhost3",
-                },
-            ],
-            ip_val: "localhost1",
-            db_option: [
-                {
-                    value: "postgres",
-                    label: "postgres",
-                },
-                {
-                    value: "test",
-                    label: "test",
-                },
-            ],
-            db_val: "postgres",
-            schema_option: [
-                {
-                    value: "0",
-                    label: "请选择模式",
-                },
-                {
-                    value: "public",
-                    label: "public",
-                },
-            ],
-            schema_val: "0",
         };
     },
 })

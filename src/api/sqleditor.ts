@@ -7,10 +7,10 @@ import {
 } from '@/types'
 
 
-export async function initSQLEditor(data: TreeNode<any>) {
+export async function api_initSQLEditor(data: TreeNode<any>) {
     return await http.request<ResponseData<string>>('/sqleditor/initSQLEditor', { method: 'POST', data });
 }
-export async function formatSQL(data: string) {
+export async function api_formatSQL(data: string) {
     const headers = { 'content-type': 'text/plain' };
     return await http.request<ResponseData<string>>('/sqleditor/formatSQL', { method: 'POST', headers, data });
 }
@@ -19,6 +19,27 @@ export async function formatSQL(data: string) {
  * @param data 
  * @returns 
  */
-export async function executeSQL(data: SQLEditorExec) {
+export async function api_executeSQL(data: SQLEditorExec) {
     return await http.request<ResponseData<string>>('/sqleditor/executeSQL', { method: 'POST', data });
+}
+/**
+ * 查询全部Server
+ * @returns 
+ */
+export async function api_findAllServer() {
+    return await http.request<ResponseData<string[]>>('/sqleditor/findAllServer', { method: 'POST' });
+}
+/**
+ * 查询SQLEditor执行状态
+ * @returns 
+ */
+ export async function api_sqleditorStatus(contextId:string) {
+    return await http.request<ResponseData<string[]>>('/sqleditor/status/'+contextId, { method: 'GET' });
+}
+/**
+ * 查询SQLEditor执行结果集
+ * @returns 
+ */
+ export async function api_sqleditorPoll(contextId:string) {
+    return await http.request<ResponseData<string[]>>('/sqleditor/poll/'+contextId, { method: 'GET' });
 }
