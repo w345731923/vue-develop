@@ -49,19 +49,39 @@
             </div>
             <div class="row-connect">
                 <el-space wrap>
-                    <el-select v-model="state.server_val" placeholder="localhost" size="small">
+                    <el-select v-model="state.server_val" size="small" class="el-server">
+                        <template #prefix> <img src="../../assets/hgdb16.png" /> </template>
                         <el-option v-for="item in state.server_option" :key="item.key" :label="item.label"
                             :value="item.key">
+                            <span><img src="../../assets/hgdb16.png" style="margin: 0px 4px -2px -4px;" /></span>
+                            <span style="
+                                color: var(--el-text-color-secondary);
+                                font-size: 13px;
+                                ">{{ item.label }}</span>
                         </el-option>
                     </el-select>
                     <el-select v-model="state.db_val" placeholder="postgres" size="small">
+                        <template #prefix> <img src="../../assets/database.png" /> </template>
+
                         <el-option v-for="item in state.db_option" :key="item.key" :label="item.label"
                             :value="item.key">
+                            <span><img src="../../assets/database.png" style="margin: 0px 4px -2px -4px;" /></span>
+                            <span style="
+                                color: var(--el-text-color-secondary);
+                                font-size: 13px;
+                                ">{{ item.label }}</span>
                         </el-option>
                     </el-select>
                     <el-select v-model="state.schema_val" size="small">
+                        <template #prefix> <img src="../../assets/schema.png" /> </template>
+
                         <el-option v-for="item in state.schema_option" :key="item.key" :value="item.key"
                             :label="item.label">
+                            <span><img src="../../assets/schema.png" style="margin: 0px 4px -2px -4px;" /></span>
+                            <span style="
+                                color: var(--el-text-color-secondary);
+                                font-size: 13px;
+                                ">{{ item.label }}</span>
                         </el-option>
                     </el-select>
                     <el-button size="small" color="#f2f2f2" @click="handleExecute">
@@ -109,8 +129,9 @@ import {
 } from "@/types";
 import {
     api_initSQLEditor, api_formatSQL, api_executeSQL, api_findAllServer, api_sqleditorStatus, api_sqleditorPoll
+    , api_changeServerItem
 } from "@/api/sqleditor";
-import { getNodePath } from "@/utils/tree";
+import { ElMessage } from "element-plus";
 interface ISelect {
     key: string;
     label: string;
@@ -157,13 +178,13 @@ export default defineComponent({
             //查询全部Server
             api_findAllServer().then((resp) => {
                 console.log("findAllServer resp", resp);
-                const all_server: ISelect[] = resp.data.map((item) => {
+                resp.data.map((item) => {
                     const server = item.split('\r\n');
-                    if (server.length > 1) return { key: item, label: item[1] }
-                    return { key: item, label: item[0] }
+                    let label = item[0]
+                    if (server.length > 1) label = item[1]
+                    state.server_option.push({ key: item, label: label })
                 })
-                console.log('all_server', all_server)
-                state.server_option = all_server;
+                console.log('state.server_option', state.server_option)
             })
 
         });
@@ -174,12 +195,12 @@ export default defineComponent({
             tabId: tabId.value,
             treeData: undefined, //树形菜单值
             sql: 'select \n 123',
-            server_val: '请选择服务',
-            server_option: [],
-            db_val: '请选择数据库',
-            db_option: [],
-            schema_val: '请选择模式',
-            schema_option: [],
+            server_val: '-1',
+            server_option: [{ key: '-1', label: '请选择服务' }],
+            db_val: '-1',
+            db_option: [{ key: '-1', label: '请选择数据库' }],
+            schema_val: '-1',
+            schema_option: [{ key: '-1', label: '请选择模式' }],
         })
         console.log('state', state)
         // const state = reactive({
@@ -194,16 +215,32 @@ export default defineComponent({
         const handleExport = () => {
             alert('导出')
         }
+        //格式化
         const handleFormat = () => {
-            const sql = codeRef.value.getSqlValue();
-            console.log('handleFormat getSqlValue', sql)
-
+            let sql = codeRef.value.getSelection();
+            let noSelect = false;
+            if (sql.length == 0) {
+                noSelect = true;
+                sql = codeRef.value.getSqlValue();
+            }
+            if (sql.trim().length == 0) return;
+            console.log('handleFormat getSQL=', noSelect, sql.length,sql)
             api_formatSQL(sql).then((resp) => {
                 console.log("formatSQL resp", resp);
-                codeRef.value.setSqlValue(resp.data);
+                if (noSelect)
+                    codeRef.value.setSqlValue(resp.data);
+                else
+                    codeRef.value.replaceSelection(resp.data);
             })
         }
         const handleExecute = () => {
+            if (state.server_val == '-1' || state.db_val == '-1' || state.schema_val == '-1') {
+                ElMessage({
+                    message: '请选择要执行的数据库',
+                    type: "warning",
+                });
+                return;
+            }
             const sql = codeRef.value.getSqlValue();
             console.log('handleExecute sql = ', sql)
             const data = {} as SQLEditorExec;
@@ -212,14 +249,28 @@ export default defineComponent({
             console.log("request data", data);
             api_executeSQL(data).then((resp1) => {
                 console.log("api_executeSQL resp1", resp1);
+                loopForQueryStatus(0)
+            })
+        }
+        /**
+         * 递归查询执行状态，状态=finish，执行查询结果
+         */
+        const loopForQueryStatus = (time = 1000) => {
+            setTimeout(() => {
                 api_sqleditorStatus(state.treeData!.contextId).then((resp2) => {
                     console.log("api_sqleditorStatus resp2", resp2);
-
-                    api_sqleditorPoll(state.treeData!.contextId).then((respPoll) => {
-                        console.log("api_sqleditorPoll respPoll", respPoll);
-                    })
+                    if (resp2.data.status != 'finish') {
+                        //查询未结束，继续查询
+                        loopForQueryStatus();
+                    } else {
+                        //显示查询结果
+                        api_sqleditorPoll(state.treeData!.contextId).then((respPoll) => {
+                            console.log("api_sqleditorPoll respPoll", respPoll);
+                            alert('执行完成')
+                        })
+                    }
                 })
-            })
+            }, time);
         }
         const handleStop = () => {
             alert('停止')
@@ -306,4 +357,6 @@ export default defineComponent({
     cursor: row-resize;
     background-color: var(--mdc-theme-background, #dedede);
 }
+
+.el-server {}
 </style>

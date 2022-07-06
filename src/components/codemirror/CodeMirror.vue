@@ -43,13 +43,23 @@ export default {
         this.$refs.myCm.codemirror.showHint({ completeSingle: false });
       }
     },
+    //得到sql
     getSqlValue() {
       return this.editor.getValue();
     },
+    //设置sql
     setSqlValue(content) {
       console.log('setSqlValue content = ', content)
       toRaw(this.editor).setValue(content);
-    }
+    },
+    //获取鼠标选中区域的代码
+    getSelection() {
+      return this.editor.getSelection();
+    },
+    //替换选中区域的代码
+    replaceSelection(content) {
+      toRaw(this.editor).replaceSelection(content);
+    },
   },
   mounted() {
     console.log('this.$refs', this.key, this.$refs)
@@ -80,6 +90,7 @@ export default {
       // addNew: bool启用后，这会为现有选择添加新范围，而不是替换它。默认行为是在Mac OS上为命令单击启用此功能，并在其他平台上按住Control键单击。
       // moveOnDrag: bool 当鼠标甚至拖动编辑器内部的内容时，它控制是复制（false）还是移动（true）。默认情况下，通过在Mac OS上单击鼠标右键并在其他位置按住Ctrl键单击来启用此功能。
       // lineWrapping: boolean CodeMirror是否应滚动或换行以排长行。默认为false（滚动）。
+      // lineWrapping: true,
       lineNumbers: true, // 是否在编辑器左侧显示行号。
       // firstLineNumber: integer 在哪个数字开始计数行。默认值为1。
       // lineNumberFormatter: function(line: integer) → string  用于格式化行号的函数。该函数传递给行号，并应返回将在装订线中显示的字符串。
@@ -111,7 +122,7 @@ export default {
       // maxHighlightLength: number 当突出显示长行时，为了保持响应，编辑器将放弃并简单地将行的其余部分设置为纯文本，当它到达某个位置时。默认值为10 000.您可以将其设置Infinity为关闭此行为。
       // viewportMargin: integer 指定在当前滚动到视图中的文档部分上方和下方呈现的行数。这会影响滚动时所需的更新量以及此类更新所做的工作量。您通常应该将其保留为默认值10.
       matchBrackets: true,
-      styleActiveLine: true, // 高亮选中行
+      styleActiveLine: true, // 当前行背景高亮
       // autofocus: true,
       // extraKeys: { Ctrl: "autocomplete" }, //自定义快捷键
       hintOptions: {
@@ -123,10 +134,11 @@ export default {
         // },
       },
     });
-    // editor.on("keypress", (editor1) => {
-    //   editor1.showHint();
-    // });
-
+    //输入提示
+    this.editor.on("keypress", (editor1) => {
+      editor1.showHint();
+    });
+    //输入赋值
     this.editor.on('change', cm => {
       cm.save();
       this.code = cm.getValue();

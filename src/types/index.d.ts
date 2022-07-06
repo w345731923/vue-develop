@@ -470,3 +470,20 @@ export interface BaseDataType {
   imageUrl: string,
   length: number,
 }
+
+//==============SQLEditor=============
+export interface SqlEditorStatus {
+  message: string
+  status: string,
+}
+export interface SqlEditorPoll {
+  dataModel: DataModel
+  duration: number,
+  errCode: number,
+  errMsg: string,
+  fetch_end: number,
+  fetch_start: number,
+  point: number,
+  sql: string,
+}
+
