@@ -116,7 +116,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, watch, Ref, toRefs, reactive, onMounted } from "vue";
+import { defineComponent, ref, watch, Ref, toRefs, reactive, onMounted } from "vue";
 import { } from "@/api/treeNode";
 import { ResponseData } from "@/types";
 import CodeMirror from "@/components/codemirror/CodeMirror.vue";
@@ -173,24 +173,22 @@ export default defineComponent({
                 console.log("create-sqleditor createSession treeData = ", state.treeData);
                 sessionStorage.setItem("create-sqleditor", "");
             }
-            if (state.treeData) {
-                //初始化sql编辑器
-                api_initSQLEditor(state.treeData!).then((resp) => {
-                    console.log("getDatabaseRole resp", resp);
-                    state.treeData!.contextId = resp.data;
-                })
-            }
+            // if (state.treeData) {
+            //初始化sql编辑器
+            api_initSQLEditor(state.treeData!).then((resp) => {
+                console.log("getDatabaseRole resp", resp);
+                state.treeData!.contextId = resp.data;
+            })
+            // }
 
             //查询全部Server
             api_findAllServer().then((resp) => {
                 // console.log("findAllServer resp", resp);
                 resp.data.map((item) => {
                     const server = item.split('\r\n');
-                    let label = item[0]
-                    if (server.length > 1) label = item[1]
-                    state.server_option.push({ key: item, label: label })
+                    if (server.length > 1) state.server_option.push({ key: item, label: server[1] })
+                    else state.server_option.push({ key: item, label: server[0] })
                 })
-                // console.log('state.server_option', state.server_option)
                 //设置默认值
                 setDefault()
             })
@@ -241,7 +239,11 @@ export default defineComponent({
                     api_findDatabases(queryDB).then((resp) => {
                         // console.log("api_findDatabases resp", resp);
                         //设置all database
-                        state.db_option.concat(resp.data)
+                        state.db_option.splice(1);
+                        resp.data.forEach((item) => {
+                            state.db_option.push(item)
+                        })
+
                         if (db) {
                             state.db_val = db;//设置默认的db
                             const querySchema = {
@@ -254,7 +256,10 @@ export default defineComponent({
                             api_findSchemas(querySchema).then((respSchema) => {
                                 // console.log("api_findSchemas respSchema", respSchema);
                                 //设置all schema
-                                state.schema_option.concat(resp.data)
+                                state.schema_option.splice(1);
+                                respSchema.data.forEach((item) => {
+                                    state.schema_option.push(item)
+                                })
                                 if (schema) state.schema_val = schema;//设置默认的schema
                             })
                         }
