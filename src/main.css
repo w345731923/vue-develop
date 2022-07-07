@@ -1,37 +1,44 @@
-body{
+body {
     margin: 0;
     /* height: 100vh; */
 }
+
 .pane_flex {
     /* display: flex; */
-    flex: 1 1 0%;/**flex-grow   flex-shrink    flex-basis
+    flex: 1 1 0%;
+    /**flex-grow   flex-shrink    flex-basis
     /* z-index: 0; */
     overflow: auto;
     height: auto;
 }
-._content{
+
+._content {
     display: flex;
     flex-direction: row;
     flex: 1;
     /* overflow: hidden;    */
     z-index: 0;
 }
-.planB{
+
+.planB {
     flex: 1 1 0px;
 }
-.split_flex_row{
+
+.split_flex_row {
     display: flex;
     flex-direction: row;
     flex: 1;
     overflow: hidden;
 }
-.theme_flex_column{
-    height:100vh;
-    display:flex;
-    padding:0!important;
-    flex-direction:column;
-    overflow:hidden
+
+.theme_flex_column {
+    height: 100vh;
+    display: flex;
+    padding: 0 !important;
+    flex-direction: column;
+    overflow: hidden
 }
+
 .resizer_controls {
     position: relative;
     flex: 0 1 auto;
@@ -40,27 +47,40 @@ body{
     background-color: var(--mdc-theme-background, #dedede);
     z-index: 0;
 }
+
 .resizer_controls_column {
-    flex-direction:column;
-    position:relative;
-    cursor:row-resize;
-    height:6px;
-    width:auto;
+    flex-direction: column;
+    position: relative;
+    cursor: row-resize;
+    height: 6px;
+    width: auto;
     z-index: 1;
 }
+
 /**tab自适应宽度*/
 .el-tabs {
     width: 100%;
 }
+
 /**清空tab标签下的间距*/
 .el-tabs .el-tabs__header {
     margin: 0;
 }
+
 /**tab内容高度填充外层设置高度*/
-.el-tabs .el-tabs__content,.el-tabs .el-tabs__content .el-tab-pane{
+.el-tabs .el-tabs__content,
+.el-tabs .el-tabs__content .el-tab-pane {
     height: 100%;
 }
+
 /**对话框的body上间距调整*/
-.el-dialog__body{
+.el-dialog__body {
     padding: .75rem;
+}
+
+/**下拉框内容背景色*/
+.el-select-dropdown__item.selected,
+.el-select-dropdown__item:hover,
+.el-select-dropdown__item.hover {
+    background: #e6f7ff;
 }

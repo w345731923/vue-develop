@@ -25,11 +25,11 @@
                             <Avatar />
                         </el-icon>格式化
                     </el-button>
-                    <el-button size="small" color="#f2f2f2">
+                    <!-- <el-button size="small" color="#f2f2f2">
                         <el-icon>
                             <Avatar />
                         </el-icon>文本
-                    </el-button>
+                    </el-button> -->
                     <el-button size="small" color="#f2f2f2">
                         <el-icon>
                             <Avatar />
@@ -49,7 +49,7 @@
             </div>
             <div class="row-connect">
                 <el-space wrap>
-                    <el-select v-model="state.server_val" size="small" class="el-server">
+                    <el-select v-model="state.server_val" size="small" class="el-server" @change="handServerChange">
                         <template #prefix> <img src="../../assets/hgdb16.png" /> </template>
                         <el-option v-for="item in state.server_option" :key="item.key" :label="item.label"
                             :value="item.key">
@@ -63,25 +63,23 @@
                     <el-select v-model="state.db_val" placeholder="postgres" size="small">
                         <template #prefix> <img src="../../assets/database.png" /> </template>
 
-                        <el-option v-for="item in state.db_option" :key="item.key" :label="item.label"
-                            :value="item.key">
+                        <el-option v-for="item in state.db_option" :key="item" :label="item" :value="item">
                             <span><img src="../../assets/database.png" style="margin: 0px 4px -2px -4px;" /></span>
                             <span style="
                                 color: var(--el-text-color-secondary);
                                 font-size: 13px;
-                                ">{{ item.label }}</span>
+                                ">{{ item }}</span>
                         </el-option>
                     </el-select>
                     <el-select v-model="state.schema_val" size="small">
                         <template #prefix> <img src="../../assets/schema.png" /> </template>
 
-                        <el-option v-for="item in state.schema_option" :key="item.key" :value="item.key"
-                            :label="item.label">
+                        <el-option v-for="item in state.schema_option" :key="item" :value="item" :label="item">
                             <span><img src="../../assets/schema.png" style="margin: 0px 4px -2px -4px;" /></span>
                             <span style="
                                 color: var(--el-text-color-secondary);
                                 font-size: 13px;
-                                ">{{ item.label }}</span>
+                                ">{{ item }}</span>
                         </el-option>
                     </el-select>
                     <el-button size="small" color="#f2f2f2" @click="handleExecute">
@@ -129,9 +127,14 @@ import {
 } from "@/types";
 import {
     api_initSQLEditor, api_formatSQL, api_executeSQL, api_findAllServer, api_sqleditorStatus, api_sqleditorPoll
-    , api_changeServerItem
+    , api_changeServerItem, api_findDatabases, api_findSchemas
 } from "@/api/sqleditor";
+import { getNodePathServerGroup, getNodePathServerName, getNodePathDB, getNodePathSchema } from "@/utils/tree";
+
 import { ElMessage } from "element-plus";
+const DB_Text = '请选择数据库';
+const Schema_Text = '请选择模式';
+
 interface ISelect {
     key: string;
     label: string;
@@ -143,9 +146,9 @@ interface IState {
     server_val: string;
     server_option: ISelect[];
     db_val: string;
-    db_option: ISelect[];
+    db_option: string[];
     schema_val: string;
-    schema_option: ISelect[];
+    schema_option: string[];
 }
 export default defineComponent({
     name: "SQLEditor",
@@ -170,23 +173,27 @@ export default defineComponent({
                 console.log("create-sqleditor createSession treeData = ", state.treeData);
                 sessionStorage.setItem("create-sqleditor", "");
             }
-            //初始化sql编辑器
-            api_initSQLEditor(state.treeData!).then((resp) => {
-                console.log("getDatabaseRole resp", resp);
-                state.treeData!.contextId = resp.data;
-            })
+            if (state.treeData) {
+                //初始化sql编辑器
+                api_initSQLEditor(state.treeData!).then((resp) => {
+                    console.log("getDatabaseRole resp", resp);
+                    state.treeData!.contextId = resp.data;
+                })
+            }
+
             //查询全部Server
             api_findAllServer().then((resp) => {
-                console.log("findAllServer resp", resp);
+                // console.log("findAllServer resp", resp);
                 resp.data.map((item) => {
                     const server = item.split('\r\n');
                     let label = item[0]
                     if (server.length > 1) label = item[1]
                     state.server_option.push({ key: item, label: label })
                 })
-                console.log('state.server_option', state.server_option)
+                // console.log('state.server_option', state.server_option)
+                //设置默认值
+                setDefault()
             })
-
         });
         const codeRef: Ref = ref(null); //sql对象
         const resultRef: Ref = ref(null); //结果集对象
@@ -197,12 +204,67 @@ export default defineComponent({
             sql: 'select \n 123',
             server_val: '-1',
             server_option: [{ key: '-1', label: '请选择服务' }],
-            db_val: '-1',
-            db_option: [{ key: '-1', label: '请选择数据库' }],
-            schema_val: '-1',
-            schema_option: [{ key: '-1', label: '请选择模式' }],
+            db_val: DB_Text,
+            db_option: [DB_Text],
+            schema_val: Schema_Text,
+            schema_option: [Schema_Text],
         })
-        console.log('state', state)
+        // console.log('state', state)
+        const setDefault = () => {
+            if (state.treeData && state.treeData!.nodePath && state.treeData!.connectionId) {
+                const group = getNodePathServerGroup(state.treeData!.nodePath);
+                const server = getNodePathServerName(state.treeData!.nodePath);
+                const db = getNodePathDB(state.treeData!.nodePath);
+                const schema = getNodePathSchema(state.treeData!.nodePath);
+                // console.log('group=', group)
+                // console.log('server=', server)
+                // console.log('db=', db)
+                // console.log('schema=', schema)
+                let serverDef = server;
+                if (group) {
+                    serverDef = group + '\r\n' + server;
+                }
+                console.log('serverDef=', serverDef)
+                //设置默认的server
+                state.server_val = serverDef;
+                /**
+                 * 如果有server，查询database
+                 */
+                if (server) {
+                    //根据server查询database下拉列表
+                    const queryDB = {
+                        contextId: state.treeData!.contextId,
+                        newServerItem: serverDef,
+                        newDatabaseItem: null,
+                        newSchemaItem: null,
+                    }
+                    api_findDatabases(queryDB).then((resp) => {
+                        // console.log("api_findDatabases resp", resp);
+                        //设置all database
+                        state.db_option.concat(resp.data)
+                        if (db) {
+                            state.db_val = db;//设置默认的db
+                            const querySchema = {
+                                contextId: state.treeData!.contextId,
+                                newServerItem: serverDef,
+                                newDatabaseItem: db,
+                                newSchemaItem: null,
+                            }
+                            ////根据db查询schema下拉列表
+                            api_findSchemas(querySchema).then((respSchema) => {
+                                // console.log("api_findSchemas respSchema", respSchema);
+                                //设置all schema
+                                state.schema_option.concat(resp.data)
+                                if (schema) state.schema_val = schema;//设置默认的schema
+                            })
+                        }
+
+
+                    })
+                }
+
+            }
+        }
         // const state = reactive({
         //   identity: props.identity,
         // });
@@ -224,7 +286,7 @@ export default defineComponent({
                 sql = codeRef.value.getSqlValue();
             }
             if (sql.trim().length == 0) return;
-            console.log('handleFormat getSQL=', noSelect, sql.length,sql)
+            console.log('handleFormat getSQL=', noSelect, sql.length, sql)
             api_formatSQL(sql).then((resp) => {
                 console.log("formatSQL resp", resp);
                 if (noSelect)
@@ -234,7 +296,7 @@ export default defineComponent({
             })
         }
         const handleExecute = () => {
-            if (state.server_val == '-1' || state.db_val == '-1' || state.schema_val == '-1') {
+            if (state.server_val == '-1' || state.db_val == DB_Text || state.schema_val == '-1') {
                 ElMessage({
                     message: '请选择要执行的数据库',
                     type: "warning",
@@ -297,6 +359,18 @@ export default defineComponent({
             };
             return false;
         };
+        //server选择器
+        const handServerChange = (val: string) => {
+            const data = {
+                contextId: state.treeData!.contextId,
+                newServerItem: val,
+                newDatabaseItem: null,
+                newSchemaItem: null,
+            }
+            api_changeServerItem(data).then((resp) => {
+                console.log("api_changeServerItem resp", resp);
+            })
+        }
         return {
             // ...toRefs(state),
             codeRef,
@@ -308,7 +382,8 @@ export default defineComponent({
             handleExport,
             handleFormat,
             handleExecute,
-            handleStop
+            handleStop,
+            handServerChange
         };
     },
     data() {

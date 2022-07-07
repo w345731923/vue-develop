@@ -21,7 +21,7 @@ export interface Register {
 export interface EditableTabs {
   name: string;
   title: string;
-  currentView: any
+  currentView: any;
 }
 
 export interface LoginResp {
@@ -486,4 +486,10 @@ export interface SqlEditorPoll {
   point: number,
   sql: string,
 }
-
+//切换Server
+export interface SqlEditorItemChangeParam {
+  contextId: string,//SQL编辑器的ID
+  newServerItem: string | null,//在SQL编辑器中切换Database下拉框后选中的值
+  newDatabaseItem: string | null,//在SQL编辑器中切换Schema下拉框后选中的值
+  newSchemaItem: string | null,//在SQL编辑器中切换Server下拉框后选中的值
+}

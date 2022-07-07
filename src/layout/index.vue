@@ -31,7 +31,7 @@ interface TreeNodeState {
 import vHeader from "@/layout/components/Header.vue";
 import vSidebar from "@/layout/components/Sidebar.vue";
 import vContent from "@/layout/components/Content.vue";
-import { getNodePath } from "@/utils/tree";
+import { getNodePath, getNodePathServerName } from "@/utils/tree";
 import Node from "element-plus/es/components/tree/src/model/node";
 
 /**
@@ -49,6 +49,10 @@ export default defineComponent({
   setup() {
     onMounted(() => {
       // dragSQLEditor();
+      //清空缓存数据
+      sessionStorage.setItem("tabId", '');
+      sessionStorage.setItem("create-sqleditor", '');
+      sessionStorage.setItem("table-design-session", "");
     });
     //TreeNodeState
     const state: TreeNodeState = reactive({
@@ -106,7 +110,6 @@ export default defineComponent({
 
         state.tabActiveName = id;
       }
-
     }
     /**
      * 添加tabs页,SQL编辑器
@@ -114,12 +117,21 @@ export default defineComponent({
     const addSQLEditor = () => {
       console.log("LayoutIndex addSQLEditor");
       const tabId = 'sql' + new Date().getTime();
-      const newTitle = `*<localhost>无标题`;
+      let newTitle = `*<localhost>无标题`;
+      //获取左侧树形菜单的数据
+      const val = sessionStorage.getItem("create-sqleditor");
+      if (val) {
+        const treeData = JSON.parse(val);
+        console.log('treeData', treeData.nodePath)
+        //是否打开连接，打开连接才会传默认值
+        if (treeData.connectionId != null && treeData.connectionId != '')
+          newTitle = '<' + getNodePathServerName(treeData.nodePath) + '>无标题';
+      }
       state.editableTabs.push({
         title: newTitle,
         name: tabId,
         currentView: "sqleditor",
-        // content: <SQLEditor identity={tabId} />,
+        // content: <SQLEditor identity={tabId} />,        
       });
       state.tabActiveName = tabId;
     };

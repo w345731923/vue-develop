@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm, SQLDropPreview, TableSimple, SqlEditorPoll, SqlEditorStatus, SQLEditorExec
+    SchemaEditForm, SQLDropPreview, SqlEditorItemChangeParam, SqlEditorPoll, SqlEditorStatus, SQLEditorExec
 } from '@/types'
 
 
@@ -30,6 +30,20 @@ export async function api_findAllServer() {
     return await http.request<ResponseData<string[]>>('/sqleditor/findAllServer', { method: 'POST' });
 }
 /**
+ * 切换db节点
+ * @returns 
+ */
+export async function api_findDatabases(data: SqlEditorItemChangeParam) {
+    return await http.request<ResponseData<string[]>>('/sqleditor/findDatabases', { method: 'POST', data });
+}
+/**
+ * 切换schema节点
+ * @returns 
+ */
+export async function api_findSchemas(data: SqlEditorItemChangeParam) {
+    return await http.request<ResponseData<string[]>>('/sqleditor/findSchemas', { method: 'POST', data });
+}
+/**
  * 查询SQLEditor执行状态
  * @returns 
  */
@@ -47,6 +61,6 @@ export async function api_sqleditorPoll(contextId: string) {
  * 切换server节点
  * @returns 
  */
- export async function api_changeServerItem( ) {
-    return await http.request<ResponseData<SqlEditorPoll[]>>('/sqleditor/changeServerItem' , { method: 'POST' });
+export async function api_changeServerItem(data: SqlEditorItemChangeParam) {
+    return await http.request<ResponseData<SqlEditorPoll[]>>('/sqleditor/changeServerItem', { method: 'POST', data });
 }

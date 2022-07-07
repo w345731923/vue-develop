@@ -1001,7 +1001,7 @@ export default defineComponent({
     /**
      * 打开表
      */
-    const openTable = (node : Node) => {
+    const openTable = (node: Node) => {
       console.log("open table");
       const data = node.data as TreeNode<TableSimple>;
       data.nodePath = getNodePath(node);
@@ -1019,11 +1019,11 @@ export default defineComponent({
         emit("openTableView", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')', node);
       });
       // emit("openTableView", '111', '111', node);
-      
-        // const names = data.nodePath.split("/");
-        // //id:oid, title:表名@数据库名.模式名
-        // emit("openTableView", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')', node);
-    
+
+      // const names = data.nodePath.split("/");
+      // //id:oid, title:表名@数据库名.模式名
+      // emit("openTableView", data.object.oid + '', names[9] + "@" + names[7] + "." + names[5] + '(' + names[3] + ')', node);
+
     }
 
     /**

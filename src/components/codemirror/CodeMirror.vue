@@ -62,7 +62,7 @@ export default {
     },
   },
   mounted() {
-    console.log('this.$refs', this.key, this.$refs)
+    // console.log('this.$refs', this.key, this.$refs)
     /**
      * api：https://codemirror.net/doc/manual.html#api
      */

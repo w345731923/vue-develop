@@ -43,3 +43,36 @@ export const getConnectionId = (node: Node) => {
         nodeData.object.databaseName;
     return localStorage.getItem(key);
 };
+/**
+ * 根据nodepath获取某个节点的值
+ * @param nodePath 
+ * @param startName 
+ * @param endName 
+ * @returns 
+ */
+const getNodePathObj = (nodePath: string, startName: string, endName: string) => {
+    //hgdbdeveloper://serverGroupName/11/serverName/test123/databaseName/postgres/schemaName/public/tableName/a
+    //把前面部分截取
+    const n = nodePath.substring(16);
+    let startIndex = n.indexOf(startName);
+    if (startIndex == -1) {
+        return ''
+    }
+    startIndex += startName.length;
+    let endIndex = n.indexOf(endName);
+    if (endIndex == -1) endIndex = n.length;
+    const obj = n.substring(startIndex, endIndex);
+    return obj;
+};
+export const getNodePathServerGroup = (nodePath: string) => {
+    return getNodePathObj(nodePath, 'serverGroupName/', '/serverName');
+};
+export const getNodePathServerName = (nodePath: string) => {
+    return getNodePathObj(nodePath, 'serverName/', '/databaseName');
+};
+export const getNodePathDB = (nodePath: string) => {
+    return getNodePathObj(nodePath, 'databaseName/', '/schemaName');
+};
+export const getNodePathSchema = (nodePath: string) => {
+    return getNodePathObj(nodePath, 'schemaName/', '/tableName');
+};
