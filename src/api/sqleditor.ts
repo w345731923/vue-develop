@@ -58,6 +58,14 @@ export async function api_sqleditorPoll(contextId: string) {
     return await http.request<ResponseData<SqlEditorPoll[]>>('/sqleditor/poll/' + contextId, { method: 'GET' });
 }
 /**
+ * SQLEditor点击停止
+ * @returns 
+ */
+ export async function api_sqleditorCancle(contextId: string) {
+    return await http.request<ResponseData<SqlEditorPoll[]>>('sqleditor/cancle/' + contextId, { method: 'GET' });
+}
+
+/**
  * 切换server节点
  * @returns 
  */

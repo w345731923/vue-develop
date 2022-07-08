@@ -82,7 +82,7 @@
                                 ">{{ item }}</span>
                         </el-option>
                     </el-select>
-                    <el-button size="small" color="#f2f2f2" @click="handleExecute">
+                    <el-button size="small" color="#f2f2f2" @click="handleExecute" >
                         <el-icon>
                             <Avatar />
                         </el-icon>执行
@@ -127,7 +127,7 @@ import {
 } from "@/types";
 import {
     api_initSQLEditor, api_formatSQL, api_executeSQL, api_findAllServer, api_sqleditorStatus, api_sqleditorPoll
-    , api_changeServerItem, api_findDatabases, api_findSchemas
+    , api_changeServerItem, api_findDatabases, api_findSchemas, api_sqleditorCancle
 } from "@/api/sqleditor";
 import { getNodePathServerGroup, getNodePathServerName, getNodePathDB, getNodePathSchema } from "@/utils/tree";
 
@@ -149,6 +149,7 @@ interface IState {
     db_option: string[];
     schema_val: string;
     schema_option: string[];
+    execBtn: boolean;//执行按钮是否禁用
 }
 export default defineComponent({
     name: "SQLEditor",
@@ -190,7 +191,7 @@ export default defineComponent({
                     else state.server_option.push({ key: item, label: server[0] })
                 })
                 //设置默认值
-                setDefault()
+                setServerDefault()
             })
         });
         const codeRef: Ref = ref(null); //sql对象
@@ -206,69 +207,71 @@ export default defineComponent({
             db_option: [DB_Text],
             schema_val: Schema_Text,
             schema_option: [Schema_Text],
+            execBtn: false,//执行默认禁用
         })
-        // console.log('state', state)
-        const setDefault = () => {
+        /**
+         * 初始化三个下拉框默认值
+         */
+        const setServerDefault = () => {
             if (state.treeData && state.treeData!.nodePath && state.treeData!.connectionId) {
                 const group = getNodePathServerGroup(state.treeData!.nodePath);
                 const server = getNodePathServerName(state.treeData!.nodePath);
-                const db = getNodePathDB(state.treeData!.nodePath);
-                const schema = getNodePathSchema(state.treeData!.nodePath);
+                const dbDef = getNodePathDB(state.treeData!.nodePath);
+                const schemaDef = getNodePathSchema(state.treeData!.nodePath);
                 // console.log('group=', group)
                 // console.log('server=', server)
                 // console.log('db=', db)
                 // console.log('schema=', schema)
                 let serverDef = server;
-                if (group) {
-                    serverDef = group + '\r\n' + server;
-                }
+                if (group) serverDef = group + '\r\n' + server;
                 console.log('serverDef=', serverDef)
                 //设置默认的server
                 state.server_val = serverDef;
                 /**
                  * 如果有server，查询database
                  */
-                if (server) {
-                    //根据server查询database下拉列表
-                    const queryDB = {
+                if (server) setDatabaseDefault(serverDef, dbDef, schemaDef)
+            }
+        }
+        /**
+         * 设置db和schema的默认值，可用于初始化默认值和切换server
+         */
+        const setDatabaseDefault = (serverDef: string, dbDef: string, schemaDef: string) => {
+            state.execBtn = true;//当server被开启，启用执行激活
+            //根据server查询database下拉列表
+            const queryDB = {
+                contextId: state.treeData!.contextId,
+                newServerItem: serverDef,
+                newDatabaseItem: null,
+                newSchemaItem: null,
+            }
+            api_findDatabases(queryDB).then((resp) => {
+                // console.log("api_findDatabases resp", resp);
+                //设置all database
+                state.db_option.splice(1);
+                state.schema_option.splice(1);
+                resp.data.forEach((item) => {
+                    state.db_option.push(item)
+                })
+
+                if (dbDef) {
+                    state.db_val = dbDef;//设置默认的db
+                    const querySchema = {
                         contextId: state.treeData!.contextId,
                         newServerItem: serverDef,
-                        newDatabaseItem: null,
+                        newDatabaseItem: dbDef,
                         newSchemaItem: null,
                     }
-                    api_findDatabases(queryDB).then((resp) => {
-                        // console.log("api_findDatabases resp", resp);
-                        //设置all database
-                        state.db_option.splice(1);
-                        resp.data.forEach((item) => {
-                            state.db_option.push(item)
+                    //根据db查询schema下拉列表
+                    api_findSchemas(querySchema).then((respSchema) => {
+                        //设置all schema
+                        respSchema.data.forEach((item) => {
+                            state.schema_option.push(item)
                         })
-
-                        if (db) {
-                            state.db_val = db;//设置默认的db
-                            const querySchema = {
-                                contextId: state.treeData!.contextId,
-                                newServerItem: serverDef,
-                                newDatabaseItem: db,
-                                newSchemaItem: null,
-                            }
-                            ////根据db查询schema下拉列表
-                            api_findSchemas(querySchema).then((respSchema) => {
-                                // console.log("api_findSchemas respSchema", respSchema);
-                                //设置all schema
-                                state.schema_option.splice(1);
-                                respSchema.data.forEach((item) => {
-                                    state.schema_option.push(item)
-                                })
-                                if (schema) state.schema_val = schema;//设置默认的schema
-                            })
-                        }
-
-
+                        if (schemaDef) state.schema_val = schemaDef;//设置默认的schema
                     })
                 }
-
-            }
+            })
         }
         // const state = reactive({
         //   identity: props.identity,
@@ -301,9 +304,10 @@ export default defineComponent({
             })
         }
         const handleExecute = () => {
-            if (state.server_val == '-1' || state.db_val == DB_Text || state.schema_val == '-1') {
+            // if (state.server_val == '-1' || state.db_val == DB_Text || state.schema_val == '-1') {
+            if (state.server_val == '-1') {
                 ElMessage({
-                    message: '请选择要执行的数据库',
+                    message: '请选择要执行的连接',
                     type: "warning",
                 });
                 return;
@@ -341,6 +345,9 @@ export default defineComponent({
         }
         const handleStop = () => {
             alert('停止')
+            api_sqleditorCancle(state.treeData!.contextId).then((resp1) => {
+                console.log("api_sqleditorCancle resp1", resp1);
+            })
         }
         /**
          * 拖动树形菜单的边框
@@ -374,6 +381,7 @@ export default defineComponent({
             }
             api_changeServerItem(data).then((resp) => {
                 console.log("api_changeServerItem resp", resp);
+                setDatabaseDefault(val, '', '')
             })
         }
         return {
