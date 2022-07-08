@@ -488,6 +488,7 @@ export interface SqlEditorPoll {
 }
 //切换Server
 export interface SqlEditorItemChangeParam {
+  autoCommit: boolean,
   contextId: string,//SQL编辑器的ID
   newServerItem: string | null,//在SQL编辑器中切换Database下拉框后选中的值
   newDatabaseItem: string | null,//在SQL编辑器中切换Schema下拉框后选中的值

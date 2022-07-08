@@ -60,7 +60,7 @@
                                 ">{{ item.label }}</span>
                         </el-option>
                     </el-select>
-                    <el-select v-model="state.db_val" placeholder="postgres" size="small">
+                    <el-select v-model="state.db_val" placeholder="postgres" size="small" @change="handDBChange">
                         <template #prefix> <img src="../../assets/database.png" /> </template>
 
                         <el-option v-for="item in state.db_option" :key="item" :label="item" :value="item">
@@ -71,7 +71,7 @@
                                 ">{{ item }}</span>
                         </el-option>
                     </el-select>
-                    <el-select v-model="state.schema_val" size="small">
+                    <el-select v-model="state.schema_val" size="small" @change="handSchemaChange">
                         <template #prefix> <img src="../../assets/schema.png" /> </template>
 
                         <el-option v-for="item in state.schema_option" :key="item" :value="item" :label="item">
@@ -82,7 +82,7 @@
                                 ">{{ item }}</span>
                         </el-option>
                     </el-select>
-                    <el-button size="small" color="#f2f2f2" @click="handleExecute" >
+                    <el-button size="small" color="#f2f2f2" @click="handleExecute" :disabled='state.execBtn'>
                         <el-icon>
                             <Avatar />
                         </el-icon>执行
@@ -127,7 +127,7 @@ import {
 } from "@/types";
 import {
     api_initSQLEditor, api_formatSQL, api_executeSQL, api_findAllServer, api_sqleditorStatus, api_sqleditorPoll
-    , api_changeServerItem, api_findDatabases, api_findSchemas, api_sqleditorCancle
+    , api_changeServerItem, api_changeDatabaseItem, api_changeSchemaItem, api_findDatabases, api_findSchemas, api_sqleditorCancle
 } from "@/api/sqleditor";
 import { getNodePathServerGroup, getNodePathServerName, getNodePathDB, getNodePathSchema } from "@/utils/tree";
 
@@ -149,7 +149,7 @@ interface IState {
     db_option: string[];
     schema_val: string;
     schema_option: string[];
-    execBtn: boolean;//执行按钮是否禁用
+    execBtn: boolean;//执行按钮是禁用
 }
 export default defineComponent({
     name: "SQLEditor",
@@ -177,7 +177,7 @@ export default defineComponent({
             // if (state.treeData) {
             //初始化sql编辑器
             api_initSQLEditor(state.treeData!).then((resp) => {
-                console.log("getDatabaseRole resp", resp);
+                console.log("api_initSQLEditor resp", resp);
                 state.treeData!.contextId = resp.data;
             })
             // }
@@ -207,8 +207,17 @@ export default defineComponent({
             db_option: [DB_Text],
             schema_val: Schema_Text,
             schema_option: [Schema_Text],
-            execBtn: false,//执行默认禁用
+            execBtn: true,//执行默认禁用
         })
+        const getSqlEditorItemChangeParam = (serverDef, newDatabaseItem, newSchemaItem, autoCommit = false) => {
+            return {
+                autoCommit: autoCommit,
+                contextId: state.treeData!.contextId,
+                newServerItem: serverDef,
+                newDatabaseItem: newDatabaseItem,
+                newSchemaItem: newSchemaItem,
+            }
+        }
         /**
          * 初始化三个下拉框默认值
          */
@@ -230,52 +239,51 @@ export default defineComponent({
                 /**
                  * 如果有server，查询database
                  */
-                if (server) setDatabaseDefault(serverDef, dbDef, schemaDef)
+                setDatabaseDefault(serverDef, dbDef, schemaDef)
             }
         }
         /**
-         * 设置db和schema的默认值，可用于初始化默认值和切换server
+         * 设置db的默认值，可用于初始化默认值和切换db
          */
         const setDatabaseDefault = (serverDef: string, dbDef: string, schemaDef: string) => {
-            state.execBtn = true;//当server被开启，启用执行激活
-            //根据server查询database下拉列表
-            const queryDB = {
-                contextId: state.treeData!.contextId,
-                newServerItem: serverDef,
-                newDatabaseItem: null,
-                newSchemaItem: null,
-            }
-            api_findDatabases(queryDB).then((resp) => {
-                // console.log("api_findDatabases resp", resp);
-                //设置all database
-                state.db_option.splice(1);
-                state.schema_option.splice(1);
-                resp.data.forEach((item) => {
-                    state.db_option.push(item)
-                })
-
-                if (dbDef) {
-                    state.db_val = dbDef;//设置默认的db
-                    const querySchema = {
-                        contextId: state.treeData!.contextId,
-                        newServerItem: serverDef,
-                        newDatabaseItem: dbDef,
-                        newSchemaItem: null,
-                    }
-                    //根据db查询schema下拉列表
-                    api_findSchemas(querySchema).then((respSchema) => {
-                        //设置all schema
-                        respSchema.data.forEach((item) => {
-                            state.schema_option.push(item)
-                        })
-                        if (schemaDef) state.schema_val = schemaDef;//设置默认的schema
+            console.log('setDatabaseDefault', serverDef, dbDef, schemaDef)
+            state.db_val = DB_Text;
+            state.db_option.splice(1);
+            state.schema_val = Schema_Text;
+            state.schema_option.splice(1);
+            if (serverDef) {
+                state.execBtn = false;//当server被开启，启用执行激活
+                //根据server查询database下拉列表
+                const queryDB = getSqlEditorItemChangeParam(serverDef, null, null, false);
+                api_findDatabases(queryDB).then((resp) => {
+                    //设置all database
+                    resp.data.forEach((item) => {
+                        state.db_option.push(item);
+                        // state.db_option.concat(resp.data);//不知为何concat拼不上
                     })
-                }
-            })
+                    setSchemaDefault(serverDef, dbDef, schemaDef)
+                })
+            }
         }
-        // const state = reactive({
-        //   identity: props.identity,
-        // });
+        /**
+         * 设置schema的默认值，可用于初始化默认值和切换schema
+         */
+        const setSchemaDefault = (serverDef: string, dbDef: string, schemaDef: string) => {
+            state.schema_val = Schema_Text;
+            state.schema_option.splice(1);
+            if (dbDef) {
+                state.db_val = dbDef;//设置默认的db
+                const querySchema = getSqlEditorItemChangeParam(serverDef, dbDef, null, false);
+                //根据db查询schema下拉列表
+                api_findSchemas(querySchema).then((respSchema) => {
+                    //设置all schema
+                    respSchema.data.forEach((item) => {
+                        state.schema_option.push(item)
+                    })
+                    if (schemaDef) state.schema_val = schemaDef;//设置默认的schema
+                })
+            }
+        }
         const handleSave = () => {
             alert('保存')
         }
@@ -297,10 +305,8 @@ export default defineComponent({
             console.log('handleFormat getSQL=', noSelect, sql.length, sql)
             api_formatSQL(sql).then((resp) => {
                 console.log("formatSQL resp", resp);
-                if (noSelect)
-                    codeRef.value.setSqlValue(resp.data);
-                else
-                    codeRef.value.replaceSelection(resp.data);
+                if (noSelect) codeRef.value.setSqlValue(resp.data);
+                else codeRef.value.replaceSelection(resp.data);
             })
         }
         const handleExecute = () => {
@@ -337,14 +343,12 @@ export default defineComponent({
                         //显示查询结果
                         api_sqleditorPoll(state.treeData!.contextId).then((respPoll) => {
                             console.log("api_sqleditorPoll respPoll", respPoll);
-                            alert('执行完成')
                         })
                     }
                 })
             }, time);
         }
         const handleStop = () => {
-            alert('停止')
             api_sqleditorCancle(state.treeData!.contextId).then((resp1) => {
                 console.log("api_sqleditorCancle resp1", resp1);
             })
@@ -353,8 +357,6 @@ export default defineComponent({
          * 拖动树形菜单的边框
          */
         const dragSQLEditor = (event: any, codeRef: any) => {
-            // console.log('dragSQLEditor event', event)
-            // console.log('dragSQLEditor codeRef', codeRef)            
             const header = document.getElementsByClassName("header")[0];
             const right = document.getElementsByClassName("right")[0];
             console.log('right clientHeight', right.clientHeight)
@@ -371,17 +373,41 @@ export default defineComponent({
             };
             return false;
         };
-        //server选择器
+        //server选择器下拉事件
         const handServerChange = (val: string) => {
-            const data = {
-                contextId: state.treeData!.contextId,
-                newServerItem: val,
-                newDatabaseItem: null,
-                newSchemaItem: null,
+            console.log('handServerChange val=', val)
+            if (val == '-1') {
+                setDatabaseDefault('', '', '');
+                return;
             }
+            const data = getSqlEditorItemChangeParam(val, null, null, false);
             api_changeServerItem(data).then((resp) => {
                 console.log("api_changeServerItem resp", resp);
                 setDatabaseDefault(val, '', '')
+            })
+        }
+        //DB选择器下拉事件
+        const handDBChange = (val: string) => {
+            console.log('handServerChange val=', val)
+            if (val == DB_Text) {
+                setSchemaDefault('', '', '');
+                return;
+            }
+            const data = getSqlEditorItemChangeParam(state.server_val, val, null, false);
+            api_changeDatabaseItem(data).then((resp) => {
+                console.log("api_changeDatabaseItem resp", resp);
+                setSchemaDefault(state.server_val, val, '')
+            })
+        }
+        //schema选择器下拉事件
+        const handSchemaChange = (val: string) => {
+            console.log('handSchemaChange val=', val)
+            if (val == Schema_Text) {
+                return;
+            }
+            const data = getSqlEditorItemChangeParam(state.server_val, state.db_val, val, false);
+            api_changeSchemaItem(data).then((resp) => {
+                console.log("api_changeSchemaItem resp", resp);
             })
         }
         return {
@@ -396,7 +422,9 @@ export default defineComponent({
             handleFormat,
             handleExecute,
             handleStop,
-            handServerChange
+            handServerChange,
+            handDBChange,
+            handSchemaChange
         };
     },
     data() {
