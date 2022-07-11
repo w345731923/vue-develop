@@ -70,14 +70,14 @@ export async function api_sqleditorPoll(contextId: string) {
  * @returns 
  */
 export async function api_changeServerItem(data: SqlEditorItemChangeParam) {
-    return await http.request<ResponseData<SqlEditorPoll[]>>('/sqleditor/changeServerItem', { method: 'POST', data });
+    return await http.request<ResponseData<string>>('/sqleditor/changeServerItem', { method: 'POST', data });
 }
 /**
  * 切换db节点
  * @returns 
  */
  export async function api_changeDatabaseItem(data: SqlEditorItemChangeParam) {
-    return await http.request<ResponseData<SqlEditorPoll[]>>('/sqleditor/changeDatabaseItem', { method: 'POST', data });
+    return await http.request<ResponseData<string>>('/sqleditor/changeDatabaseItem', { method: 'POST', data });
 }
 /**
  * 切换server节点

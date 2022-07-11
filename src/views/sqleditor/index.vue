@@ -383,6 +383,13 @@ export default defineComponent({
             const data = getSqlEditorItemChangeParam(val, null, null, false);
             api_changeServerItem(data).then((resp) => {
                 console.log("api_changeServerItem resp", resp);
+                let contextId = resp.data;
+                if (contextId) {
+                    state.treeData!.contextId! = contextId;
+                }
+                // } else {
+                //     // TODO 当contextId为空时，说明切换的目标对象存在问题，需要返回之前的对象
+                // }
                 setDatabaseDefault(val, '', '')
             })
         }
@@ -396,6 +403,13 @@ export default defineComponent({
             const data = getSqlEditorItemChangeParam(state.server_val, val, null, false);
             api_changeDatabaseItem(data).then((resp) => {
                 console.log("api_changeDatabaseItem resp", resp);
+                let contextId = resp.data;
+                if (contextId) {
+                    state.treeData!.contextId! = contextId;
+                }
+                // } else {
+                //     // TODO 当contextId为空时，说明切换的目标对象存在问题，需要返回之前的对象
+                // }
                 setSchemaDefault(state.server_val, val, '')
             })
         }
