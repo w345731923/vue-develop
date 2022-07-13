@@ -91,6 +91,10 @@ import { defineComponent, ref, reactive, toRefs, PropType } from 'vue'
 import { BaseDataType, DataModel, SaveDataInfo } from "@/types";
 import { saveTable } from '@/api/treeNode';
 
+const ADD = 'ADD';
+const UPDATE = 'UPDATE';
+const DELETE = 'DELETE';
+
 interface IState {
   nodePath : string,                        // nodePath
   currentGrid : {
@@ -105,15 +109,15 @@ interface IState {
 }
 
 interface DataColumnInfo {
-  colId : number,                     // 列号
+  column : number,                     // 列号
   oldValue : object | undefined,                  // 旧值
-  newValue : object,                  // 新值
+  newValue : object | undefined,                  // 新值
 }
 
 interface DataChangeInfo {
   rowId: number,                      // 行号
-  changeType : number,                // 0 : default, 1 : 新增行, 2: 修改行，3:删除行
-  dataColumnInfo : DataColumnInfo[] | undefined,  // 该行修改的数据,列数据的对比的集合（新增行与删除行时该属性为空，其数据可通过state.data.datas去获取）
+  type : string,                // ADD : 新增行,default, UPDATE: 修改行，DELETE:删除行
+  dataList : DataColumnInfo[] | undefined,  // 该行修改的数据,列数据的对比的集合（新增行与删除行时该属性为空，其数据可通过state.data.datas去获取）
 }
 
 export default defineComponent ({
@@ -240,31 +244,30 @@ export default defineComponent ({
         // 检查当前行是否已经在state.changeData中
         let changeData = findChangeDataByRowId(value.row_index);
         console.log(changeData)
-        debugger
         if (changeData) {
           // 只修改新数据
           console.log(value, state)
           // value.forEach((element, index) => {
-          //   console.log("修改新值:", changeData!.dataColumnInfo![index].newValue, value[index].value);
-          //   changeData!.dataColumnInfo![index].newValue = value[index].value;
+          //   console.log("修改新值:", changeData!.dataList![index].newValue, value[index].value);
+          //   changeData!.dataList![index].newValue = value[index].value;
           // });
           for (let i = 0; i < value.length; i++) {
             console.log("修改新值:", value[i].value);
-            if (changeData.dataColumnInfo![i]) {
-              changeData.dataColumnInfo![i].newValue = value[i].value;
+            if (changeData.dataList![i]) {
+              changeData.dataList![i].newValue = value[i].value;
             } else {
-              changeData.dataColumnInfo![i] = {
-                colId : i,
+              changeData.dataList![i] = {
+                column : i,
                 oldValue : undefined,
                 newValue : value[i].value,
               }
             }
-            // changeData.dataColumnInfo![i] = {
+            // changeData.dataList![i] = {
             //   colId : number,
             //   oldValue : object,                  // 旧值
             //   newValue : object,                  // 新值
             // };
-            // changeData.dataColumnInfo![i].newValue = value[i].value;
+            // changeData.dataList![i].newValue = value[i].value;
           }
         } else {
           // 为state.changeData添加一个新的修改对象
@@ -272,7 +275,7 @@ export default defineComponent ({
           console.log("xxxx", value, state.data?.datas)
           value.forEach((element, index) => {
             let changeColumnInfo : DataColumnInfo = {
-              colId: index,
+              column: index,
               oldValue: state.inputData?.datas[value.row_index][index],
               newValue: element.value,
             } 
@@ -281,8 +284,8 @@ export default defineComponent ({
           console.log(dataColumnInfo)
           let updateRow : DataChangeInfo = {
             rowId: value.row_index,
-            changeType: 2,
-            dataColumnInfo: dataColumnInfo
+            type: UPDATE,
+            dataList: dataColumnInfo
           }
           console.log("修改行:", updateRow)
           state.changeData?.push(updateRow);
@@ -345,8 +348,8 @@ export default defineComponent ({
 
       let addRow : DataChangeInfo = {
         rowId: idx,
-        changeType: 1,
-        dataColumnInfo: []
+        type: ADD,
+        dataList: []
       }
       this.state.changeData?.push(addRow);
 
@@ -373,36 +376,45 @@ export default defineComponent ({
     
     delRow() {
       console.log("删除被选中的行. rowID:", this.state.currentGrid.rowId)
+      let delRowId = this.state.currentGrid.rowId;
       // console.log(this.state.currentGrid)
-      // this.state.currentGrid.rowId != null && this.state.data?.datas.splice(this.state.currentGrid.rowId!, 1)
+      // delRowId != null && this.state.data?.datas.splice(delRowId!, 1)
       let index = -1;
       let changeData : DataChangeInfo;
       for (let i = 0; i < this.state.changeData!.length; i++) {
-        if(this.state.currentGrid.rowId === this.state.changeData![i].rowId) {
+        if(delRowId === this.state.changeData![i].rowId) {
           changeData = this.state.changeData![i];
           index = i;
         }
       }
-      // let changeData = this.findChangeDataByRowId(this.state.currentGrid.rowId);
+      // let changeData = this.findChangeDataByRowId(delRowId);
       if (changeData!) {
         console.log(changeData)
         // 如果delRow的rowId已经在changeData中，且状态为新增(说明删除的是新增的数据，且未持久化)，将其删除
-        if (changeData.changeType == 1) {
+        if (changeData.type == ADD) {
           // 清除展示用的数据
           this.state.data?.datas.splice(changeData.rowId, 1);
           // 清除修改的数据
           this.state.changeData?.splice(index, 1);
           return;
         // 如果delRow的rowId已经在changeData中，且状态为修改，将changeData中旧的删除
-        } else if (changeData.changeType == 2) {
+        } else if (changeData.type == UPDATE) {
           this.state.changeData?.splice(index, 1);
         }
       }
-      
+      let dataColumnInfo : DataColumnInfo[] = [];
+      this.state.inputData?.datas[delRowId].forEach((element, index) => {
+        let changeColumnInfo : DataColumnInfo = {
+          column: index,
+          oldValue: element,
+          newValue: undefined,
+        } 
+        dataColumnInfo.push(changeColumnInfo);
+      });
       let delRow : DataChangeInfo = {
-        rowId: this.state.currentGrid.rowId,
-        changeType: 3,
-        dataColumnInfo: undefined
+        rowId: delRowId,
+        type: DELETE,
+        dataList: dataColumnInfo
       }
       this.state.changeData?.push(delRow);
     },
@@ -455,11 +467,11 @@ export default defineComponent ({
       this.state.changeData?.forEach((r, i) => {
         if (rowIndex == r.rowId) {
           console.log("设置行的className", r, i)
-          if (r.changeType == 1) {
+          if (r.type == ADD) {
             res = 'add-row';
-          } else if (r.changeType == 2) {
+          } else if (r.type == UPDATE) {
             res = 'update-row';
-          } else if (r.changeType == 3) {
+          } else if (r.type == DELETE) {
             res = 'delete-row';
           }
         }
