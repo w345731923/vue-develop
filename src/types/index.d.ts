@@ -471,6 +471,13 @@ export interface BaseDataType {
   length: number,
 }
 
+export interface SaveDataInfo {
+  nodePath : string,                    // nodePath，表路径
+  columnNames : string[],               // 列名的链表
+  dataTypes : BaseDataType[],           // 列类型的链表
+  dataChangeInfos : DataChangeInfo[],   // 修改的数据，包括增/删/改的数据
+}
+
 //==============SQLEditor=============
 export interface SqlEditorStatus {
   message: string

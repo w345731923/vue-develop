@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel, TableEditForm, FetchDataInfoForm
+    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel, TableEditForm, FetchDataInfoForm, SaveDataInfo
 } from '@/types'
 
 
@@ -281,6 +281,16 @@ export async function tableEdit(data: TableEditForm) {
         method: 'POST', data
     });
 }
+
+/**
+ * 保存打开表中所做的修改
+ * @param data 
+ * @returns 
+ */
+export async function saveTable (data : SaveDataInfo) {
+    return await http.request<ResponseData<boolean>>('/data/saveData', {method : 'POST', data});
+}
+
 /**
  * 查询database下的schema的列表string[]
  * @returns 

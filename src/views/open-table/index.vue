@@ -1,6 +1,6 @@
 <template>
 <!-- <DataTabV2 :dataModel="state.dataModel"/> -->
-<DataTab :dataModel="state.dataModel" @refreshTableDataModel="refreshTableDataModel"/>
+<DataTab :dataModel="state.dataModel" :nodePath="state.nodePath" @refreshTableDataModel="refreshTableDataModel"/>
 <!-- <DataTabTest /> -->
 </template>
 
@@ -61,7 +61,7 @@ export default defineComponent({
         condition : condition!,
         limitNum : limit,
         offsetNum : offset,
-      } 
+      };
       getTableData(fetchDataInfo).then((responseData) => {
         console.log("getTableData", responseData);
         state.dataModel = responseData.data;
