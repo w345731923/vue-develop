@@ -51,6 +51,7 @@ export default defineComponent({
     });
 
     const refreshTableDataModel = () => {
+      console.log("刷新表数据")
       fetchTableData(state.nodePath!, [], 20, 0, state.condition);
     };
 

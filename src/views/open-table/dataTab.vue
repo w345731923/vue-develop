@@ -430,6 +430,12 @@ export default defineComponent ({
       }
       saveTable(saveData).then((responseData) => {
         console.log("saveData 结果", responseData);
+        if (responseData.data) {
+          // 数据刷新，重新获取数据
+          this.$emit("refreshTableDataModel");
+          // 刷新UI组件
+          this.$forceUpdate;
+        }
       });
     },
 
