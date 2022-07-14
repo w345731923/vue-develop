@@ -1,6 +1,9 @@
 <template>
 <!-- <DataTabV2 :dataModel="state.dataModel"/> -->
-<DataTab :dataModel="state.dataModel" :nodePath="state.nodePath" @refreshTableDataModel="refreshTableDataModel"/>
+<DataTab :dataModel="state.dataModel" :nodePath="state.nodePath" :currentPage="state.currentPage"
+  :pageSize="state.pageSize" :pageSizes="state.pageSizes" :total="state.total"
+  @refreshTableDataModel="refreshTableDataModel" @handleSizeChange="handleSizeChange" 
+  @handleCurrentChange="handleCurrentChange"/>
 <!-- <DataTabTest /> -->
 </template>
 
@@ -10,7 +13,7 @@ import { DataModel, FetchDataInfoForm, TableDesignModel, TableSimple, TreeNode }
 import { getNodePath } from "@/utils/tree";
 import { assertConditional } from "@babel/types";
 import Node from "element-plus/es/components/tree/src/model/node";
-import { defineComponent, onMounted, reactive } from "vue";
+import { defineComponent, onMounted, reactive, ref } from "vue";
 import DataTab from "./dataTab.vue";
 import DataTabV2 from "./dataTabV2.vue";
 import DataTabTest from "./dataTabTest.vue";
@@ -23,7 +26,18 @@ interface IState {
   condition : string | undefined;                 // 当前页面的查询条件
 
   dataModel : DataModel | undefined;              // 当前页面操作的数据
+
+  // 分页控件所需的属性
+  currentPage : number;         // 当前页的页码
+  pageSize : number;            // 每页显示多少条数据
+  pageSizes : number[];         // Element-plus 的分页控件用于显示可选每页显示多少数据
+  total : number;               // Element-plus 的分页控件使用，获取总的数目，控件会自动计算显示多少页
+  
 }
+
+const defaultCurrentPage = 1;
+const defaultPageSize = 100;
+const defaultPageSizes = [100, 200, 300, 400];
 
 export default defineComponent({
   // props : ["treeData"],
@@ -36,7 +50,13 @@ export default defineComponent({
       offsetNum : 0,                  
       condition : undefined,           
 
-      dataModel : undefined
+      dataModel : undefined,
+
+      currentPage : defaultCurrentPage,
+      pageSize : defaultPageSize,
+      pageSizes : defaultPageSizes,
+      total : 400,
+
     });
 
 
@@ -52,27 +72,62 @@ export default defineComponent({
 
     const refreshTableDataModel = () => {
       console.log("刷新表数据")
-      fetchTableData(state.nodePath!, [], 20, 0, state.condition);
+      fetchTableData(state.nodePath!, [], defaultCurrentPage, defaultPageSize, state.condition);
     };
 
-    const fetchTableData = (nodePath : string, filterColumnList : string[], limit : number, offset : number, condition : string | undefined) => {
+    const fetchTableDataByState = (filterColumnList : string[]) => {
+      fetchTableData(state.nodePath!, filterColumnList, state.currentPage, state.pageSize, state.condition);
+    }
+
+    const fetchTableData = (nodePath : string, filterColumnList : string[], currentPage : number, pageSize : number, condition : string | undefined) => {
       const fetchDataInfo : FetchDataInfoForm = {
         nodePath : nodePath,
         filterColumnList : filterColumnList,
         condition : condition!,
-        limitNum : limit,
-        offsetNum : offset,
+        limitNum : pageSize,
+        offsetNum : (currentPage - 1) * pageSize,
       };
       getTableData(fetchDataInfo).then((responseData) => {
         console.log("getTableData", responseData);
         state.dataModel = responseData.data;
         console.log("修改state", state);
       });
-    };
+    }
+
+    // const fetchTableData = (nodePath : string, filterColumnList : string[], limit : number, offset : number, condition : string | undefined) => {
+    //   const fetchDataInfo : FetchDataInfoForm = {
+    //     nodePath : nodePath,
+    //     filterColumnList : filterColumnList,
+    //     condition : condition!,
+    //     limitNum : limit,
+    //     offsetNum : offset,
+    //   };
+    //   getTableData(fetchDataInfo).then((responseData) => {
+    //     console.log("getTableData", responseData);
+    //     state.dataModel = responseData.data;
+    //     console.log("修改state", state);
+    //   });
+    // };
+
+    const handleSizeChange = (val: number) => {
+      console.log(`${val} items per page`)
+
+      state.pageSize = val;
+      fetchTableDataByState([]);
+      
+    }
+    const handleCurrentChange = (val: number) => {
+      state.currentPage = val;
+      console.log(`current page: ${val}`)
+      fetchTableDataByState([]);
+    }
 
     return {
       state,
       refreshTableDataModel,
+      
+      handleSizeChange,
+      handleCurrentChange,
     }
 
   },

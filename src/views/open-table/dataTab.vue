@@ -1,87 +1,76 @@
 <template>
   <div>
-  <div class="toolbar topToolBar">
-    <el-row :gutter="20">
-      <el-col :span="2">
-        <div class="toolbar-button"><el-button type="primary" 
-              :icon="Timer">导出</el-button>
-        </div>
-      </el-col>
-      <el-col :span="2">
-        <div class="toolbar-button">
-          <el-button>导入</el-button>
-        </div>
-      </el-col>
-    </el-row>
-  </div>
-  <!-- <div class="el-row toolbar topToolBar">
-    <el-button>导入</el-button>
-    <el-button type="primary" 
-              :icon="Timer">导出</el-button>
-  </div> -->
-  <div class="datatableDiv">
-    <!-- <div class="header" v-if="headTurn">
-      TODO
-      @current-change="handleCurrentChange"
+    <div class="toolbar topToolBar">
+      <el-row :gutter="20">
+        <el-col :span="2">
+          <div class="toolbar-button"><el-button type="primary" 
+                :icon="Timer">导出</el-button>
+          </div>
+        </el-col>
+        <el-col :span="2">
+          <div class="toolbar-button">
+            <el-button>导入</el-button>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+    <!-- <div class="el-row toolbar topToolBar">
+      <el-button>导入</el-button>
+      <el-button type="primary" 
+                :icon="Timer">导出</el-button>
     </div> -->
-    <el-table ref="dataTable"
-      style="width: 100%"
-      :data="state.data?.datas"
-      highlight-current-row
+    <div class="datatableDiv">
+      <!-- <div class="header" v-if="headTurn">
+        TODO
+        @current-change="handleCurrentChange"
+      </div> -->
+      <el-table ref="dataTable"
+        style="width: 100%"
+        :data="state.data?.datas"
+        highlight-current-row
 
-      @cell-click="cellclick"
-      @cell-dblclick="celledit"
-      :row-class-name="tableRowClassName"
-      @row-click="setRowIndex"
-      >
-      <!-- 动态生成列名 -->
-      <el-table-column v-for="(item, index) in state.data?.columnNames" :key="index" :label="item" :prop="item" >
-        <template #default="scope">
-          <!-- <span>{{scope.row[index]}}</span> -->
-          <el-input v-if="scope.row[index].edit"
-                    :ref="item"
-                    v-model="scope.row[index].value"
-                    style="width: 100%"
-                    @blur="changeData(scope.row)">
-          </el-input>
-          <span v-else>{{scope.row[index].value}}</span>
-        </template>
-      </el-table-column>
-      
-      <!-- <el-table-column v-for="item in data.columnNames" :key="item.value" ></el-table-column> -->
-      <!-- <el-table-column v-if="dataModel.columnNames.length > 0" v-model="dataModel.co"></el-table-column> -->
-    </el-table>
-  </div>  
-  <div class="el-row toolbar bottomToolBar">
-    <el-button @click="addRow">添加新行</el-button>
-    <el-button @click="delRow">删除行</el-button>
-    <el-button @click="saveClick">保存</el-button>
-    <el-button @click="cancleClick">取消</el-button>
-    <el-button @click="$emit('refreshTableDataModel')">刷新</el-button>
-  </div>
-  <!-- <el-menu
-    :default-active="activeIndex"
-    class="el-menu-demo"
-    mode="horizontal"
-    :ellipsis="false"
-    @select="handleSelect"
-  >
-    <el-menu-item index="0">LOGO</el-menu-item>
-    <div class="flex-grow" />
-    <el-menu-item index="1">Processing Center</el-menu-item>
-    <el-sub-menu index="2">
-      <template #title>Workspace</template>
-      <el-menu-item index="2-1">item one</el-menu-item>
-      <el-menu-item index="2-2">item two</el-menu-item>
-      <el-menu-item index="2-3">item three</el-menu-item>
-      <el-sub-menu index="2-4">
-        <template #title>item four</template>
-        <el-menu-item index="2-4-1">item one</el-menu-item>
-        <el-menu-item index="2-4-2">item two</el-menu-item>
-        <el-menu-item index="2-4-3">item three</el-menu-item>
-      </el-sub-menu>
-    </el-sub-menu>
-  </el-menu> -->
+        @cell-click="cellclick"
+        @cell-dblclick="celledit"
+        :row-class-name="tableRowClassName"
+        @row-click="setRowIndex"
+        >
+        <!-- 动态生成列名 -->
+        <el-table-column v-for="(item, index) in state.data?.columnNames" :key="index" :label="item" :prop="item" >
+          <template #default="scope">
+            <!-- <span>{{scope.row[index]}}</span> -->
+            <el-input v-if="scope.row[index].edit"
+                      :ref="item"
+                      v-model="scope.row[index].value"
+                      style="width: 100%"
+                      @blur="changeData(scope.row)">
+            </el-input>
+            <span v-else>{{scope.row[index].value}}</span>
+          </template>
+        </el-table-column>
+        
+        <!-- <el-table-column v-for="item in data.columnNames" :key="item.value" ></el-table-column> -->
+        <!-- <el-table-column v-if="dataModel.columnNames.length > 0" v-model="dataModel.co"></el-table-column> -->
+      </el-table>
+    </div>  
+    <div class="el-row toolbar bottomToolBar">
+      <el-button @click="addRow">添加新行</el-button>
+      <el-button @click="delRow">删除行</el-button>
+      <el-button @click="saveClick">保存</el-button>
+      <el-button @click="cancleClick">取消</el-button>
+      <el-button @click="$emit('refreshTableDataModel')">刷新</el-button>
+      <el-pagination 
+        v-model:currentPage="state.currentPage"
+        v-model:page-size="state.pageSize"
+        :page-sizes="state.pageSizes"
+        :small="small"
+        :disabled="disabled"
+        :background="background"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="state.total"
+        @size-change="$emit('handleSizeChange', state.pageSize)"
+        @current-change="$emit('handleCurrentChange', state.currentPage)"
+      />
+    </div>
   </div>
 </template>
 
@@ -90,10 +79,6 @@ import { Timer } from '@element-plus/icons-vue'
 import { defineComponent, ref, reactive, toRefs, PropType } from 'vue'
 import { BaseDataType, DataModel, SaveDataInfo } from "@/types";
 import { saveTable } from '@/api/treeNode';
-
-const ADD = 'ADD';
-const UPDATE = 'UPDATE';
-const DELETE = 'DELETE';
 
 interface IState {
   nodePath : string,                        // nodePath
@@ -106,6 +91,11 @@ interface IState {
   data : DataModel | undefined,                   // 页面中显示的数据
   inputData : DataModel | undefined,              // 该页面传入的数据的备份，用于与修改后的数据进行对比
   changeData : DataChangeInfo[] | undefined      // 页面中修改的数据
+
+  currentPage : number,         // 当前页的页码
+  pageSize : number,            // 每页显示多少条数据
+  pageSizes : number[],         // Element-plus 的分页控件用于显示可选每页显示多少数据
+  total : number,               // Element-plus 的分页控件使用，获取总的数目，控件会自动计算显示多少页
 }
 
 interface DataColumnInfo {
@@ -120,6 +110,16 @@ interface DataChangeInfo {
   dataList : DataColumnInfo[] | undefined,  // 该行修改的数据,列数据的对比的集合（新增行与删除行时该属性为空，其数据可通过state.data.datas去获取）
 }
 
+// 标记行的修改类型
+const ADD = 'ADD';
+const UPDATE = 'UPDATE';
+const DELETE = 'DELETE';
+// 分页相关的属性
+
+const small = ref(false)        // Element-plus的分页控件使用小图标的样式
+const background = ref(false)   // Element-plus的分页控件是否使用背景
+const disabled = ref(false)     // Element-plus的分页控件是否禁用
+
 export default defineComponent ({
   name : "DataTabPageIndex",
   components : {},
@@ -133,9 +133,15 @@ export default defineComponent ({
   props : {
     dataModel : Object,
     nodePath : String,
-    refreshTableDataModel : Function,
+
+    currentPage : Number,
+    pageSize : Number,
+    pageSizes : Array,
+    total : Number,
+
+    // refreshTableDataModel : Function,
   },
-  emits : ["refreshTableDataModel"],
+  emits : ["refreshTableDataModel", "handleSizeChange", "handleCurrentChange"],
   watch : {
     // 监听父控件中dataModel的变化
     dataModel : {
@@ -181,7 +187,13 @@ export default defineComponent ({
         colId : 0,     // 列ID
         val : '',       // 单元格的值
         isHead : undefined  // 是否为表头 
-      }
+      },
+      
+      currentPage : ref(props.currentPage!).value,
+      pageSize : ref(props.pageSize!).value,
+      pageSizes : ref(props.pageSizes!).value as number[],
+      total : ref(props.total!).value,
+      
     });
 
     state.nodePath = ref(props.nodePath!).value;
@@ -321,6 +333,10 @@ export default defineComponent ({
         setRowIndex,
         findChangeDataByRowId,
         // handleCurrentChange,
+
+        small,
+        background,
+        disabled,
     }
   },
   created () {
