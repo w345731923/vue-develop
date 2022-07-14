@@ -451,6 +451,11 @@ export interface FetchDataInfoForm {
   offsetNum: number,                   // SQL offset
 }
 
+export interface CountDataForm {
+  nodePath: string,                     //node整体路径
+  condition: string,                // SQL where
+}
+
 // DataModel,返回包括打开表、视图、物化视图 以及 SQLEditor可能返回的结果集
 export interface DataModel {
   executeSQL: string,

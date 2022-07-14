@@ -8,8 +8,8 @@
 </template>
 
 <script lang='ts'>
-import { getTableData } from "@/api/treeNode";
-import { DataModel, FetchDataInfoForm, TableDesignModel, TableSimple, TreeNode } from "@/types";
+import { countData, getTableData } from "@/api/treeNode";
+import { CountDataForm, DataModel, FetchDataInfoForm, TableDesignModel, TableSimple, TreeNode } from "@/types";
 import { getNodePath } from "@/utils/tree";
 import { assertConditional } from "@babel/types";
 import Node from "element-plus/es/components/tree/src/model/node";
@@ -36,8 +36,8 @@ interface IState {
 }
 
 const defaultCurrentPage = 1;
-const defaultPageSize = 100;
-const defaultPageSizes = [100, 200, 300, 400];
+const defaultPageSize = 2;
+const defaultPageSizes = [2, 200, 300, 400];
 
 export default defineComponent({
   // props : ["treeData"],
@@ -55,7 +55,7 @@ export default defineComponent({
       currentPage : defaultCurrentPage,
       pageSize : defaultPageSize,
       pageSizes : defaultPageSizes,
-      total : 400,
+      total : 100,
 
     });
 
@@ -67,6 +67,7 @@ export default defineComponent({
       const selectTableNode = JSON.parse(selectTableNodeSession!) as TreeNode<TableSimple>;
       state.nodePath = selectTableNode.nodePath;
       state.treeNode = selectTableNode;
+      getDataCount();
       refreshTableDataModel();
     });
 
@@ -120,6 +121,18 @@ export default defineComponent({
       state.currentPage = val;
       console.log(`current page: ${val}`)
       fetchTableDataByState([]);
+    }
+
+    const getDataCount = () => {
+      console.log("查询表数据的数量")
+      const countDataForm : CountDataForm = {
+        nodePath : state.nodePath!,
+        condition : state.condition!,
+      };
+      countData(countDataForm).then((responseData) => {
+        console.log("countDataForm", responseData);
+        state.total = responseData.data;
+      });
     }
 
     return {

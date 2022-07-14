@@ -3,7 +3,7 @@ import {
     ResponseData, TreeNodeDel, TreeNodeRename, TreeNode, ServerGroupForm
     , ServerGroup, Server
     , Schema, ServerEditForm, Database, ServerPwdForm, DatabaseEditForm, SQLCreatePreview, SQLAlterPreview,
-    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel, TableEditForm, FetchDataInfoForm, SaveDataInfo
+    SchemaEditForm, SQLDropPreview, TableSimple, DataType, TableDesignModel, TableEditForm, FetchDataInfoForm, SaveDataInfo, CountDataForm
 } from '@/types'
 
 
@@ -227,6 +227,15 @@ export async function checkConnect(connectionID: string) {
  */
 export async function getTableData(data: FetchDataInfoForm) {
     return await http.request<ResponseData>('/data/fetchData', {method : 'POST', data});
+}
+
+/**
+ * 获取表中符合查询条件的行数
+ * @param data 
+ * @returns 
+ */
+export async function countData(data: CountDataForm) {
+    return await http.request<ResponseData>('/data/countData', {method : 'POST', data});
 }
 
 /**

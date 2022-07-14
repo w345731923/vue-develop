@@ -161,6 +161,12 @@ export default defineComponent ({
       handler(newValue, oldValue) {
         this.state.nodePath = newValue;
       }
+    },
+    total : {
+      immediate : true,
+      handler(newValue, oldValue) {
+        this.state.total = newValue;
+      }
     }
     // state.data? : {
     //   immediate : true,
